@@ -1,0 +1,234 @@
+@page
+@model MatMob.Areas.Identity.Pages.Account.Manage.PersonalDataModel
+@{
+    ViewData["Title"] = "Dados Pessoais";
+    ViewData["ActivePage"] = ManageNavPages.PersonalData;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a asp-page="./Index">Gerenciar Perfil</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Dados Pessoais</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-3">
+            <partial name="_ManageNav" />
+        </div>
+        <div class="col-md-9">
+            <div class="card shadow">
+                <div class="card-header bg-secondary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-download me-2"></i>Gerenciar Dados Pessoais
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <partial name="_StatusMessage" for="StatusMessage" />
+                    
+                    <!-- Informações sobre LGPD -->
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Seus Direitos de Privacidade</strong><br>
+                        De acordo com a Lei Geral de Proteção de Dados (LGPD), você tem o direito de:
+                        <ul class="mb-0 mt-2">
+                            <li>Solicitar uma cópia dos seus dados pessoais</li>
+                            <li>Corrigir dados incorretos ou desatualizados</li>
+                            <li>Solicitar a exclusão dos seus dados</li>
+                            <li>Revogar consentimentos dados anteriormente</li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Exportar Dados -->
+                    <div class="row mb-4">
+                        <div class="col-md-8">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title">
+                                        <i class="fas fa-file-export me-2 text-primary"></i>Exportar Seus Dados
+                                    </h6>
+                                    <p class="card-text">
+                                        Baixe um arquivo contendo todos os seus dados pessoais que armazenamos. 
+                                        O arquivo será gerado em formato JSON e incluirá:
+                                    </p>
+                                    <ul class="small text-muted">
+                                        <li>Informações da conta (email, nome, telefone)</li>
+                                        <li>Dados de perfil e configurações</li>
+                                        <li>Histórico de atividades no sistema</li>
+                                        <li>Logs de acesso e segurança</li>
+                                    </ul>
+                                    <form asp-page-handler="DownloadPersonalData" method="post">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-download me-2"></i>Baixar Meus Dados
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-shield-alt fa-3x text-success mb-3"></i>
+                                    <h6>Dados Seguros</h6>
+                                    <p class="small text-muted">
+                                        Seus dados são criptografados e protegidos seguindo as melhores práticas de segurança.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Resumo dos Dados -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="fas fa-chart-pie me-2"></i>Resumo dos Seus Dados
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3 text-center">
+                                    <div class="border rounded p-3">
+                                        <i class="fas fa-user fa-2x text-primary mb-2"></i>
+                                        <h6>Perfil</h6>
+                                        <small class="text-muted">1 registro</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 text-center">
+                                    <div class="border rounded p-3">
+                                        <i class="fas fa-cog fa-2x text-info mb-2"></i>
+                                        <h6>Configurações</h6>
+                                        <small class="text-muted">@Model.ConfigurationCount registros</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 text-center">
+                                    <div class="border rounded p-3">
+                                        <i class="fas fa-history fa-2x text-warning mb-2"></i>
+                                        <h6>Atividades</h6>
+                                        <small class="text-muted">@Model.ActivityCount registros</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 text-center">
+                                    <div class="border rounded p-3">
+                                        <i class="fas fa-sign-in-alt fa-2x text-success mb-2"></i>
+                                        <h6>Logins</h6>
+                                        <small class="text-muted">@Model.LoginCount registros</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Opções Avançadas -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card border-warning">
+                                <div class="card-header bg-warning text-dark">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-edit me-2"></i>Corrigir Dados
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <p class="card-text small">
+                                        Encontrou informações incorretas? Você pode atualizar seus dados pessoais 
+                                        na seção de perfil ou entrar em contato conosco.
+                                    </p>
+                                    <a asp-page="./Index" class="btn btn-outline-warning btn-sm">
+                                        <i class="fas fa-user-edit me-1"></i>Editar Perfil
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card border-danger">
+                                <div class="card-header bg-danger text-white">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-trash me-2"></i>Excluir Conta
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <p class="card-text small">
+                                        Deseja excluir permanentemente sua conta e todos os dados associados? 
+                                        Esta ação não pode ser desfeita.
+                                    </p>
+                                    <button class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>Excluir Conta
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Política de Privacidade -->
+            <div class="card mt-4 shadow">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-file-contract me-2"></i>Política de Privacidade
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-3">
+                        Para mais informações sobre como coletamos, usamos e protegemos seus dados pessoais, 
+                        consulte nossa política de privacidade completa.
+                    </p>
+                    <a href="#" class="btn btn-outline-info">
+                        <i class="fas fa-external-link-alt me-1"></i>Ler Política de Privacidade
+                    </a>
+                    <a href="mailto:privacidade@matmob.com" class="btn btn-outline-secondary ms-2">
+                        <i class="fas fa-envelope me-1"></i>Contatar DPO
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmação de Exclusão -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteModalLabel">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Confirmar Exclusão da Conta
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-warning me-2"></i>
+                    <strong>Atenção!</strong> Esta ação é irreversível.
+                </div>
+                <p>Ao excluir sua conta:</p>
+                <ul>
+                    <li>Todos os seus dados pessoais serão removidos permanentemente</li>
+                    <li>Você perderá acesso a todos os serviços</li>
+                    <li>Não será possível recuperar suas informações</li>
+                </ul>
+                <p><strong>Tem certeza de que deseja continuar?</strong></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Cancelar
+                </button>
+                <form asp-page-handler="DeletePersonalData" method="post" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-1"></i>Sim, Excluir Minha Conta
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,180 @@
+@model IEnumerable<MatMob.Models.Entities.Peca>
+@{
+    ViewData["Title"] = "Peças";
+}
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="display-6 mb-0">
+            <i class="fas fa-boxes text-primary me-2"></i>Peças
+        </h1>
+        <p class="text-muted">Controle de estoque de peças e componentes</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a asp-action="Create" class="btn btn-primary me-2">
+            <i class="fas fa-plus me-1"></i>Nova Peça
+        </a>
+        <a asp-action="EstoqueBaixo" class="btn btn-warning">
+            <i class="fas fa-exclamation-triangle me-1"></i>Estoque Baixo
+        </a>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-6">
+                <label for="searchString" class="form-label">Buscar</label>
+                <input type="text" class="form-control" id="searchString" name="searchString" 
+                       value="@ViewData["CurrentFilter"]" placeholder="Nome, código ou descrição">
+            </div>
+            <div class="col-md-4">
+                <div class="form-check mt-4">
+                    <input class="form-check-input" type="checkbox" id="estoqueBaixo" name="estoqueBaixo" 
+                           value="true" checked="@(ViewData["EstoqueBaixo"]?.ToString() == "True")">
+                    <label class="form-check-label" for="estoqueBaixo">
+                        Apenas estoque baixo
+                    </label>
+                </div>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-outline-primary">
+                    <i class="fas fa-search me-1"></i>Filtrar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Lista de Peças -->
+<div class="card">
+    <div class="card-body">
+        @if (Model.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Código</th>
+                            <th>Nome</th>
+                            <th>Estoque</th>
+                            <th>Estoque Mínimo</th>
+                            <th>Preço Unitário</th>
+                            <th>Status</th>
+                            <th class="text-center">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var peca in Model)
+                        {
+                            <tr class="@(peca.EstoqueBaixo ? "table-warning" : "")">
+                                <td>
+                                    <code>@peca.Codigo</code>
+                                </td>
+                                <td>
+                                    <div class="fw-bold">@peca.Nome</div>
+                                    @if (!string.IsNullOrEmpty(peca.UnidadeMedida))
+                                    {
+                                        <small class="text-muted">UN: @peca.UnidadeMedida</small>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="badge @(peca.EstoqueBaixo ? "bg-danger" : "bg-success")">
+                                        @peca.QuantidadeEstoque
+                                    </span>
+                                    @if (peca.EstoqueBaixo)
+                                    {
+                                        <i class="fas fa-exclamation-triangle text-warning ms-1" title="Estoque baixo"></i>
+                                    }
+                                </td>
+                                <td>@peca.EstoqueMinimo</td>
+                                <td>
+                                    @if (peca.PrecoUnitario.HasValue)
+                                    {
+                                        @peca.PrecoUnitario.Value.ToString("C")
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (peca.Ativa)
+                                    {
+                                        <span class="badge bg-success">Ativa</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Inativa</span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group" role="group">
+                                        <a asp-action="Details" asp-route-id="@peca.Id" 
+                                           class="btn btn-sm btn-outline-info" title="Detalhes">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a asp-action="Edit" asp-route-id="@peca.Id" 
+                                           class="btn btn-sm btn-outline-primary" title="Editar">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-5">
+                <i class="fas fa-boxes fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Nenhuma peça encontrada</h5>
+                <a asp-action="Create" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i>Cadastrar Primeira Peça
+                </a>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Resumo -->
+@if (Model.Any())
+{
+    <div class="row mt-4">
+        <div class="col-md-3">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Total</h5>
+                    <h3 class="text-primary">@Model.Count()</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Ativas</h5>
+                    <h3 class="text-success">@Model.Count(p => p.Ativa)</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Estoque Baixo</h5>
+                    <h3 class="text-warning">@Model.Count(p => p.EstoqueBaixo)</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Valor Total</h5>
+                    <h3 class="text-info">@Model.Where(p => p.PrecoUnitario.HasValue).Sum(p => p.PrecoUnitario.Value * p.QuantidadeEstoque).ToString("C")</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+}

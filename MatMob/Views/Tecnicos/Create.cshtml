@@ -1,0 +1,124 @@
+@model MatMob.Models.Entities.Tecnico
+@{
+    ViewData["Title"] = "Novo Técnico";
+}
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="display-6 mb-0">
+            <i class="fas fa-plus text-primary me-2"></i>Novo Técnico
+        </h1>
+        <p class="text-muted">Cadastrar novo profissional técnico</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i>Voltar
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form asp-action="Create" method="post">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label asp-for="Nome" class="form-label"></label>
+                        <input asp-for="Nome" class="form-control" placeholder="Nome completo do técnico">
+                        <span asp-validation-for="Nome" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label"></label>
+                        <input asp-for="Email" class="form-control" type="email" placeholder="email@exemplo.com">
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label asp-for="Telefone" class="form-label"></label>
+                        <input asp-for="Telefone" class="form-control" placeholder="(11) 3333-4444">
+                        <span asp-validation-for="Telefone" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label asp-for="Celular" class="form-label"></label>
+                        <input asp-for="Celular" class="form-control" placeholder="(11) 99999-8888">
+                        <span asp-validation-for="Celular" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label asp-for="Especializacao" class="form-label"></label>
+                        <select asp-for="Especializacao" class="form-select">
+                            <option value="">Selecione a especialização</option>
+                            <option value="Eletrônica">Eletrônica</option>
+                            <option value="Elétrica">Elétrica</option>
+                            <option value="Mecânica">Mecânica</option>
+                            <option value="Telecomunicações">Telecomunicações</option>
+                            <option value="Informática">Informática</option>
+                            <option value="Geral">Geral</option>
+                        </select>
+                        <span asp-validation-for="Especializacao" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label asp-for="Status" class="form-label"></label>
+                        <select asp-for="Status" class="form-select">
+                            @foreach (var status in Enum.GetValues<MatMob.Models.Entities.StatusTecnico>())
+                            {
+                                <option value="@((int)status)">@status.GetDisplayName()</option>
+                            }
+                        </select>
+                        <span asp-validation-for="Status" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label asp-for="DataContratacao" class="form-label"></label>
+                        <input asp-for="DataContratacao" class="form-control" type="date">
+                        <span asp-validation-for="DataContratacao" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Observacoes" class="form-label"></label>
+                <textarea asp-for="Observacoes" class="form-control" rows="3" 
+                          placeholder="Observações sobre o técnico (opcional)"></textarea>
+                <span asp-validation-for="Observacoes" class="text-danger"></span>
+            </div>
+
+            <hr>
+
+            <div class="row">
+                <div class="col-md-12 text-end">
+                    <a asp-action="Index" class="btn btn-secondary me-2">
+                        <i class="fas fa-times me-1"></i>Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i>Salvar
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

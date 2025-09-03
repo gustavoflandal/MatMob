@@ -1,0 +1,156 @@
+@model IEnumerable<MatMob.Models.Entities.OrdemServico>
+@{
+    ViewData["Title"] = "Ordens de Serviço";
+}
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="display-6 mb-0">
+            <i class="fas fa-clipboard-list text-primary me-2"></i>Ordens de Serviço
+        </h1>
+        <p class="text-muted">Gestão de manutenções e serviços</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i>Nova OS
+        </a>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label for="searchString" class="form-label">Buscar</label>
+                <input type="text" class="form-control" id="searchString" name="searchString" 
+                       value="@ViewData["CurrentFilter"]" placeholder="Número da OS ou descrição">
+            </div>
+            <div class="col-md-3">
+                <label for="statusFilter" class="form-label">Status</label>
+                <select class="form-select" id="statusFilter" name="statusFilter">
+                    <option value="">Todos os status</option>
+                    @foreach (var status in Enum.GetValues<MatMob.Models.Entities.StatusOS>())
+                    {
+                        <option value="@((int)status)" selected="@(ViewData["StatusFilter"]?.ToString() == ((int)status).ToString())">
+                            @status.GetDisplayName()
+                        </option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="tipoFilter" class="form-label">Tipo</label>
+                <select class="form-select" id="tipoFilter" name="tipoFilter">
+                    <option value="">Todos os tipos</option>
+                    @foreach (var tipo in Enum.GetValues<MatMob.Models.Entities.TipoServico>())
+                    {
+                        <option value="@((int)tipo)" selected="@(ViewData["TipoFilter"]?.ToString() == ((int)tipo).ToString())">
+                            @tipo.GetDisplayName()
+                        </option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-outline-primary">
+                    <i class="fas fa-search me-1"></i>Filtrar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Lista de OS -->
+<div class="card">
+    <div class="card-body">
+        @if (Model.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Número</th>
+                            <th>Ativo</th>
+                            <th>Tipo</th>
+                            <th>Status</th>
+                            <th>Prioridade</th>
+                            <th>Data Abertura</th>
+                            <th class="text-center">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var os in Model)
+                        {
+                            <tr>
+                                <td><strong>@os.NumeroOS</strong></td>
+                                <td>@os.Ativo.Nome</td>
+                                <td>@os.TipoServico.GetDisplayName()</td>
+                                <td>
+                                    @switch (os.Status)
+                                    {
+                                        case MatMob.Models.Entities.StatusOS.Aberta:
+                                            <span class="badge bg-danger">Aberta</span>
+                                            break;
+                                        case MatMob.Models.Entities.StatusOS.EmAndamento:
+                                            <span class="badge bg-warning">Em Andamento</span>
+                                            break;
+                                        case MatMob.Models.Entities.StatusOS.Concluida:
+                                            <span class="badge bg-success">Concluída</span>
+                                            break;
+                                        default:
+                                            <span class="badge bg-secondary">@os.Status.GetDisplayName()</span>
+                                            break;
+                                    }
+                                </td>
+                                <td>
+                                    @switch (os.Prioridade)
+                                    {
+                                        case MatMob.Models.Entities.PrioridadeOS.Critica:
+                                            <span class="badge bg-danger">Crítica</span>
+                                            break;
+                                        case MatMob.Models.Entities.PrioridadeOS.Alta:
+                                            <span class="badge bg-warning">Alta</span>
+                                            break;
+                                        case MatMob.Models.Entities.PrioridadeOS.Media:
+                                            <span class="badge bg-info">Média</span>
+                                            break;
+                                        case MatMob.Models.Entities.PrioridadeOS.Baixa:
+                                            <span class="badge bg-secondary">Baixa</span>
+                                            break;
+                                    }
+                                </td>
+                                <td>@os.DataAbertura.ToString("dd/MM/yyyy")</td>
+                                <td class="text-center">
+                                    <div class="btn-group" role="group">
+                                        <a asp-action="Details" asp-route-id="@os.Id" 
+                                           class="btn btn-sm btn-outline-info" title="Detalhes">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a asp-action="Detalhada" asp-route-id="@os.Id" 
+                                           class="btn btn-sm btn-outline-success" title="Gestão Avançada">
+                                            <i class="fas fa-cogs"></i>
+                                        </a>
+                                        <a asp-action="Edit" asp-route-id="@os.Id" 
+                                           class="btn btn-sm btn-outline-primary" title="Editar">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-5">
+                <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Nenhuma ordem de serviço encontrada</h5>
+                <a asp-action="Create" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i>Criar Primeira OS
+                </a>
+            </div>
+        }
+    </div>
+</div>
+

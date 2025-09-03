@@ -1,0 +1,92 @@
+@page
+@model MatMob.Areas.Identity.Pages.Account.LoginModel
+
+@{
+    ViewData["Title"] = "Entrar";
+    Layout = "_AuthLayout";
+}
+
+<div class="auth-card">
+    <div class="auth-header">
+        <i class="fas fa-bus auth-logo"></i>
+        <h1 class="auth-title">MatMob</h1>
+        <p class="auth-subtitle">Sistema de Gestão de Mobilidade Urbana</p>
+    </div>
+    
+    <div class="auth-body">
+        <form id="account" method="post">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+            
+            <div class="form-floating">
+                <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="nome@exemplo.com" />
+                <label asp-for="Input.Email">Email</label>
+                <span asp-validation-for="Input.Email" class="text-validation-error"></span>
+            </div>
+            
+            <div class="form-floating">
+                <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="senha" />
+                <label asp-for="Input.Password">Senha</label>
+                <span asp-validation-for="Input.Password" class="text-validation-error"></span>
+            </div>
+            
+            <div class="remember-me">
+                <input class="form-check-input" asp-for="Input.RememberMe" />
+                <label class="form-check-label" asp-for="Input.RememberMe">
+                    Lembrar de mim
+                </label>
+            </div>
+            
+            <button id="login-submit" type="submit" class="btn btn-auth btn-auth-primary">
+                <i class="fas fa-sign-in-alt me-2"></i>Entrar
+            </button>
+        </form>
+        
+        <div class="auth-links">
+            <a id="forgot-password" asp-page="./ForgotPassword">Esqueceu sua senha?</a>
+            <div class="auth-divider">
+                <span>ou</span>
+            </div>
+            <a asp-page="./Register" class="btn btn-auth btn-auth-primary">
+                <i class="fas fa-user-plus me-2"></i>Criar nova conta
+            </a>
+            <a href="/" class="btn btn-auth btn-auth-outline">
+                <i class="fas fa-arrow-left me-2"></i>Sair
+            </a>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    
+    <script>
+        $(document).ready(function() {
+            // Foco automático no primeiro campo
+            $('#Input_Email').focus();
+            
+            // Animação nos campos de input
+            $('.form-floating .form-control').on('focus', function() {
+                $(this).parent().addClass('focused');
+            });
+            
+            $('.form-floating .form-control').on('blur', function() {
+                if ($(this).val() === '') {
+                    $(this).parent().removeClass('focused');
+                }
+            });
+            
+            // Validação em tempo real
+            $('#Input_Email, #Input_Password').on('input', function() {
+                $(this).removeClass('is-invalid');
+                $(this).next('.text-validation-error').hide();
+            });
+            
+            // Loading state no botão de login
+            $('#account').on('submit', function() {
+                $('#login-submit').html('<i class="fas fa-spinner fa-spin me-2"></i>Entrando...').prop('disabled', true);
+            });
+            
+            console.log('Login page initialized');
+        });
+    </script>
+}

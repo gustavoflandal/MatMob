@@ -1,0 +1,324 @@
+@model MatMob.Models.Entities.OrdemServico
+@using MatMob.Models.Entities
+@using MatMob.Extensions
+
+@{
+    ViewData["Title"] = "Detalhes da Ordem de Serviço";
+}
+
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2><i class="fas fa-clipboard-list me-2"></i>Detalhes da Ordem de Serviço</h2>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="@Url.Action("Index", "Dashboard")">Dashboard</a></li>
+                            <li class="breadcrumb-item"><a href="@Url.Action("Index", "OrdensServico")">Ordens de Serviço</a></li>
+                            <li class="breadcrumb-item active">@Model.NumeroOS</li>
+                        </ol>
+                    </nav>
+                </div>
+                <div class="btn-group">
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">
+                        <i class="fas fa-edit me-1"></i>Editar
+                    </a>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#agendarModal">
+                        <i class="fas fa-calendar-plus me-1"></i>Agendar
+                    </button>
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Voltar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Informações Principais -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-info-circle me-2"></i>Informações Gerais</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">Número OS:</dt>
+                                <dd class="col-sm-8"><strong>@Model.NumeroOS</strong></dd>
+                                
+                                <dt class="col-sm-4">Ativo:</dt>
+                                <dd class="col-sm-8">@Model.Ativo?.Nome</dd>
+                                
+                                <dt class="col-sm-4">Tipo de Serviço:</dt>
+                                <dd class="col-sm-8">
+                                    <span class="badge bg-info">@Model.TipoServico.GetDisplayName()</span>
+                                </dd>
+                                
+                                <dt class="col-sm-4">Prioridade:</dt>
+                                <dd class="col-sm-8">
+                                    @{
+                                        var prioridadeClass = Model.Prioridade switch
+                                        {
+                                            PrioridadeOS.Baixa => "success",
+                                            PrioridadeOS.Media => "warning",
+                                            PrioridadeOS.Alta => "danger",
+                                            PrioridadeOS.Critica => "dark",
+                                            _ => "secondary"
+                                        };
+                                    }
+                                    <span class="badge bg-@prioridadeClass">@Model.Prioridade.GetDisplayName()</span>
+                                </dd>
+                                
+                                <dt class="col-sm-4">Status:</dt>
+                                <dd class="col-sm-8">
+                                    @{
+                                        var statusClass = Model.Status switch
+                                        {
+                                            StatusOS.Aberta => "primary",
+                                            StatusOS.EmAndamento => "warning",
+                                            StatusOS.Concluida => "success",
+                                            StatusOS.Cancelada => "danger",
+                                            _ => "secondary"
+                                        };
+                                    }
+                                    <span class="badge bg-@statusClass">@Model.Status.GetDisplayName()</span>
+                                </dd>
+                            </dl>
+                        </div>
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">Data Abertura:</dt>
+                                <dd class="col-sm-8">@Model.DataAbertura.ToString("dd/MM/yyyy HH:mm")</dd>
+                                
+                                <dt class="col-sm-4">Data Início:</dt>
+                                <dd class="col-sm-8">@(Model.DataInicio?.ToString("dd/MM/yyyy HH:mm") ?? "-")</dd>
+                                
+                                <dt class="col-sm-4">Data Conclusão:</dt>
+                                <dd class="col-sm-8">@(Model.DataConclusao?.ToString("dd/MM/yyyy HH:mm") ?? "-")</dd>
+                                
+                                <dt class="col-sm-4">Equipe:</dt>
+                                <dd class="col-sm-8">@(Model.Equipe?.Nome ?? "Não atribuída")</dd>
+                                
+                                <dt class="col-sm-4">Técnico:</dt>
+                                <dd class="col-sm-8">@(Model.TecnicoResponsavel?.Nome ?? "Não atribuído")</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Descrição do Problema -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-exclamation-triangle me-2"></i>Descrição do Problema</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">@(Model.DescricaoProblema ?? "Nenhuma descrição fornecida.")</p>
+                </div>
+            </div>
+
+            <!-- Solução Aplicada -->
+            @if (!string.IsNullOrEmpty(Model.SolucaoAplicada))
+            {
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-tools me-2"></i>Solução Aplicada</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-0">@Model.SolucaoAplicada</p>
+                    </div>
+                </div>
+            }
+
+            <!-- Agendamento -->
+            @if (Model.DataProgramada.HasValue)
+            {
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-calendar-alt me-2"></i>Agendamento</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <strong>Data Programada:</strong><br>
+                                @Model.DataProgramada.Value.ToString("dd/MM/yyyy")
+                            </div>
+                            <div class="col-md-4">
+                                <strong>Horário Início:</strong><br>
+                                @(Model.HoraInicioProgramada?.ToString(@"hh\:mm") ?? "-")
+                            </div>
+                            <div class="col-md-4">
+                                <strong>Horário Fim:</strong><br>
+                                @(Model.HoraFimProgramada?.ToString(@"hh\:mm") ?? "-")
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Custos -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-dollar-sign me-2"></i>Custos</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-6">Estimado:</dt>
+                        <dd class="col-6">@(Model.CustoEstimado?.ToString("C") ?? "-")</dd>
+                        
+                        <dt class="col-6">Real:</dt>
+                        <dd class="col-6">@(Model.CustoReal?.ToString("C") ?? "-")</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Tempo -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-clock me-2"></i>Tempo</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-6">Gasto (h):</dt>
+                        <dd class="col-6">@(Model.TempoGastoHoras?.ToString("F1") ?? "-")</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Ações Rápidas -->
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-bolt me-2"></i>Ações Rápidas</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        @if (Model.Status == StatusOS.Aberta)
+                        {
+                            <form asp-action="UpdateStatus" method="post" class="d-inline">
+                                <input type="hidden" name="id" value="@Model.Id" />
+                                <input type="hidden" name="novoStatus" value="@((int)StatusOS.EmAndamento)" />
+                                <button type="submit" class="btn btn-warning btn-sm w-100" onclick="return confirm('Confirma o início da OS?')">
+                                    <i class="fas fa-play me-1"></i>Iniciar OS
+                                </button>
+                            </form>
+                        }
+                        else if (Model.Status == StatusOS.EmAndamento)
+                        {
+                            <form asp-action="UpdateStatus" method="post" class="d-inline">
+                                <input type="hidden" name="id" value="@Model.Id" />
+                                <input type="hidden" name="novoStatus" value="@((int)StatusOS.Concluida)" />
+                                <button type="submit" class="btn btn-success btn-sm w-100" onclick="return confirm('Confirma a conclusão da OS?')">
+                                    <i class="fas fa-check me-1"></i>Concluir OS
+                                </button>
+                            </form>
+                        }
+                        
+                        <a asp-action="Detalhada" asp-route-id="@Model.Id" class="btn btn-info btn-sm">
+                            <i class="fas fa-cogs me-1"></i>Gestão Avançada
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Agendamento -->
+<div class="modal fade" id="agendarModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-calendar-plus me-2"></i>Agendar Ordem de Serviço</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-action="AgendarOS" method="post">
+                <div class="modal-body">
+                    <input type="hidden" name="Id" value="@Model.Id" />
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Data Programada</label>
+                        <input type="date" name="DataProgramada" class="form-control" 
+                               value="@(Model.DataProgramada?.ToString("yyyy-MM-dd"))" required />
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-6">
+                            <label class="form-label">Horário Início</label>
+                            <input type="time" name="HoraInicioProgramada" class="form-control" 
+                                   value="@(Model.HoraInicioProgramada?.ToString(@"hh\:mm"))" />
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Horário Fim</label>
+                            <input type="time" name="HoraFimProgramada" class="form-control" 
+                                   value="@(Model.HoraFimProgramada?.ToString(@"hh\:mm"))" />
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3 mt-3">
+                        <label class="form-label">Equipe Responsável</label>
+                        <select name="EquipeId" class="form-select">
+                            <option value="">Selecionar equipe...</option>
+                            @foreach (var equipe in ViewBag.Equipes as SelectList ?? new SelectList(new List<object>()))
+                            {
+                                <option value="@equipe.Value" selected="@(equipe.Value == Model.EquipeId?.ToString())">
+                                    @equipe.Text
+                                </option>
+                            }
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Técnico Responsável</label>
+                        <select name="TecnicoResponsavelId" class="form-select">
+                            <option value="">Selecionar técnico...</option>
+                            @foreach (var tecnico in ViewBag.Tecnicos as SelectList ?? new SelectList(new List<object>()))
+                            {
+                                <option value="@tecnico.Value" selected="@(tecnico.Value == Model.TecnicoResponsavelId?.ToString())">
+                                    @tecnico.Text
+                                </option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i>Salvar Agendamento
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Auto-popular técnicos baseado na equipe selecionada
+        $('select[name="EquipeId"]').change(function() {
+            var equipeId = $(this).val();
+            var tecnicoSelect = $('select[name="TecnicoResponsavelId"]');
+            
+            if (equipeId) {
+                $.get('@Url.Action("GetTecnicosPorEquipe", "OrdensServico")', { equipeId: equipeId })
+                    .done(function(data) {
+                        tecnicoSelect.empty().append('<option value="">Selecionar técnico...</option>');
+                        $.each(data, function(i, item) {
+                            tecnicoSelect.append($('<option>', {
+                                value: item.value,
+                                text: item.text
+                            }));
+                        });
+                    });
+            } else {
+                tecnicoSelect.empty().append('<option value="">Selecionar técnico...</option>');
+            }
+        });
+    </script>
+}

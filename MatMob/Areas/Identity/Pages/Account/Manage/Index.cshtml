@@ -1,0 +1,167 @@
+@page
+@model MatMob.Areas.Identity.Pages.Account.Manage.IndexModel
+@{
+    ViewData["Title"] = "Gerenciar Perfil";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Gerenciar Perfil</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-3">
+            <partial name="_ManageNav" />
+        </div>
+        <div class="col-md-9">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-user me-2"></i>Informações do Perfil
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <partial name="_StatusMessage" for="StatusMessage" />
+                    
+                    <form id="profile-form" method="post">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input asp-for="Username" class="form-control" placeholder="Nome de usuário" disabled />
+                                    <label asp-for="Username" class="form-label">
+                                        <i class="fas fa-user me-2"></i>Nome de Usuário
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input asp-for="Input.Email" class="form-control" placeholder="Email" />
+                                    <label asp-for="Input.Email" class="form-label">
+                                        <i class="fas fa-envelope me-2"></i>Email
+                                    </label>
+                                    <span asp-validation-for="Input.Email" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input asp-for="Input.PhoneNumber" class="form-control" placeholder="Telefone" />
+                                    <label asp-for="Input.PhoneNumber" class="form-label">
+                                        <i class="fas fa-phone me-2"></i>Telefone
+                                    </label>
+                                    <span asp-validation-for="Input.PhoneNumber" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input asp-for="Input.Nome" class="form-control" placeholder="Nome completo" />
+                                    <label asp-for="Input.Nome" class="form-label">
+                                        <i class="fas fa-id-card me-2"></i>Nome Completo
+                                    </label>
+                                    <span asp-validation-for="Input.Nome" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input asp-for="Input.Cargo" class="form-control" placeholder="Cargo" />
+                                    <label asp-for="Input.Cargo" class="form-label">
+                                        <i class="fas fa-briefcase me-2"></i>Cargo
+                                    </label>
+                                    <span asp-validation-for="Input.Cargo" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input asp-for="Input.Departamento" class="form-control" placeholder="Departamento" />
+                                    <label asp-for="Input.Departamento" class="form-label">
+                                        <i class="fas fa-building me-2"></i>Departamento
+                                    </label>
+                                    <span asp-validation-for="Input.Departamento" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button id="update-profile-button" type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Salvar Alterações
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Informações da Conta -->
+            <div class="card mt-4 shadow">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Status da Conta
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Status da Conta:</label>
+                                <div>
+                                    <span class="badge bg-success fs-6">
+                                        <i class="fas fa-check me-1"></i>Ativa
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Email Confirmado:</label>
+                                <div>
+                                    @if (Model.IsEmailConfirmed)
+                                    {
+                                        <span class="badge bg-success fs-6">
+                                            <i class="fas fa-check me-1"></i>Confirmado
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning fs-6">
+                                            <i class="fas fa-exclamation me-1"></i>Pendente
+                                        </span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Último Acesso:</label>
+                                <div class="text-muted">
+                                    <i class="fas fa-clock me-1"></i>@DateTime.Now.ToString("dd/MM/yyyy HH:mm")
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Membro desde:</label>
+                                <div class="text-muted">
+                                    <i class="fas fa-calendar me-1"></i>@DateTime.Now.AddMonths(-6).ToString("dd/MM/yyyy")
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

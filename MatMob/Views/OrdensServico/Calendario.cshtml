@@ -1,0 +1,323 @@
+@model MatMob.Models.ViewModels.CalendarioManutencaoViewModel
+@using MatMob.Models.Entities
+@using MatMob.Extensions
+@{
+    ViewData["Title"] = "Calendário de Manutenções";
+    var nomesMeses = new[] { "", "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", 
+                            "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro" };
+    var primeiroDiaMes = new DateTime(Model.AnoAtual, Model.MesAtual, 1);
+    var ultimoDiaMes = primeiroDiaMes.AddMonths(1).AddDays(-1);
+    var diasNoMes = ultimoDiaMes.Day;
+    var primeiroDiaSemana = (int)primeiroDiaMes.DayOfWeek;
+}
+
+<div class="container-fluid py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
+            <li class="breadcrumb-item"><a asp-controller="OrdensServico" asp-action="Index">Ordens de Serviço</a></li>
+            <li class="breadcrumb-item active">Calendário</li>
+        </ol>
+    </nav>
+
+    <!-- Cabeçalho -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="fas fa-calendar me-2"></i>
+                        Calendário de Manutenções
+                    </h4>
+                    <div class="d-flex align-items-center">
+                        <a href="@Url.Action("Calendario", new { mes = Model.MesAtual == 1 ? 12 : Model.MesAtual - 1, 
+                                                                 ano = Model.MesAtual == 1 ? Model.AnoAtual - 1 : Model.AnoAtual })" 
+                           class="btn btn-outline-light btn-sm me-2">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                        <h5 class="mb-0 mx-3">@nomesMeses[Model.MesAtual] @Model.AnoAtual</h5>
+                        <a href="@Url.Action("Calendario", new { mes = Model.MesAtual == 12 ? 1 : Model.MesAtual + 1, 
+                                                                 ano = Model.MesAtual == 12 ? Model.AnoAtual + 1 : Model.AnoAtual })" 
+                           class="btn btn-outline-light btn-sm ms-2">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estatísticas do Mês -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h3>@Model.TotalEventosDoMes</h3>
+                    <p class="mb-0">Total de Eventos</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-secondary text-white">
+                <div class="card-body text-center">
+                    <h3>@Model.EventosAgendados</h3>
+                    <p class="mb-0">Agendados</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body text-center">
+                    <h3>@Model.EventosEmAndamento</h3>
+                    <p class="mb-0">Em Andamento</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h3>@Model.EventosConcluidos</h3>
+                    <p class="mb-0">Concluídos</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Calendário -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calendar-alt me-2"></i>
+                        @nomesMeses[Model.MesAtual] @Model.AnoAtual
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-bordered mb-0 calendario-table">
+                        <thead class="table-dark">
+                            <tr>
+                                <th class="text-center">Dom</th>
+                                <th class="text-center">Seg</th>
+                                <th class="text-center">Ter</th>
+                                <th class="text-center">Qua</th>
+                                <th class="text-center">Qui</th>
+                                <th class="text-center">Sex</th>
+                                <th class="text-center">Sáb</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                int diaAtual = 1;
+                                var hoje = DateTime.Today;
+                            }
+                            @for (int semana = 0; semana < 6 && diaAtual <= diasNoMes; semana++)
+                            {
+                                <tr>
+                                    @for (int diaSemana = 0; diaSemana < 7; diaSemana++)
+                                    {
+                                        <td class="calendario-dia p-2" style="height: 120px; vertical-align: top;">
+                                            @if ((semana == 0 && diaSemana < primeiroDiaSemana) || diaAtual > diasNoMes)
+                                            {
+                                                <!-- Dia vazio -->
+                                            }
+                                            else
+                                            {
+                                                var dataAtual = new DateTime(Model.AnoAtual, Model.MesAtual, diaAtual);
+                                                var eventosNoDia = Model.EventosDoMes.Where(e => e.DataPrevista.Date == dataAtual.Date).ToList();
+                                                
+                                                <div class="d-flex justify-content-between align-items-start mb-1">
+                                                    <span class="fw-bold @(dataAtual.Date == hoje ? "text-primary" : "")">
+                                                        @diaAtual
+                                                    </span>
+                                                    @if (eventosNoDia.Any())
+                                                    {
+                                                        <span class="badge bg-primary rounded-pill">@eventosNoDia.Count</span>
+                                                    }
+                                                </div>
+                                                
+                                                @foreach (var evento in eventosNoDia.Take(3))
+                                                {
+                                                    var corBadge = evento.Status switch
+                                                    {
+                                                        StatusAgenda.Concluida => "success",
+                                                        StatusAgenda.EmAndamento => "warning",
+                                                        StatusAgenda.Cancelada => "danger",
+                                                        _ => "secondary"
+                                                    };
+                                                    <div class="mb-1">
+                                                        <small class="badge bg-@corBadge d-block text-truncate" 
+                                                               style="max-width: 100%; font-size: 9px;"
+                                                               title="@evento.Titulo - @evento.DataPrevista.ToString("HH:mm")">
+                                                            @evento.Titulo.Substring(0, Math.Min(evento.Titulo.Length, 15))@(evento.Titulo.Length > 15 ? "..." : "")
+                                                        </small>
+                                                    </div>
+                                                }
+                                                
+                                                @if (eventosNoDia.Count > 3)
+                                                {
+                                                    <small class="text-muted">+@(eventosNoDia.Count - 3) mais</small>
+                                                }
+                                                
+                                                diaAtual++;
+                                            }
+                                        </td>
+                                    }
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Formulário e Lista de Eventos -->
+        <div class="col-md-4">
+            <!-- Novo Evento -->
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-plus me-2"></i>Novo Evento
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <form asp-action="CriarEventoAgenda" method="post">
+                        <div class="mb-3">
+                            <label class="form-label">Título</label>
+                            <input asp-for="Titulo" class="form-control" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Data/Hora</label>
+                            <input asp-for="DataPrevista" type="datetime-local" class="form-control" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Tipo</label>
+                            <select asp-for="Tipo" class="form-select" required>
+                                <option value="">Selecione o tipo</option>
+                                <option value="@((int)TipoAgenda.ManutencaoPreventiva)">Manutenção Preventiva</option>
+                                <option value="@((int)TipoAgenda.ManutencaoCorretiva)">Manutenção Corretiva</option>
+                                <option value="@((int)TipoAgenda.Inspecao)">Inspeção</option>
+                                <option value="@((int)TipoAgenda.Calibracao)">Calibração</option>
+                                <option value="@((int)TipoAgenda.Teste)">Teste</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Ativo</label>
+                            <select asp-for="AtivoId" class="form-select">
+                                <option value="">Selecione um ativo (opcional)</option>
+                                @foreach (var ativo in Model.AtivosDisponiveis)
+                                {
+                                    <option value="@ativo.Id">@ativo.Nome</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Responsável</label>
+                            <select asp-for="ResponsavelId" class="form-select" required>
+                                <option value="">Selecione um responsável</option>
+                                @foreach (var tecnico in Model.TecnicosDisponiveis)
+                                {
+                                    <option value="@tecnico.Id">@tecnico.Nome</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Equipe</label>
+                            <select asp-for="EquipeId" class="form-select">
+                                <option value="">Selecione uma equipe (opcional)</option>
+                                @foreach (var equipe in Model.EquipesDisponiveis)
+                                {
+                                    <option value="@equipe.Id">@equipe.Nome</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Descrição</label>
+                            <textarea asp-for="Descricao" class="form-control" rows="3"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="fas fa-plus me-2"></i>Criar Evento
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Eventos do Mês -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-list me-2"></i>Eventos do Mês
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush" style="max-height: 400px; overflow-y: auto;">
+                        @foreach (var evento in Model.EventosDoMes.OrderBy(e => e.DataPrevista))
+                        {
+                            var corBadge = evento.Status switch
+                            {
+                                StatusAgenda.Concluida => "success",
+                                StatusAgenda.EmAndamento => "warning",
+                                StatusAgenda.Cancelada => "danger",
+                                _ => "secondary"
+                            };
+                            <div class="list-group-item">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">@evento.Titulo</h6>
+                                    <span class="badge bg-@corBadge">@evento.Status.GetDisplayName()</span>
+                                </div>
+                                <p class="mb-1">
+                                    <i class="fas fa-clock me-1"></i>@evento.DataPrevista.ToString("dd/MM HH:mm")
+                                    <br>
+                                    <i class="fas fa-user me-1"></i>@evento.Responsavel.Nome
+                                    @if (evento.Ativo != null)
+                                    {
+                                        <br>
+                                        <i class="fas fa-cog me-1"></i>@evento.Ativo.Nome
+                                    }
+                                </p>
+                                <small class="text-muted">@evento.Tipo.GetDisplayName()</small>
+                            </div>
+                        }
+                        @if (!Model.EventosDoMes.Any())
+                        {
+                            <div class="list-group-item text-center text-muted">
+                                <i class="fas fa-calendar-times fa-2x mb-2"></i>
+                                <p class="mb-0">Nenhum evento neste mês</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.calendario-table td {
+    width: 14.28%;
+    min-height: 120px;
+}
+
+.calendario-dia {
+    position: relative;
+}
+
+.calendario-dia:hover {
+    background-color: #f8f9fa;
+}
+</style>
+
+@section Scripts {
+    <script>
+        // Definir data atual no formulário
+        document.addEventListener('DOMContentLoaded', function() {
+            const dataInput = document.querySelector('input[name="DataPrevista"]');
+            if (dataInput && !dataInput.value) {
+                const agora = new Date();
+                agora.setMinutes(agora.getMinutes() - agora.getTimezoneOffset());
+                dataInput.value = agora.toISOString().slice(0, 16);
+            }
+        });
+    </script>
+}

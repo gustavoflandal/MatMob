@@ -1,0 +1,253 @@
+@model MatMob.Models.Entities.Tecnico
+@using MatMob.Extensions
+@using MatMob.Models.Entities
+@{
+    ViewData["Title"] = "Editar Técnico";
+}
+
+<div class="container-fluid py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Tecnicos" asp-action="Index">Técnicos</a></li>
+            <li class="breadcrumb-item"><a asp-action="Details" asp-route-id="@Model.Id">@Model.Nome</a></li>
+            <li class="breadcrumb-item active">Editar</li>
+        </ol>
+    </nav>
+
+    <!-- Cabeçalho -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-edit me-2"></i>
+                        Editar Técnico: @Model.Nome
+                    </h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Formulário de Edição -->
+            <div class="card shadow">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user-edit me-2"></i>Informações do Técnico
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                        
+                        <input type="hidden" asp-for="Id" />
+                        <input type="hidden" asp-for="DataCadastro" />
+
+                        <!-- Informações Pessoais -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-id-card me-2"></i>Dados Pessoais
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label asp-for="Nome" class="form-label">
+                                                <i class="fas fa-user me-1"></i>Nome Completo
+                                            </label>
+                                            <input asp-for="Nome" class="form-control" />
+                                            <span asp-validation-for="Nome" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label asp-for="CPF" class="form-label">
+                                                <i class="fas fa-id-badge me-1"></i>CPF
+                                            </label>
+                                            <input asp-for="CPF" class="form-control" />
+                                            <span asp-validation-for="CPF" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label asp-for="Email" class="form-label">
+                                                <i class="fas fa-envelope me-1"></i>Email
+                                            </label>
+                                            <input asp-for="Email" type="email" class="form-control" />
+                                            <span asp-validation-for="Email" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label asp-for="Telefone" class="form-label">
+                                                <i class="fas fa-phone me-1"></i>Telefone
+                                            </label>
+                                            <input asp-for="Telefone" class="form-control" />
+                                            <span asp-validation-for="Telefone" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label asp-for="DataNascimento" class="form-label">
+                                                <i class="fas fa-calendar me-1"></i>Data de Nascimento
+                                            </label>
+                                            <input asp-for="DataNascimento" type="date" class="form-control" />
+                                            <span asp-validation-for="DataNascimento" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label asp-for="Status" class="form-label">
+                                                <i class="fas fa-toggle-on me-1"></i>Status
+                                            </label>
+                                            <select asp-for="Status" class="form-select" asp-items="Html.GetEnumSelectList<StatusTecnico>()">
+                                            </select>
+                                            <span asp-validation-for="Status" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Informações Profissionais -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-tools me-2"></i>Dados Profissionais
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label asp-for="Especialidade" class="form-label">
+                                                <i class="fas fa-wrench me-1"></i>Especialidade
+                                            </label>
+                                            <input asp-for="Especialidade" class="form-control" />
+                                            <span asp-validation-for="Especialidade" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label asp-for="DataAdmissao" class="form-label">
+                                                <i class="fas fa-calendar-plus me-1"></i>Data de Admissão
+                                            </label>
+                                            <input asp-for="DataAdmissao" type="date" class="form-control" />
+                                            <span asp-validation-for="DataAdmissao" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="Observacoes" class="form-label">
+                                        <i class="fas fa-sticky-note me-1"></i>Observações
+                                    </label>
+                                    <textarea asp-for="Observacoes" class="form-control" rows="3"></textarea>
+                                    <span asp-validation-for="Observacoes" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">
+                                <i class="fas fa-times me-1"></i>Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save me-1"></i>Salvar Alterações
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Informações Atuais -->
+        <div class="col-md-4">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Informações Atuais
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>ID:</strong> @Model.Id
+                    </div>
+                    <div class="mb-3">
+                        <strong>Status Atual:</strong>
+                        <span class="badge bg-@(Model.Status == StatusTecnico.Ativo ? "success" : "secondary")">
+                            @Model.Status.GetDisplayName()
+                        </span>
+                    </div>
+                    <div class="mb-3">
+                        <strong>Idade:</strong>
+                        @(Model.DataNascimento.HasValue ? ((DateTime.Today - Model.DataNascimento.Value).Days / 365).ToString() + " anos" : "N/A")
+                    </div>
+                    <div class="mb-3">
+                        <strong>Tempo na Empresa:</strong>
+                        @(Model.DataAdmissao.HasValue ? ((DateTime.Today - Model.DataAdmissao.Value).Days / 365).ToString() + " anos" : Model.DataContratacao.HasValue ? ((DateTime.Today - Model.DataContratacao.Value).Days / 365).ToString() + " anos" : "N/A")
+                    </div>
+                    <div class="mb-3">
+                        <strong>Equipes Ativas:</strong>
+                        @Model.EquipesTecnico.Count(et => et.Ativo)
+                    </div>
+                </div>
+            </div>
+
+            <!-- Equipes Atuais -->
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-users me-2"></i>Equipes Atuais
+                    </h6>
+                </div>
+                <div class="card-body">
+                    @if (Model.EquipesTecnico.Any(et => et.Ativo))
+                    {
+                        @foreach (var equipeTecnico in Model.EquipesTecnico.Where(et => et.Ativo))
+                        {
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <strong>@equipeTecnico.Equipe.Nome</strong><br>
+                                    <small class="text-muted">
+                                        Desde @equipeTecnico.DataEntrada.ToString("dd/MM/yyyy")
+                                    </small>
+                                </div>
+                                <a asp-controller="Equipes" asp-action="Details" asp-route-id="@equipeTecnico.EquipeId" 
+                                   class="btn btn-outline-info btn-sm">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </div>
+                            @if (!equipeTecnico.Equals(Model.EquipesTecnico.Where(et => et.Ativo).Last()))
+                            {
+                                <hr class="my-2">
+                            }
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted mb-0">
+                            <i class="fas fa-exclamation-triangle me-1"></i>
+                            Técnico não está em nenhuma equipe
+                        </p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

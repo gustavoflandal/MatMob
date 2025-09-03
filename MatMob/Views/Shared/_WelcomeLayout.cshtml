@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - MatMob</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/MatMob.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    
+    <style>
+        body {
+            background-color: #ffffff !important;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .welcome-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 0;
+        }
+        
+        .welcome-card {
+            background: white;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            box-shadow: none;
+            border-radius: 0;
+            overflow: hidden;
+            width: 100%;
+            height: 100vh;
+        }
+        
+        .welcome-header {
+            background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        
+        .welcome-header .logo {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .welcome-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+        
+        .welcome-header p {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-bottom: 0;
+        }
+        
+        .welcome-body {
+            flex: 1;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+            flex: 1;
+        }
+        
+        .feature-item {
+            text-align: center;
+            padding: 1rem;
+            border-radius: 10px;
+            background: #f8f9fa;
+            transition: transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .feature-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .feature-item i {
+            font-size: 2rem;
+            color: #0d6efd;
+            margin-bottom: 0.75rem;
+        }
+        
+        .feature-item h5 {
+            color: #212529;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+        
+        .feature-item p {
+            color: #6c757d;
+            font-size: 0.85rem;
+            margin-bottom: 0;
+            line-height: 1.3;
+        }
+        
+        .welcome-actions {
+            text-align: center;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #dee2e6;
+            flex-shrink: 0;
+        }
+        
+        .btn-welcome {
+            padding: 10px 25px;
+            font-size: 1rem;
+            border-radius: 25px;
+            margin: 0 8px;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            min-width: 140px;
+        }
+        
+        .btn-primary-welcome {
+            background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
+            color: white;
+            border: none;
+        }
+        
+        .btn-primary-welcome:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(13, 110, 253, 0.3);
+            color: white;
+        }
+        
+        .btn-outline-welcome {
+            background: transparent;
+            color: #0d6efd;
+            border: 2px solid #0d6efd;
+        }
+        
+        .btn-outline-welcome:hover {
+            background: #0d6efd;
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .footer-info {
+            text-align: center;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #dee2e6;
+            color: #6c757d;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+        
+        @@media (max-width: 1200px) {
+            .feature-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @@media (max-width: 768px) {
+            .welcome-header {
+                padding: 1.5rem 1rem;
+            }
+            
+            .welcome-header .logo {
+                font-size: 2.5rem;
+            }
+            
+            .welcome-header h1 {
+                font-size: 1.75rem;
+            }
+            
+            .welcome-body {
+                padding: 1.5rem 1rem;
+            }
+            
+            .feature-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+                margin: 1rem 0;
+            }
+            
+            .btn-welcome {
+                display: block;
+                margin: 8px 0;
+                min-width: auto;
+            }
+            
+            .footer-info {
+                font-size: 0.8rem;
+            }
+        }
+        
+        @@media (max-width: 480px) {
+            .welcome-header {
+                padding: 1rem;
+            }
+            
+            .welcome-body {
+                padding: 1rem;
+            }
+            
+            .feature-item {
+                padding: 0.75rem;
+            }
+            
+            .feature-item i {
+                font-size: 1.5rem;
+            }
+            
+            .feature-item h5 {
+                font-size: 0.9rem;
+            }
+            
+            .feature-item p {
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main role="main">
+        @RenderBody()
+    </main>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

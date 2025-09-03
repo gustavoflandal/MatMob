@@ -1,0 +1,86 @@
+﻿@{
+    ViewData["Title"] = "Bem-vindo ao MatMob";
+    Layout = "_WelcomeLayout";
+}
+
+@if (User.Identity?.IsAuthenticated == true)
+{
+    <script>
+        window.location.href = '@Url.Action("Index", "Dashboard")';
+    </script>
+}
+else
+{
+    <div class="welcome-container">
+        <div class="welcome-card">
+            <div class="welcome-header">
+                <div class="logo">
+                    <i class="fas fa-bus"></i>
+                </div>
+                <h1>MatMob</h1>
+                <p>Sistema de Gestão de Mobilidade Urbana</p>
+            </div>
+            
+            <div class="welcome-body">
+                <div class="text-center mb-3">
+                    <h3 class="text-primary mb-2">Gerencie sua frota com eficiência</h3>
+                    <p class="text-muted mb-0">Solução completa para controle de ativos, manutenção, equipes e custos em mobilidade urbana.</p>
+                </div>
+                
+                <div class="feature-grid">
+                    <div class="feature-item">
+                        <i class="fas fa-cogs"></i>
+                        <h5>Gestão de Ativos</h5>
+                        <p>Controle completo dos veículos e equipamentos</p>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-wrench"></i>
+                        <h5>Manutenção</h5>
+                        <p>Ordens de serviço e controle de manutenções</p>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-users"></i>
+                        <h5>Equipes</h5>
+                        <p>Gerenciamento de técnicos especializados</p>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-warehouse"></i>
+                        <h5>Estoque</h5>
+                        <p>Controle de peças e materiais</p>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-chart-line"></i>
+                        <h5>Relatórios</h5>
+                        <p>Análises de custos e performance</p>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-calendar-alt"></i>
+                        <h5>Planejamento</h5>
+                        <p>Calendário e gestão de cronogramas</p>
+                    </div>
+                </div>
+                
+                <div class="welcome-actions">
+                    <h4 class="mb-3">Acesse o Sistema</h4>
+                    <a href="/Identity/Account/Login" class="btn-welcome btn-primary-welcome">
+                        <i class="fas fa-sign-in-alt me-2"></i>Fazer Login
+                    </a>
+                    <a href="/Identity/Account/Register" class="btn-welcome btn-outline-welcome">
+                        <i class="fas fa-user-plus me-2"></i>Criar Conta
+                    </a>
+                </div>
+                
+                <div class="footer-info">
+                    <p>
+                        <a href="/DiagnosticoLogin" class="text-decoration-none me-3">
+                            <i class="fas fa-stethoscope me-1"></i>Diagnóstico
+                        </a>
+                        <a href="/Diagnostico/Login" class="text-decoration-none">
+                            <i class="fas fa-info-circle me-1"></i>Informações
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+}

@@ -1,0 +1,323 @@
+@model MatMob.Models.Entities.Ativo
+@{
+    ViewData["Title"] = "Detalhes do Ativo";
+}
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="display-6 mb-0">
+            <i class="fas fa-cog text-primary me-2"></i>@Model.Nome
+        </h1>
+        <p class="text-muted">Detalhes do ativo</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary me-2">
+            <i class="fas fa-edit me-1"></i>Editar
+        </a>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i>Voltar
+        </a>
+    </div>
+</div>
+
+<!-- Informações Principais -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Informações do Ativo
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-4">Nome:</dt>
+                            <dd class="col-sm-8">@Model.Nome</dd>
+
+                            <dt class="col-sm-4">Tipo:</dt>
+                            <dd class="col-sm-8">
+                                <span class="badge bg-info">@Model.Tipo</span>
+                            </dd>
+
+                            <dt class="col-sm-4">Status:</dt>
+                            <dd class="col-sm-8">
+                                @switch (Model.Status)
+                                {
+                                    case MatMob.Models.Entities.StatusAtivo.Ativo:
+                                        <span class="badge bg-success"><i class="fas fa-check-circle me-1"></i>Ativo</span>
+                                        break;
+                                    case MatMob.Models.Entities.StatusAtivo.EmManutencao:
+                                        <span class="badge bg-warning"><i class="fas fa-wrench me-1"></i>Em Manutenção</span>
+                                        break;
+                                    case MatMob.Models.Entities.StatusAtivo.Inativo:
+                                        <span class="badge bg-secondary"><i class="fas fa-pause-circle me-1"></i>Inativo</span>
+                                        break;
+                                    case MatMob.Models.Entities.StatusAtivo.Descartado:
+                                        <span class="badge bg-danger"><i class="fas fa-trash me-1"></i>Descartado</span>
+                                        break;
+                                }
+                            </dd>
+
+                            <dt class="col-sm-4">Localização:</dt>
+                            <dd class="col-sm-8">@Model.Localizacao</dd>
+                        </dl>
+                    </div>
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-5">Número de Série:</dt>
+                            <dd class="col-sm-7">
+                                @if (!string.IsNullOrEmpty(Model.NumeroSerie))
+                                {
+                                    <code>@Model.NumeroSerie</code>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </dd>
+
+                            <dt class="col-sm-5">Data Instalação:</dt>
+                            <dd class="col-sm-7">
+                                @if (Model.DataInstalacao.HasValue)
+                                {
+                                    @Model.DataInstalacao.Value.ToString("dd/MM/yyyy")
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </dd>
+
+                            <dt class="col-sm-5">Cadastrado em:</dt>
+                            <dd class="col-sm-7">@Model.DataCadastro.ToString("dd/MM/yyyy HH:mm")</dd>
+
+                            @if (Model.UltimaAtualizacao.HasValue)
+                            {
+                                <dt class="col-sm-5">Última atualização:</dt>
+                                <dd class="col-sm-7">@Model.UltimaAtualizacao.Value.ToString("dd/MM/yyyy HH:mm")</dd>
+                            }
+                        </dl>
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrEmpty(Model.Descricao))
+                {
+                    <hr>
+                    <div class="row">
+                        <div class="col-12">
+                            <dt>Descrição:</dt>
+                            <dd class="mt-2">@Model.Descricao</dd>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Resumo Rápido -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>Resumo
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="border-end">
+                            <div class="h4 text-primary">@Model.OrdensServico.Count</div>
+                            <div class="small text-muted">Total OS</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="h4 text-success">@Model.PlanosManutencao.Count</div>
+                        <div class="small text-muted">Planos</div>
+                    </div>
+                </div>
+                <hr>
+                <div class="d-grid">
+                    <a asp-controller="OrdensServico" asp-action="Create" asp-route-ativoId="@Model.Id" 
+                       class="btn btn-warning btn-sm">
+                        <i class="fas fa-plus me-1"></i>Nova OS
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Ordens de Serviço -->
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-clipboard-list me-2"></i>Ordens de Serviço
+        </h5>
+        <a asp-controller="OrdensServico" asp-action="Create" asp-route-ativoId="@Model.Id" 
+           class="btn btn-sm btn-primary">
+            <i class="fas fa-plus me-1"></i>Nova OS
+        </a>
+    </div>
+    <div class="card-body">
+        @if (Model.OrdensServico.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Número</th>
+                            <th>Tipo</th>
+                            <th>Status</th>
+                            <th>Data Abertura</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var os in Model.OrdensServico.OrderByDescending(o => o.DataAbertura).Take(5))
+                        {
+                            <tr>
+                                <td><strong>@os.NumeroOS</strong></td>
+                                <td>@os.TipoServico.GetDisplayName()</td>
+                                <td>
+                                    @switch (os.Status)
+                                    {
+                                        case MatMob.Models.Entities.StatusOS.Aberta:
+                                            <span class="badge bg-danger">Aberta</span>
+                                            break;
+                                        case MatMob.Models.Entities.StatusOS.EmAndamento:
+                                            <span class="badge bg-warning">Em Andamento</span>
+                                            break;
+                                        case MatMob.Models.Entities.StatusOS.Concluida:
+                                            <span class="badge bg-success">Concluída</span>
+                                            break;
+                                        default:
+                                            <span class="badge bg-secondary">@os.Status.GetDisplayName()</span>
+                                            break;
+                                    }
+                                </td>
+                                <td>@os.DataAbertura.ToString("dd/MM/yyyy")</td>
+                                <td>
+                                    <a asp-controller="OrdensServico" asp-action="Details" asp-route-id="@os.Id" 
+                                       class="btn btn-sm btn-outline-info">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            @if (Model.OrdensServico.Count > 5)
+            {
+                <div class="text-center">
+                    <a asp-controller="OrdensServico" asp-action="Index" asp-route-ativoId="@Model.Id" 
+                       class="btn btn-outline-primary btn-sm">
+                        Ver todas as @Model.OrdensServico.Count OS
+                    </a>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="text-center py-3">
+                <i class="fas fa-clipboard-list fa-2x text-muted mb-2"></i>
+                <p class="text-muted">Nenhuma ordem de serviço registrada para este ativo.</p>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Planos de Manutenção -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-calendar-alt me-2"></i>Planos de Manutenção
+        </h5>
+        <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#novoPlanoModal">
+            <i class="fas fa-plus me-1"></i>Novo Plano
+        </button>
+    </div>
+    <div class="card-body">
+        @if (Model.PlanosManutencao.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Periodicidade</th>
+                            <th>Próxima Manutenção</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var plano in Model.PlanosManutencao)
+                        {
+                            <tr>
+                                <td><strong>@plano.Nome</strong></td>
+                                <td>@plano.Periodicidade.GetDisplayName()</td>
+                                <td>
+                                    @if (plano.ProximaManutencao.HasValue)
+                                    {
+                                        @plano.ProximaManutencao.Value.ToString("dd/MM/yyyy")
+                                        @if (plano.ProximaManutencao.Value <= DateTime.Now.AddDays(7))
+                                        {
+                                            <i class="fas fa-exclamation-triangle text-warning ms-1" title="Próxima do vencimento"></i>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (plano.Habilitado)
+                                    {
+                                        <span class="badge bg-success">Ativo</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Inativo</span>
+                                    }
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary" title="Editar">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-3">
+                <i class="fas fa-calendar-alt fa-2x text-muted mb-2"></i>
+                <p class="text-muted">Nenhum plano de manutenção cadastrado para este ativo.</p>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Modal para Novo Plano (placeholder) -->
+<div class="modal fade" id="novoPlanoModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Novo Plano de Manutenção</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted">Funcionalidade em desenvolvimento...</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>

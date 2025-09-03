@@ -1,0 +1,185 @@
+@model MatMob.Models.Entities.Tecnico
+@using MatMob.Extensions
+@using MatMob.Models.Entities
+@{
+    ViewData["Title"] = "Detalhes do Técnico";
+}
+
+<div class="container-fluid py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Tecnicos" asp-action="Index">Técnicos</a></li>
+            <li class="breadcrumb-item active">@Model.Nome</li>
+        </ol>
+    </nav>
+
+    <!-- Cabeçalho -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="fas fa-user-hard-hat me-2"></i>
+                        Detalhes do Técnico: @Model.Nome
+                    </h4>
+                    <div>
+                        <span class="badge bg-@(Model.Status == StatusTecnico.Ativo ? "success" : "secondary") fs-6">
+                            @Model.Status.GetDisplayName()
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Informações Pessoais -->
+        <div class="col-md-6">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-id-card me-2"></i>Informações Pessoais
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-sm-4"><strong>ID:</strong></div>
+                        <div class="col-sm-8">@Model.Id</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-4"><strong>Nome:</strong></div>
+                        <div class="col-sm-8">@Model.Nome</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-4"><strong>CPF:</strong></div>
+                        <div class="col-sm-8">@(Model.CPF ?? "Não informado")</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-4"><strong>Email:</strong></div>
+                        <div class="col-sm-8"><a href="mailto:@Model.Email">@Model.Email</a></div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-4"><strong>Telefone:</strong></div>
+                        <div class="col-sm-8">@(Model.Telefone ?? "Não informado")</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-4"><strong>Data de Nascimento:</strong></div>
+                        <div class="col-sm-8">@(Model.DataNascimento?.ToString("dd/MM/yyyy") ?? "Não informado")</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Informações Profissionais -->
+        <div class="col-md-6">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-tools me-2"></i>Informações Profissionais
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-sm-4"><strong>Especialidade:</strong></div>
+                        <div class="col-sm-8"><span class="badge bg-primary">@(Model.Especialidade ?? Model.Especializacao)</span></div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-4"><strong>Data de Admissão:</strong></div>
+                        <div class="col-sm-8">@(Model.DataAdmissao?.ToString("dd/MM/yyyy") ?? Model.DataContratacao?.ToString("dd/MM/yyyy") ?? "Não informado")</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-4"><strong>Status:</strong></div>
+                        <div class="col-sm-8">
+                            <span class="badge bg-@(Model.Status == StatusTecnico.Ativo ? "success" : "secondary")">
+                                @Model.Status.GetDisplayName()
+                            </span>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-4"><strong>Equipes Atuais:</strong></div>
+                        <div class="col-sm-8">
+                            @if (Model.EquipesTecnico.Any(et => et.Ativo))
+                            {
+                                @foreach (var equipeTecnico in Model.EquipesTecnico.Where(et => et.Ativo))
+                                {
+                                    <span class="badge bg-info me-1">@equipeTecnico.Equipe.Nome</span>
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-muted">Nenhuma equipe atribuída</span>
+                            }
+                        </div>
+                    </div>
+                    @if (!string.IsNullOrEmpty(Model.Observacoes))
+                    {
+                        <div class="row mb-3">
+                            <div class="col-sm-4"><strong>Observações:</strong></div>
+                            <div class="col-sm-8">@Model.Observacoes</div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estatísticas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h3>@Model.EquipesTecnico.Count(et => et.Ativo)</h3>
+                    <p class="mb-0">Equipes Atuais</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h3>@Model.OrdensServicoResponsavel.Count</h3>
+                    <p class="mb-0">Ordens de Serviço</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h3>@(Model.DataAdmissao.HasValue ? ((DateTime.Today - Model.DataAdmissao.Value).Days / 365) : Model.DataContratacao.HasValue ? ((DateTime.Today - Model.DataContratacao.Value).Days / 365) : 0)</h3>
+                    <p class="mb-0">Anos na Empresa</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body text-center">
+                    <h3>@(Model.DataNascimento.HasValue ? ((DateTime.Today - Model.DataNascimento.Value).Days / 365) : 0)</h3>
+                    <p class="mb-0">Idade</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botões de Ação -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between">
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>Voltar à Lista
+                </a>
+                <div>
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
+                        <i class="fas fa-edit me-1"></i>Editar Técnico
+                    </a>
+                    @if (User.IsInRole("Administrador"))
+                    {
+                        <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger">
+                            <i class="fas fa-trash me-1"></i>Excluir
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

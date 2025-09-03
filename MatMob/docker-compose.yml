@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  matmob-app:
+    build: .
+    ports:
+      - "8080:80"
+      - "8443:443"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Server=matmob-db;Port=3306;Database=MatMob_db;Uid=root;Pwd=matmob123;CharSet=utf8mb4;
+    depends_on:
+      - matmob-db
+    networks:
+      - matmob-network
+
+  matmob-db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: matmob123
+      MYSQL_DATABASE: MatMob_db
+      MYSQL_USER: matmob
+      MYSQL_PASSWORD: matmob123
+    ports:
+      - "3307:3306"
+    volumes:
+      - matmob-data:/var/lib/mysql
+    networks:
+      - matmob-network
+
+volumes:
+  matmob-data:
+
+networks:
+  matmob-network:
+    driver: bridge

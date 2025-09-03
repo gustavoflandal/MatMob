@@ -1,0 +1,458 @@
+@model MatMob.Models.ViewModels.CalendarioOSViewModel
+@using MatMob.Models.Entities
+@using MatMob.Extensions
+@{
+    ViewData["Title"] = "Calendário de Ordens de Serviço";
+    var nomesMeses = new[] { "", "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", 
+                            "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro" };
+    var primeiroDiaMes = new DateTime(Model.AnoAtual, Model.MesAtual, 1);
+    var ultimoDiaMes = primeiroDiaMes.AddMonths(1).AddDays(-1);
+    var diasNoMes = ultimoDiaMes.Day;
+    var primeiroDiaSemana = (int)primeiroDiaMes.DayOfWeek;
+}
+
+<div class="container-fluid py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
+            <li class="breadcrumb-item"><a asp-controller="OrdensServico" asp-action="Index">Ordens de Serviço</a></li>
+            <li class="breadcrumb-item active">Calendário de OS</li>
+        </ol>
+    </nav>
+
+    <!-- Cabeçalho -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="fas fa-calendar-alt me-2"></i>
+                        Calendário de Ordens de Serviço
+                    </h4>
+                    <div class="d-flex align-items-center">
+                        <a href="@Url.Action("CalendarioOS", new { mes = Model.MesAtual == 1 ? 12 : Model.MesAtual - 1, 
+                                                                   ano = Model.MesAtual == 1 ? Model.AnoAtual - 1 : Model.AnoAtual,
+                                                                   equipe = Model.EquipeFiltro })" 
+                           class="btn btn-outline-light btn-sm me-2">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                        <h5 class="mb-0 mx-3">@nomesMeses[Model.MesAtual] @Model.AnoAtual</h5>
+                        <a href="@Url.Action("CalendarioOS", new { mes = Model.MesAtual == 12 ? 1 : Model.MesAtual + 1, 
+                                                                   ano = Model.MesAtual == 12 ? Model.AnoAtual + 1 : Model.AnoAtual,
+                                                                   equipe = Model.EquipeFiltro })" 
+                           class="btn btn-outline-light btn-sm ms-2">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtro por Equipe -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="get" class="row g-3 align-items-end">
+                        <input type="hidden" name="mes" value="@Model.MesAtual" />
+                        <input type="hidden" name="ano" value="@Model.AnoAtual" />
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                <i class="fas fa-users me-1"></i>Filtrar por Equipe
+                            </label>
+                            <select name="equipe" class="form-select">
+                                <option value="">Todas as Equipes</option>
+                                @foreach (var equipe in Model.EquipesDisponiveis)
+                                {
+                                    <option value="@equipe.Id" selected="@(Model.EquipeFiltro == equipe.Id)">
+                                        @equipe.Nome
+                                    </option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-filter me-1"></i>Filtrar
+                            </button>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <small class="text-muted">
+                                @if (Model.EquipeFiltro.HasValue)
+                                {
+                                    var nomeEquipe = Model.EquipesDisponiveis.FirstOrDefault(e => e.Id == Model.EquipeFiltro.Value)?.Nome;
+                                    <span class="badge bg-info">Filtrado por: @nomeEquipe</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Exibindo todas as equipes</span>
+                                }
+                            </small>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estatísticas do Mês -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h3>@Model.TotalOrdensDoMes</h3>
+                    <p class="mb-0">Total Agendadas</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h3>@Model.OrdensEmAndamentoDoMes</h3>
+                    <p class="mb-0">Em Andamento</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h3>@Model.OrdensConcluidasDoMes</h3>
+                    <p class="mb-0">Concluídas</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body text-center">
+                    <h3>@Model.OrdensAtrasadasDoMes</h3>
+                    <p class="mb-0">Atrasadas</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Calendário -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">
+                        <i class="fas fa-calendar me-2"></i>
+                        @nomesMeses[Model.MesAtual] @Model.AnoAtual
+                    </h6>
+                    <div>
+                        <small class="me-3">
+                            <span class="badge bg-secondary me-1"></span>Aberta
+                            <span class="badge bg-primary me-1 ms-2"></span>Em Andamento
+                            <span class="badge bg-warning me-1 ms-2"></span>Aguardando
+                            <span class="badge bg-success me-1 ms-2"></span>Concluída
+                            <span class="badge bg-danger me-1 ms-2"></span>Atrasada
+                        </small>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-bordered mb-0 calendario-os-table">
+                        <thead class="table-dark">
+                            <tr>
+                                <th class="text-center">Dom</th>
+                                <th class="text-center">Seg</th>
+                                <th class="text-center">Ter</th>
+                                <th class="text-center">Qua</th>
+                                <th class="text-center">Qui</th>
+                                <th class="text-center">Sex</th>
+                                <th class="text-center">Sáb</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                int diaAtual = 1;
+                                var hoje = DateTime.Today;
+                            }
+                            @for (int semana = 0; semana < 6 && diaAtual <= diasNoMes; semana++)
+                            {
+                                <tr>
+                                    @for (int diaSemana = 0; diaSemana < 7; diaSemana++)
+                                    {
+                                        <td class="calendario-dia-os p-2" style="height: 140px; vertical-align: top; cursor: pointer;">
+                                            @if ((semana == 0 && diaSemana < primeiroDiaSemana) || diaAtual > diasNoMes)
+                                            {
+                                                <!-- Dia vazio -->
+                                            }
+                                            else
+                                            {
+                                                var dataAtual = new DateTime(Model.AnoAtual, Model.MesAtual, diaAtual);
+                                                var ordensNoDia = Model.OrdensDoMes.Where(o => o.DataProgramada.Date == dataAtual.Date).ToList();
+                                                
+                                                <div class="d-flex justify-content-between align-items-start mb-1" 
+                                                     data-data="@dataAtual.ToString("yyyy-MM-dd")" 
+                                                     data-equipe="@(Model.EquipeFiltro ?? 0)"
+                                                     onclick="abrirModalDia(this)">
+                                                    <span class="fw-bold @(dataAtual.Date == hoje ? "text-primary" : "")">
+                                                        @diaAtual
+                                                    </span>
+                                                    @if (ordensNoDia.Any())
+                                                    {
+                                                        <span class="badge bg-primary rounded-pill">@ordensNoDia.Count</span>
+                                                    }
+                                                </div>
+                                                
+                                                @foreach (var ordem in ordensNoDia.Take(4))
+                                                {
+                                                    var corBadge = ordem.EstaAtrasada ? "danger" :
+                                                                   ordem.Status switch
+                                                                   {
+                                                                       StatusOS.Concluida => "success",
+                                                                       StatusOS.EmAndamento => "primary",
+                                                                       StatusOS.AguardandoPecas => "warning",
+                                                                       StatusOS.Cancelada => "dark",
+                                                                       _ => "secondary"
+                                                                   };
+                                                    
+                                                    <div class="mb-1">
+                                                        <small class="badge bg-@corBadge d-block text-truncate" 
+                                                               style="max-width: 100%; font-size: 8px;"
+                                                               title="@ordem.NumeroOS - @ordem.HorarioFormatado - @ordem.NomeAtivo">
+                                                            @ordem.NumeroOS
+                                                            @if (ordem.HoraInicioProgramada.HasValue)
+                                                            {
+                                                                <br>@ordem.HoraInicioProgramada.Value.ToString(@"hh\:mm")
+                                                            }
+                                                        </small>
+                                                    </div>
+                                                }
+                                                
+                                                @if (ordensNoDia.Count > 4)
+                                                {
+                                                    <small class="text-muted">+@(ordensNoDia.Count - 4) mais</small>
+                                                }
+                                                
+                                                diaAtual++;
+                                            }
+                                        </td>
+                                    }
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal do Dia -->
+<div class="modal fade" id="modalDia" tabindex="-1" aria-labelledby="modalDiaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="modalDiaLabel">
+                    <i class="fas fa-calendar-day me-2"></i>
+                    Ordens de Serviço - <span id="dataSelecionada"></span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <!-- Lista de Ordens do Dia -->
+                    <div class="col-md-8">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6>
+                                <i class="fas fa-list me-2"></i>Ordens Programadas
+                            </h6>
+                            <div id="loadingOrdens" class="d-none">
+                                <div class="spinner-border spinner-border-sm" role="status">
+                                    <span class="visually-hidden">Carregando...</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="ordensContainer">
+                            <!-- Conteúdo carregado via AJAX -->
+                        </div>
+                    </div>
+                    
+                    <!-- Formulário Nova OS -->
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header bg-success text-white">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-plus me-2"></i>Agendar Nova OS
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <form id="formNovaOS">
+                                    <input type="hidden" id="dataAgendamento" name="DataProgramada" />
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">Tipo de Serviço</label>
+                                        <select name="TipoServico" class="form-select" required>
+                                            <option value="">Selecione o tipo</option>
+                                            <option value="@((int)TipoServico.ManutencaoPreventiva)">Manutenção Preventiva</option>
+                                            <option value="@((int)TipoServico.ManutencaoCorretiva)">Manutenção Corretiva</option>
+                                            <option value="@((int)TipoServico.Instalacao)">Instalação</option>
+                                            <option value="@((int)TipoServico.Inspecao)">Inspeção</option>
+                                            <option value="@((int)TipoServico.Reparo)">Reparo</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">Prioridade</label>
+                                        <select name="Prioridade" class="form-select" required>
+                                            <option value="@((int)PrioridadeOS.Baixa)">Baixa</option>
+                                            <option value="@((int)PrioridadeOS.Media)" selected>Média</option>
+                                            <option value="@((int)PrioridadeOS.Alta)">Alta</option>
+                                            <option value="@((int)PrioridadeOS.Critica)">Crítica</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">Ativo</label>
+                                        <select name="AtivoId" class="form-select" required>
+                                            <option value="">Selecione um ativo</option>
+                                            @foreach (var ativo in Model.AtivosDisponiveis)
+                                            {
+                                                <option value="@ativo.Id">@ativo.Nome - @ativo.Localizacao</option>
+                                            }
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">Equipe</label>
+                                        <select name="EquipeId" class="form-select">
+                                            <option value="">Selecione uma equipe</option>
+                                            @foreach (var equipe in Model.EquipesDisponiveis)
+                                            {
+                                                <option value="@equipe.Id" selected="@(Model.EquipeFiltro == equipe.Id)">@equipe.Nome</option>
+                                            }
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">Técnico Responsável</label>
+                                        <select name="TecnicoResponsavelId" class="form-select">
+                                            <option value="">Selecione um técnico</option>
+                                            @foreach (var tecnico in Model.TecnicosDisponiveis)
+                                            {
+                                                <option value="@tecnico.Id">@tecnico.Nome</option>
+                                            }
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <label class="form-label">Hora Início</label>
+                                            <input type="time" name="HoraInicioProgramada" class="form-control" value="08:00" required />
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="form-label">Hora Fim</label>
+                                            <input type="time" name="HoraFimProgramada" class="form-control" value="17:00" required />
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3 mt-3">
+                                        <label class="form-label">Descrição do Problema</label>
+                                        <textarea name="DescricaoProblema" class="form-control" rows="3" required placeholder="Descreva o problema ou serviço a ser realizado..."></textarea>
+                                    </div>
+                                    
+                                    <button type="submit" class="btn btn-success w-100">
+                                        <i class="fas fa-plus me-2"></i>Agendar OS
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.calendario-os-table td {
+    width: 14.28%;
+    min-height: 140px;
+}
+
+.calendario-dia-os {
+    position: relative;
+}
+
+.calendario-dia-os:hover {
+    background-color: #f8f9fa;
+    transform: scale(1.02);
+    transition: all 0.2s ease;
+}
+</style>
+
+@section Scripts {
+    <script>
+        function abrirModalDia(elemento) {
+            const data = elemento.getAttribute('data-data');
+            const equipe = elemento.getAttribute('data-equipe');
+            const dataFormatada = new Date(data + 'T00:00:00').toLocaleDateString('pt-BR');
+            
+            document.getElementById('dataSelecionada').textContent = dataFormatada;
+            document.getElementById('dataAgendamento').value = data;
+            
+            // Mostrar loading
+            document.getElementById('loadingOrdens').classList.remove('d-none');
+            
+            // Carregar ordens do dia via AJAX
+            fetch(`@Url.Action("GetOrdensDoDia")?data=${data}&equipe=${equipe > 0 ? equipe : ''}`)
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('ordensContainer').innerHTML = html;
+                    document.getElementById('loadingOrdens').classList.add('d-none');
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar ordens:', error);
+                    document.getElementById('ordensContainer').innerHTML = '<div class="alert alert-danger">Erro ao carregar ordens do dia.</div>';
+                    document.getElementById('loadingOrdens').classList.add('d-none');
+                });
+            
+            // Abrir modal
+            new bootstrap.Modal(document.getElementById('modalDia')).show();
+        }
+        
+        // Enviar formulário de nova OS via AJAX
+        document.getElementById('formNovaOS').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Agendando...';
+            submitBtn.disabled = true;
+            
+            fetch('@Url.Action("AgendarOrdemServico")', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Mostrar sucesso
+                    alert(data.message);
+                    
+                    // Fechar modal e recarregar página
+                    bootstrap.Modal.getInstance(document.getElementById('modalDia')).hide();
+                    location.reload();
+                } else {
+                    alert('Erro ao agendar ordem de serviço');
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                alert('Erro ao agendar ordem de serviço');
+            })
+            .finally(() => {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            });
+        });
+    </script>
+}

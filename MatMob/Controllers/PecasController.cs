@@ -1,0 +1,309 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using MatMob.Data;
+using MatMob.Models.Entities;
+
+namespace MatMob.Controllers
+{
+    [Authorize]
+    public class PecasController : Controller
+    {
+        private readonly ApplicationDbContext _context;
+
+        public PecasController(ApplicationDbContext context)
+        {
+            _context = context;
+        }
+
+        // GET: Pecas
+        public async Task<IActionResult> Index(string? searchString, bool? estoqueBaixo)
+        {
+            ViewData["CurrentFilter"] = searchString;
+            ViewData["EstoqueBaixo"] = estoqueBaixo;
+
+            var pecas = _context.Pecas.Where(p => p.Ativa).AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                pecas = pecas.Where(p => p.Nome.Contains(searchString) ||
+                                        p.Codigo.Contains(searchString) ||
+                                        p.Descricao!.Contains(searchString));
+            }
+
+            if (estoqueBaixo == true)
+            {
+                pecas = pecas.Where(p => p.QuantidadeEstoque <= p.EstoqueMinimo);
+            }
+
+            return View(await pecas.OrderBy(p => p.Nome).ToListAsync());
+        }
+
+        // GET: Pecas/Details/5
+        public async Task<IActionResult> Details(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var peca = await _context.Pecas
+                .Include(p => p.MovimentacoesEstoque.OrderByDescending(m => m.DataMovimentacao))
+                .Include(p => p.ItensOrdemServico)
+                    .ThenInclude(i => i.OrdemServico)
+                .FirstOrDefaultAsync(m => m.Id == id);
+
+            if (peca == null)
+            {
+                return NotFound();
+            }
+
+            return View(peca);
+        }
+
+        // GET: Pecas/Create
+        [Authorize(Roles = "Administrador,Gestor")]
+        public IActionResult Create()
+        {
+            return View();
+        }
+
+        // POST: Pecas/Create
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Administrador,Gestor")]
+        public async Task<IActionResult> Create([Bind("Codigo,Nome,Descricao,UnidadeMedida,QuantidadeEstoque,EstoqueMinimo,PrecoUnitario,Fornecedor")] Peca peca)
+        {
+            if (ModelState.IsValid)
+            {
+                // Verificar se o código já existe
+                var codigoExiste = await _context.Pecas.AnyAsync(p => p.Codigo == peca.Codigo);
+                if (codigoExiste)
+                {
+                    ModelState.AddModelError("Codigo", "Este código já está cadastrado para outra peça.");
+                    return View(peca);
+                }
+
+                peca.DataCadastro = DateTime.Now;
+                peca.Ativa = true;
+                _context.Add(peca);
+                await _context.SaveChangesAsync();
+
+                // Registrar movimentação de entrada inicial
+                if (peca.QuantidadeEstoque > 0)
+                {
+                    var movimentacao = new MovimentacaoEstoque
+                    {
+                        PecaId = peca.Id,
+                        TipoMovimentacao = TipoMovimentacao.Entrada,
+                        Quantidade = peca.QuantidadeEstoque,
+                        Motivo = "Estoque inicial",
+                        DataMovimentacao = DateTime.Now
+                    };
+                    _context.MovimentacoesEstoque.Add(movimentacao);
+                    await _context.SaveChangesAsync();
+                }
+
+                TempData["Success"] = "Peça cadastrada com sucesso!";
+                return RedirectToAction(nameof(Index));
+            }
+            return View(peca);
+        }
+
+        // GET: Pecas/Edit/5
+        [Authorize(Roles = "Administrador,Gestor")]
+        public async Task<IActionResult> Edit(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var peca = await _context.Pecas.FindAsync(id);
+            if (peca == null)
+            {
+                return NotFound();
+            }
+            return View(peca);
+        }
+
+        // POST: Pecas/Edit/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Administrador,Gestor")]
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Codigo,Nome,Descricao,UnidadeMedida,QuantidadeEstoque,EstoqueMinimo,PrecoUnitario,Fornecedor,DataCadastro,Ativa")] Peca peca)
+        {
+            if (id != peca.Id)
+            {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    // Verificar se o código já existe para outra peça
+                    var codigoExiste = await _context.Pecas
+                        .AnyAsync(p => p.Codigo == peca.Codigo && p.Id != peca.Id);
+                    if (codigoExiste)
+                    {
+                        ModelState.AddModelError("Codigo", "Este código já está cadastrado para outra peça.");
+                        return View(peca);
+                    }
+
+                    peca.UltimaAtualizacao = DateTime.Now;
+                    _context.Update(peca);
+                    await _context.SaveChangesAsync();
+                    
+                    TempData["Success"] = "Peça atualizada com sucesso!";
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!PecaExists(peca.Id))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+                return RedirectToAction(nameof(Index));
+            }
+            return View(peca);
+        }
+
+        // GET: Pecas/Delete/5
+        [Authorize(Roles = "Administrador")]
+        public async Task<IActionResult> Delete(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var peca = await _context.Pecas
+                .FirstOrDefaultAsync(m => m.Id == id);
+            if (peca == null)
+            {
+                return NotFound();
+            }
+
+            return View(peca);
+        }
+
+        // POST: Pecas/Delete/5
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Administrador")]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            var peca = await _context.Pecas.FindAsync(id);
+            if (peca != null)
+            {
+                // Verificar se a peça tem movimentações
+                var temMovimentacoes = await _context.MovimentacoesEstoque.AnyAsync(m => m.PecaId == id);
+                if (temMovimentacoes)
+                {
+                    // Inativar ao invés de excluir
+                    peca.Ativa = false;
+                    _context.Update(peca);
+                    TempData["Success"] = "Peça inativada com sucesso!";
+                }
+                else
+                {
+                    _context.Pecas.Remove(peca);
+                    TempData["Success"] = "Peça excluída com sucesso!";
+                }
+                
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        // POST: Pecas/MovimentarEstoque/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Administrador,Gestor")]
+        public async Task<IActionResult> MovimentarEstoque(int id, TipoMovimentacao tipoMovimentacao, int quantidade, string? motivo)
+        {
+            var peca = await _context.Pecas.FindAsync(id);
+            if (peca == null)
+            {
+                return NotFound();
+            }
+
+            if (quantidade <= 0)
+            {
+                TempData["Error"] = "A quantidade deve ser maior que zero.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            // Verificar se há estoque suficiente para saída
+            if (tipoMovimentacao == TipoMovimentacao.Saida && peca.QuantidadeEstoque < quantidade)
+            {
+                TempData["Error"] = "Quantidade insuficiente em estoque.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            // Atualizar estoque
+            switch (tipoMovimentacao)
+            {
+                case TipoMovimentacao.Entrada:
+                    peca.QuantidadeEstoque += quantidade;
+                    break;
+                case TipoMovimentacao.Saida:
+                    peca.QuantidadeEstoque -= quantidade;
+                    break;
+                case TipoMovimentacao.Ajuste:
+                    peca.QuantidadeEstoque = quantidade; // Ajuste define a quantidade absoluta
+                    break;
+            }
+
+            peca.UltimaAtualizacao = DateTime.Now;
+
+            // Registrar movimentação
+            var movimentacao = new MovimentacaoEstoque
+            {
+                PecaId = id,
+                TipoMovimentacao = tipoMovimentacao,
+                Quantidade = tipoMovimentacao == TipoMovimentacao.Ajuste ? 
+                    quantidade - (peca.QuantidadeEstoque - quantidade) : quantidade,
+                Motivo = motivo,
+                DataMovimentacao = DateTime.Now
+            };
+
+            _context.Update(peca);
+            _context.MovimentacoesEstoque.Add(movimentacao);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = $"Movimentação de {tipoMovimentacao.ToString().ToLower()} registrada com sucesso!";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        private bool PecaExists(int id)
+        {
+            return _context.Pecas.Any(e => e.Id == id);
+        }
+
+        // GET: Pecas/EstoqueBaixo
+        public async Task<IActionResult> EstoqueBaixo()
+        {
+            var pecasEstoqueBaixo = await _context.Pecas
+                .Where(p => p.QuantidadeEstoque <= p.EstoqueMinimo && p.Ativa)
+                .OrderBy(p => p.Nome)
+                .ToListAsync();
+
+            return View(pecasEstoqueBaixo);
+        }
+
+        // Ação para gerar código automaticamente
+        [HttpGet]
+        public JsonResult GerarCodigo()
+        {
+            var codigo = $"PC{DateTime.Now:yyyyMMdd}{Random.Shared.Next(100, 999)}";
+            return Json(codigo);
+        }
+    }
+}

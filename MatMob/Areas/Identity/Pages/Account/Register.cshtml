@@ -1,0 +1,100 @@
+@page
+@model MatMob.Areas.Identity.Pages.Account.RegisterModel
+@{
+    ViewData["Title"] = "Criar Conta";
+    Layout = "_AuthLayout";
+}
+
+<div class="auth-card">
+    <div class="auth-header">
+        <i class="fas fa-user-plus auth-logo"></i>
+        <h1 class="auth-title">Criar Conta</h1>
+        <p class="auth-subtitle">Cadastre-se no MatMob</p>
+    </div>
+    
+    <div class="auth-body">
+        <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+            
+            <div class="form-floating">
+                <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="nome@exemplo.com" />
+                <label asp-for="Input.Email">Email</label>
+                <span asp-validation-for="Input.Email" class="text-validation-error"></span>
+            </div>
+            
+            <div class="form-floating">
+                <input asp-for="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="senha" />
+                <label asp-for="Input.Password">Senha</label>
+                <span asp-validation-for="Input.Password" class="text-validation-error"></span>
+            </div>
+            
+            <div class="form-floating">
+                <input asp-for="Input.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="confirmar senha" />
+                <label asp-for="Input.ConfirmPassword">Confirmar Senha</label>
+                <span asp-validation-for="Input.ConfirmPassword" class="text-validation-error"></span>
+            </div>
+            
+            <!-- Requisitos de Senha -->
+            <div class="alert alert-info">
+                <small>
+                    <strong>Requisitos da senha:</strong><br>
+                    • Mínimo 6 caracteres • Uma maiúscula • Uma minúscula • Um número
+                </small>
+            </div>
+            
+            <button id="registerSubmit" type="submit" class="btn btn-auth btn-auth-primary">
+                <i class="fas fa-user-plus me-2"></i>Criar Conta
+            </button>
+        </form>
+        
+        <div class="auth-links">
+            <a asp-page="./Login" asp-route-returnUrl="@Model.ReturnUrl">Já tem uma conta? Entre aqui</a>
+            <div class="auth-divider">
+                <span>ou</span>
+            </div>
+            <a href="/" class="btn btn-auth btn-auth-outline">
+                <i class="fas fa-arrow-left me-2"></i>Sair
+            </a>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    
+    <script>
+        $(document).ready(function() {
+            // Foco automático no primeiro campo
+            $('#Input_Email').focus();
+            
+            // Validação em tempo real
+            $('#Input_Email, #Input_Password, #Input_ConfirmPassword').on('input', function() {
+                $(this).removeClass('is-invalid');
+                $(this).next('.text-validation-error').hide();
+                
+                // Validação específica para confirmação de senha
+                if ($(this).attr('id') === 'Input_ConfirmPassword' || $(this).attr('id') === 'Input_Password') {
+                    validatePasswordMatch();
+                }
+            });
+            
+            function validatePasswordMatch() {
+                var password = $('#Input_Password').val();
+                var confirmPassword = $('#Input_ConfirmPassword').val();
+                
+                if (confirmPassword.length > 0 && password !== confirmPassword) {
+                    $('#Input_ConfirmPassword').addClass('is-invalid');
+                } else {
+                    $('#Input_ConfirmPassword').removeClass('is-invalid');
+                }
+            }
+            
+            // Loading state no botão de registro
+            $('#registerForm').on('submit', function() {
+                $('#registerSubmit').html('<i class="fas fa-spinner fa-spin me-2"></i>Criando conta...').prop('disabled', true);
+            });
+            
+            console.log('Register page initialized');
+        });
+    </script>
+}

@@ -1,0 +1,400 @@
+@model MatMob.Models.ViewModels.GanttChartViewModel
+@using MatMob.Models.Entities
+@using MatMob.Extensions
+@{
+    ViewData["Title"] = "Gráfico de Gantt - Ordens de Serviço";
+}
+
+<div class="container-fluid py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
+            <li class="breadcrumb-item"><a asp-controller="OrdensServico" asp-action="Index">Ordens de Serviço</a></li>
+            <li class="breadcrumb-item active">Gráfico Gantt</li>
+        </ol>
+    </nav>
+
+    <!-- Cabeçalho -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-chart-gantt me-2"></i>
+                        Gráfico de Gantt - Evolução das Ordens de Serviço
+                    </h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Métricas de Desempenho -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h3>@Model.TotalOrdens</h3>
+                    <p class="mb-0">Total de Ordens</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h3>@Model.OrdensConcluidas</h3>
+                    <p class="mb-0">Concluídas</p>
+                    <small>@Model.PercentualConclusao.ToString("F1")%</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h3>@Model.OrdensEmAndamento</h3>
+                    <p class="mb-0">Em Andamento</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body text-center">
+                    <h3>@Model.OrdensAtrasadas</h3>
+                    <p class="mb-0">Atrasadas</p>
+                    <small>@Model.PercentualAtrasadas.ToString("F1")%</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-filter me-2"></i>Filtros
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Status</label>
+                            <select name="status" class="form-select">
+                                <option value="Todas" selected="@(Model.FiltroStatus == "Todas")">Todas</option>
+                                <option value="Aberta" selected="@(Model.FiltroStatus == "Aberta")">Aberta</option>
+                                <option value="EmAndamento" selected="@(Model.FiltroStatus == "EmAndamento")">Em Andamento</option>
+                                <option value="AguardandoPecas" selected="@(Model.FiltroStatus == "AguardandoPecas")">Aguardando Peças</option>
+                                <option value="Concluida" selected="@(Model.FiltroStatus == "Concluida")">Concluída</option>
+                                <option value="Cancelada" selected="@(Model.FiltroStatus == "Cancelada")">Cancelada</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Prioridade</label>
+                            <select name="prioridade" class="form-select">
+                                <option value="Todas" selected="@(Model.FiltroPrioridade == "Todas")">Todas</option>
+                                <option value="Baixa" selected="@(Model.FiltroPrioridade == "Baixa")">Baixa</option>
+                                <option value="Media" selected="@(Model.FiltroPrioridade == "Media")">Média</option>
+                                <option value="Alta" selected="@(Model.FiltroPrioridade == "Alta")">Alta</option>
+                                <option value="Critica" selected="@(Model.FiltroPrioridade == "Critica")">Crítica</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary me-2">
+                                <i class="fas fa-search me-1"></i>Filtrar
+                            </button>
+                            <a href="@Url.Action("Gantt")" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-1"></i>Limpar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráfico de Gantt -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>Timeline das Ordens de Serviço
+                    </h6>
+                    <div class="d-flex align-items-center">
+                        <small class="me-3">
+                            <span class="badge bg-secondary me-1"></span>Aberta
+                            <span class="badge bg-primary me-1 ms-2"></span>Em Andamento
+                            <span class="badge bg-warning me-1 ms-2"></span>Aguardando
+                            <span class="badge bg-success me-1 ms-2"></span>Concluída
+                            <span class="badge bg-danger me-1 ms-2"></span>Cancelada
+                        </small>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    @if (Model.Itens.Any())
+                    {
+                        <div class="gantt-container" style="overflow-x: auto;">
+                            <table class="table table-bordered mb-0 gantt-table">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th style="min-width: 200px;">Ordem de Serviço</th>
+                                        <th style="min-width: 150px;">Ativo</th>
+                                        <th style="min-width: 100px;">Status</th>
+                                        <th style="min-width: 100px;">Prioridade</th>
+                                        <th style="min-width: 120px;">Responsável</th>
+                                        <th style="min-width: 100px;">Duração</th>
+                                        <th style="min-width: 600px;">Timeline</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @{
+                                        var dataMinima = Model.Itens.Min(i => i.DataAbertura).Date;
+                                        var dataMaxima = Model.Itens.Where(i => i.DataPrevistaConclusao != DateTime.MinValue)
+                                                                   .Max(i => i.DataPrevistaConclusao).Date.AddDays(7);
+                                        var totalDias = (dataMaxima - dataMinima).Days;
+                                        if (totalDias <= 0) totalDias = 30; // Fallback
+                                    }
+                                    @foreach (var item in Model.Itens.OrderBy(i => i.DataAbertura))
+                                    {
+                                        var inicioOffset = (item.DataAbertura.Date - dataMinima).Days;
+                                        var fimOffset = item.DataConclusao?.Date != null ? 
+                                            (item.DataConclusao.Value.Date - dataMinima).Days : 
+                                            (item.DataPrevistaConclusao.Date - dataMinima).Days;
+                                        
+                                        var larguraBarra = Math.Max(((double)(fimOffset - inicioOffset) / totalDias) * 100, 2);
+                                        var posicaoInicio = ((double)inicioOffset / totalDias) * 100;
+                                        
+                                        var corBarra = item.Status switch
+                                        {
+                                            "Concluída" => "#198754",
+                                            "Em Andamento" => "#0d6efd", 
+                                            "Aguardando Peças" => "#ffc107",
+                                            "Cancelada" => "#dc3545",
+                                            _ => "#6c757d"
+                                        };
+
+                                        <tr class="@item.CssClass">
+                                            <td>
+                                                <strong>@item.NumeroOS</strong>
+                                                <br>
+                                                <small class="text-muted">
+                                                    Aberto: @item.DataAbertura.ToString("dd/MM/yyyy")
+                                                </small>
+                                            </td>
+                                            <td>
+                                                @item.Ativo
+                                            </td>
+                                            <td>
+                                                <span class="badge" style="background-color: @corBarra;">
+                                                    @item.Status
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="badge" style="background-color: @item.CorPrioridade;">
+                                                    @item.Prioridade
+                                                </span>
+                                            </td>
+                                            <td>
+                                                @(item.Responsavel ?? "Não atribuído")
+                                                @if (!string.IsNullOrEmpty(item.Equipe))
+                                                {
+                                                    <br><small class="text-muted">@item.Equipe</small>
+                                                }
+                                            </td>
+                                            <td>
+                                                <strong>@item.DuracaoPrevista dias</strong>
+                                                @if (item.DuracaoReal > 0)
+                                                {
+                                                    <br><small class="text-muted">Real: @item.DuracaoReal dias</small>
+                                                }
+                                            </td>
+                                            <td class="p-1">
+                                                <div class="gantt-timeline position-relative" style="height: 40px; background-color: #f8f9fa;">
+                                                    <!-- Barra de progresso -->
+                                                    <div class="gantt-bar position-absolute" 
+                                                         style="left: @posicaoInicio.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)%; 
+                                                                width: @larguraBarra.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)%; 
+                                                                height: 30px; 
+                                                                top: 5px; 
+                                                                background-color: @corBarra; 
+                                                                border-radius: 4px;
+                                                                opacity: 0.8;">
+                                                        <!-- Indicador de progresso -->
+                                                        <div class="progress-indicator" 
+                                                             style="width: @item.PercentualConclusao.ToString("F0", System.Globalization.CultureInfo.InvariantCulture)%; 
+                                                                    height: 100%; 
+                                                                    background-color: rgba(255,255,255,0.3); 
+                                                                    border-radius: 4px;">
+                                                        </div>
+                                                        <!-- Texto da barra -->
+                                                        <div class="gantt-text position-absolute text-white fw-bold" 
+                                                             style="top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 11px;">
+                                                            @item.PercentualConclusao.ToString("F0")%
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <!-- Indicador de atraso -->
+                                                    @if (item.EstaAtrasada)
+                                                    {
+                                                        <div class="position-absolute" 
+                                                             style="right: 5px; top: 2px; color: #dc3545;">
+                                                            <i class="fas fa-exclamation-triangle" title="Atrasada"></i>
+                                                        </div>
+                                                    }
+                                                    
+                                                    <!-- Tooltip com informações -->
+                                                    <div class="gantt-tooltip position-absolute d-none" 
+                                                         style="bottom: 45px; left: 50%; transform: translateX(-50%); 
+                                                                background-color: rgba(0,0,0,0.8); color: white; 
+                                                                padding: 8px; border-radius: 4px; font-size: 12px; 
+                                                                white-space: nowrap; z-index: 1000;">
+                                                        <strong>@item.NumeroOS</strong><br>
+                                                        Início: @(item.DataInicio?.ToString("dd/MM/yyyy") ?? "Não iniciado")<br>
+                                                        Previsão: @item.DataPrevistaConclusao.ToString("dd/MM/yyyy")<br>
+                                                        @if (item.DataConclusao.HasValue)
+                                                        {
+                                                            <text>Conclusão: @item.DataConclusao.Value.ToString("dd/MM/yyyy")</text>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <i class="fas fa-chart-gantt fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">Nenhuma ordem de serviço encontrada</h5>
+                            <p class="text-muted">Ajuste os filtros ou crie uma nova ordem de serviço.</p>
+                            <a asp-action="Create" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>Nova Ordem de Serviço
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Legenda -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Legenda
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Status das Ordens:</h6>
+                            <ul class="list-unstyled">
+                                <li><span class="badge bg-secondary me-2"></span>Aberta - Ordem criada, aguardando início</li>
+                                <li><span class="badge bg-primary me-2"></span>Em Andamento - Trabalho em execução</li>
+                                <li><span class="badge bg-warning me-2"></span>Aguardando Peças - Parada por falta de material</li>
+                                <li><span class="badge bg-success me-2"></span>Concluída - Trabalho finalizado</li>
+                                <li><span class="badge bg-danger me-2"></span>Cancelada - Ordem cancelada</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Prioridades:</h6>
+                            <ul class="list-unstyled">
+                                <li><span class="badge bg-success me-2"></span>Baixa - Pode aguardar</li>
+                                <li><span class="badge me-2" style="background-color: #ffc107;"></span>Média - Prioridade normal</li>
+                                <li><span class="badge me-2" style="background-color: #fd7e14;"></span>Alta - Requer atenção</li>
+                                <li><span class="badge bg-danger me-2"></span>Crítica - Urgente</li>
+                            </ul>
+                            <h6 class="mt-3">Indicadores:</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-exclamation-triangle text-danger me-2"></i>Ordem atrasada</li>
+                                <li><div class="d-inline-block me-2" style="width: 20px; height: 12px; background: rgba(255,255,255,0.3); border: 1px solid #ccc;"></div>Percentual de conclusão</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.gantt-container {
+    min-height: 400px;
+}
+
+.gantt-table {
+    min-width: 1200px;
+}
+
+.gantt-timeline:hover .gantt-tooltip {
+    display: block !important;
+}
+
+.gantt-item-atrasada {
+    background-color: rgba(220, 53, 69, 0.1);
+}
+
+.gantt-item-concluida {
+    background-color: rgba(25, 135, 84, 0.1);
+}
+
+.gantt-item-andamento {
+    background-color: rgba(13, 110, 253, 0.1);
+}
+
+.gantt-bar {
+    transition: all 0.3s ease;
+}
+
+.gantt-bar:hover {
+    opacity: 1 !important;
+    transform: scaleY(1.1);
+}
+
+.gantt-timeline {
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+}
+
+@@media (max-width: 768px) {
+    .gantt-table th,
+    .gantt-table td {
+        min-width: 120px;
+        font-size: 12px;
+    }
+    
+    .gantt-text {
+        font-size: 10px !important;
+    }
+}
+</style>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Adicionar interatividade aos tooltips
+            const timelines = document.querySelectorAll('.gantt-timeline');
+            timelines.forEach(timeline => {
+                timeline.addEventListener('mouseenter', function() {
+                    const tooltip = this.querySelector('.gantt-tooltip');
+                    if (tooltip) {
+                        tooltip.classList.remove('d-none');
+                    }
+                });
+                
+                timeline.addEventListener('mouseleave', function() {
+                    const tooltip = this.querySelector('.gantt-tooltip');
+                    if (tooltip) {
+                        tooltip.classList.add('d-none');
+                    }
+                });
+            });
+        });
+    </script>
+}

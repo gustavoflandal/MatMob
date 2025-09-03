@@ -1,0 +1,143 @@
+@model MatMob.Models.Entities.Ativo
+@{
+    ViewData["Title"] = "Editar Ativo";
+}
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="display-6 mb-0">
+            <i class="fas fa-edit text-primary me-2"></i>Editar Ativo
+        </h1>
+        <p class="text-muted">@Model.Nome</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-info me-2">
+            <i class="fas fa-eye me-1"></i>Detalhes
+        </a>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i>Voltar
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form asp-action="Edit" method="post">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+            
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="DataCadastro" />
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label asp-for="Nome" class="form-label"></label>
+                        <input asp-for="Nome" class="form-control">
+                        <span asp-validation-for="Nome" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label asp-for="Tipo" class="form-label"></label>
+                        <select asp-for="Tipo" class="form-select">
+                            <option value="">Selecione o tipo</option>
+                            <option value="Semáforo">Semáforo</option>
+                            <option value="Radar">Radar</option>
+                            <option value="Câmera">Câmera de Monitoramento</option>
+                            <option value="Sensor">Sensor de Tráfego</option>
+                            <option value="Painel">Painel Eletrônico</option>
+                            <option value="Controlador">Controlador de Tráfego</option>
+                            <option value="Outro">Outro</option>
+                        </select>
+                        <span asp-validation-for="Tipo" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label asp-for="NumeroSerie" class="form-label"></label>
+                        <input asp-for="NumeroSerie" class="form-control">
+                        <span asp-validation-for="NumeroSerie" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label asp-for="Status" class="form-label"></label>
+                        <select asp-for="Status" class="form-select">
+                            @foreach (var status in Enum.GetValues<MatMob.Models.Entities.StatusAtivo>())
+                            {
+                                <option value="@((int)status)">@status.GetDisplayName()</option>
+                            }
+                        </select>
+                        <span asp-validation-for="Status" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Localizacao" class="form-label"></label>
+                <input asp-for="Localizacao" class="form-control">
+                <span asp-validation-for="Localizacao" class="text-danger"></span>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label asp-for="DataInstalacao" class="form-label"></label>
+                        <input asp-for="DataInstalacao" class="form-control" type="date">
+                        <span asp-validation-for="DataInstalacao" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Descricao" class="form-label"></label>
+                <textarea asp-for="Descricao" class="form-control" rows="3"></textarea>
+                <span asp-validation-for="Descricao" class="text-danger"></span>
+            </div>
+
+            <!-- Informações de Auditoria -->
+            <div class="card bg-light mb-3">
+                <div class="card-body">
+                    <h6 class="card-title">Informações de Auditoria</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <small class="text-muted">
+                                <i class="fas fa-calendar-plus me-1"></i>
+                                Cadastrado em: @Model.DataCadastro.ToString("dd/MM/yyyy HH:mm")
+                            </small>
+                        </div>
+                        <div class="col-md-6">
+                            @if (Model.UltimaAtualizacao.HasValue)
+                            {
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar-edit me-1"></i>
+                                    Última atualização: @Model.UltimaAtualizacao.Value.ToString("dd/MM/yyyy HH:mm")
+                                </small>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <hr>
+
+            <div class="row">
+                <div class="col-md-12 text-end">
+                    <a asp-action="Index" class="btn btn-secondary me-2">
+                        <i class="fas fa-times me-1"></i>Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i>Salvar Alterações
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

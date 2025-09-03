@@ -1,0 +1,137 @@
+@model MatMob.Models.Entities.Ativo
+@{
+    ViewData["Title"] = "Novo Ativo";
+}
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="display-6 mb-0">
+            <i class="fas fa-plus text-primary me-2"></i>Novo Ativo
+        </h1>
+        <p class="text-muted">Cadastrar novo ativo de mobilidade urbana</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i>Voltar
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form asp-action="Create" method="post">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label asp-for="Nome" class="form-label"></label>
+                        <input asp-for="Nome" class="form-control" placeholder="Ex: Semáforo Principal Centro">
+                        <span asp-validation-for="Nome" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label asp-for="Tipo" class="form-label"></label>
+                        <select asp-for="Tipo" class="form-select">
+                            <option value="">Selecione o tipo</option>
+                            <option value="Semáforo">Semáforo</option>
+                            <option value="Radar">Radar</option>
+                            <option value="Câmera">Câmera de Monitoramento</option>
+                            <option value="Sensor">Sensor de Tráfego</option>
+                            <option value="Painel">Painel Eletrônico</option>
+                            <option value="Controlador">Controlador de Tráfego</option>
+                            <option value="Outro">Outro</option>
+                        </select>
+                        <span asp-validation-for="Tipo" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label asp-for="NumeroSerie" class="form-label"></label>
+                        <div class="input-group">
+                            <input asp-for="NumeroSerie" class="form-control" placeholder="Número de série do equipamento">
+                            <button type="button" class="btn btn-outline-secondary" onclick="gerarNumeroSerie()">
+                                <i class="fas fa-magic"></i> Gerar
+                            </button>
+                        </div>
+                        <span asp-validation-for="NumeroSerie" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label asp-for="Status" class="form-label"></label>
+                        <select asp-for="Status" class="form-select">
+                            @foreach (var status in Enum.GetValues<MatMob.Models.Entities.StatusAtivo>())
+                            {
+                                <option value="@((int)status)">@status.GetDisplayName()</option>
+                            }
+                        </select>
+                        <span asp-validation-for="Status" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Localizacao" class="form-label"></label>
+                <input asp-for="Localizacao" class="form-control" placeholder="Ex: Rua Principal com Av. Central">
+                <span asp-validation-for="Localizacao" class="text-danger"></span>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label asp-for="DataInstalacao" class="form-label"></label>
+                        <input asp-for="DataInstalacao" class="form-control" type="date">
+                        <span asp-validation-for="DataInstalacao" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Descricao" class="form-label"></label>
+                <textarea asp-for="Descricao" class="form-control" rows="3" 
+                          placeholder="Descrição adicional do ativo (opcional)"></textarea>
+                <span asp-validation-for="Descricao" class="text-danger"></span>
+            </div>
+
+            <hr>
+
+            <div class="row">
+                <div class="col-md-12 text-end">
+                    <a asp-action="Index" class="btn btn-secondary me-2">
+                        <i class="fas fa-times me-1"></i>Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i>Salvar
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        function gerarNumeroSerie() {
+            fetch('@Url.Action("GerarNumeroSerie", "Ativos")')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('NumeroSerie').value = data;
+                })
+                .catch(error => {
+                    console.error('Erro ao gerar número de série:', error);
+                });
+        }
+
+        // Auto-complete para localização (pode ser expandido com API de mapas)
+        document.getElementById('Localizacao').addEventListener('input', function() {
+            // Implementar auto-complete se necessário
+        });
+    </script>
+}

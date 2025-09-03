@@ -1,0 +1,222 @@
+@model MatMob.Models.Entities.Equipe
+@using MatMob.Extensions
+@using MatMob.Models.Entities
+@{
+    ViewData["Title"] = "Editar Equipe";
+    var tecnicosSelecionados = ViewBag.TecnicosSelecionados as int[] ?? new int[0];
+}
+
+<div class="container-fluid py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Equipes" asp-action="Index">Equipes</a></li>
+            <li class="breadcrumb-item"><a asp-action="Details" asp-route-id="@Model.Id">@Model.Nome</a></li>
+            <li class="breadcrumb-item active">Editar</li>
+        </ol>
+    </nav>
+
+    <!-- Cabeçalho -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-edit me-2"></i>
+                        Editar Equipe: @Model.Nome
+                    </h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Formulário de Edição -->
+            <div class="card shadow">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="fas fa-users me-2"></i>Informações da Equipe
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                        
+                        <input type="hidden" asp-for="Id" />
+                        <input type="hidden" asp-for="DataCriacao" />
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="Nome" class="form-label">
+                                        <i class="fas fa-tag me-1"></i>Nome da Equipe
+                                    </label>
+                                    <input asp-for="Nome" class="form-control" placeholder="Ex: Equipe de Manutenção A" />
+                                    <span asp-validation-for="Nome" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="Status" class="form-label">
+                                        <i class="fas fa-toggle-on me-1"></i>Status
+                                    </label>
+                                    <select asp-for="Status" class="form-select" asp-items="Html.GetEnumSelectList<StatusEquipe>()">
+                                        <option value="">Selecione o status</option>
+                                    </select>
+                                    <span asp-validation-for="Status" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Descricao" class="form-label">
+                                <i class="fas fa-align-left me-1"></i>Descrição
+                            </label>
+                            <textarea asp-for="Descricao" class="form-control" rows="3" 
+                                      placeholder="Descreva as responsabilidades e características da equipe..."></textarea>
+                            <span asp-validation-for="Descricao" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-user-hard-hat me-1"></i>Técnicos da Equipe
+                            </label>
+                            <div class="border p-3 rounded" style="max-height: 300px; overflow-y: auto;">
+                                @if (ViewBag.Tecnicos != null)
+                                {
+                                    @foreach (SelectListItem tecnico in ViewBag.Tecnicos)
+                                    {
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="tecnicoIds" 
+                                                   value="@tecnico.Value" id="tecnico_@tecnico.Value"
+                                                   @(tecnicosSelecionados.Contains(int.Parse(tecnico.Value)) ? "checked" : "") />
+                                            <label class="form-check-label" for="tecnico_@tecnico.Value">
+                                                @tecnico.Text
+                                            </label>
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    <p class="text-muted mb-0">Nenhum técnico disponível</p>
+                                }
+                            </div>
+                            <small class="form-text text-muted">
+                                Selecione os técnicos que farão parte desta equipe
+                            </small>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">
+                                <i class="fas fa-times me-1"></i>Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save me-1"></i>Salvar Alterações
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Informações Atuais -->
+        <div class="col-md-4">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Informações Atuais
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>ID:</strong> @Model.Id
+                    </div>
+                    <div class="mb-3">
+                        <strong>Status Atual:</strong>
+                        <span class="badge bg-@(Model.Status == StatusEquipe.Ativa ? "success" : "secondary")">
+                            @Model.Status.GetDisplayName()
+                        </span>
+                    </div>
+                    <div class="mb-3">
+                        <strong>Data de Criação:</strong><br>
+                        @Model.DataCriacao.ToString("dd/MM/yyyy HH:mm")
+                    </div>
+                    <div class="mb-3">
+                        <strong>Técnicos Ativos:</strong>
+                        @Model.EquipesTecnico.Count(et => et.Ativo)
+                    </div>
+                </div>
+            </div>
+
+            <!-- Técnicos Atuais -->
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-users me-2"></i>Técnicos Atuais
+                    </h6>
+                </div>
+                <div class="card-body">
+                    @if (Model.EquipesTecnico.Any(et => et.Ativo))
+                    {
+                        @foreach (var equipeTecnico in Model.EquipesTecnico.Where(et => et.Ativo))
+                        {
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <strong>@equipeTecnico.Tecnico.Nome</strong><br>
+                                    <small class="text-muted">@equipeTecnico.Tecnico.Especialidade</small>
+                                </div>
+                                <small class="text-muted">
+                                    @equipeTecnico.DataEntrada.ToString("dd/MM/yyyy")
+                                </small>
+                            </div>
+                            <hr class="my-2">
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted mb-0">Nenhum técnico na equipe</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        // Confirmar antes de salvar se houver mudanças significativas
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const checkboxes = document.querySelectorAll('input[name="tecnicoIds"]:checked');
+            const currentCount = @Model.EquipesTecnico.Count(et => et.Ativo);
+            const newCount = checkboxes.length;
+            
+            if (Math.abs(newCount - currentCount) > 2) {
+                if (!confirm(`Você está alterando de ${currentCount} para ${newCount} técnicos. Confirma a alteração?`)) {
+                    e.preventDefault();
+                    return false;
+                }
+            }
+        });
+
+        // Highlight de técnicos selecionados
+        document.querySelectorAll('input[name="tecnicoIds"]').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const label = this.parentElement;
+                if (this.checked) {
+                    label.classList.add('bg-light', 'border', 'rounded', 'p-2');
+                } else {
+                    label.classList.remove('bg-light', 'border', 'rounded', 'p-2');
+                }
+            });
+            
+            // Aplicar estilo inicial para técnicos já selecionados
+            if (checkbox.checked) {
+                checkbox.parentElement.classList.add('bg-light', 'border', 'rounded', 'p-2');
+            }
+        });
+    </script>
+}

@@ -1,0 +1,318 @@
+@model MatMob.Models.Entities.Equipe
+@using MatMob.Extensions
+@using MatMob.Models.Entities
+@{
+    ViewData["Title"] = "Detalhes da Equipe";
+}
+
+<div class="container-fluid py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Equipes" asp-action="Index">Equipes</a></li>
+            <li class="breadcrumb-item active">@Model.Nome</li>
+        </ol>
+    </nav>
+
+    <!-- Cabeçalho -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="fas fa-users me-2"></i>
+                        Detalhes da Equipe: @Model.Nome
+                    </h4>
+                    <div>
+                        <span class="badge bg-@(Model.Status == StatusEquipe.Ativa ? "success" : "secondary") fs-6">
+                            @Model.Status.GetDisplayName()
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Informações Básicas -->
+        <div class="col-md-6">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Informações Básicas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-sm-4">
+                            <strong>ID:</strong>
+                        </div>
+                        <div class="col-sm-8">
+                            @Model.Id
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <div class="col-sm-4">
+                            <strong>Nome:</strong>
+                        </div>
+                        <div class="col-sm-8">
+                            @Model.Nome
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <div class="col-sm-4">
+                            <strong>Descrição:</strong>
+                        </div>
+                        <div class="col-sm-8">
+                            @(Model.Descricao ?? "Não informada")
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <div class="col-sm-4">
+                            <strong>Status:</strong>
+                        </div>
+                        <div class="col-sm-8">
+                            <span class="badge bg-@(Model.Status == StatusEquipe.Ativa ? "success" : "secondary")">
+                                @Model.Status.GetDisplayName()
+                            </span>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <div class="col-sm-4">
+                            <strong>Data de Criação:</strong>
+                        </div>
+                        <div class="col-sm-8">
+                            @Model.DataCriacao.ToString("dd/MM/yyyy HH:mm")
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estatísticas -->
+        <div class="col-md-6">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card bg-primary text-white mb-3">
+                        <div class="card-body text-center">
+                            <h3>@Model.EquipesTecnico.Count(et => et.Ativo)</h3>
+                            <p class="mb-0">Técnicos Ativos</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card bg-success text-white mb-3">
+                        <div class="card-body text-center">
+                            <h3>@Model.OrdensServico.Count</h3>
+                            <p class="mb-0">Ordens de Serviço</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card bg-info text-white mb-3">
+                        <div class="card-body text-center">
+                            <h3>@Model.OrdensServico.Count(os => os.Status == StatusOS.EmAndamento)</h3>
+                            <p class="mb-0">OS Em Andamento</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card bg-warning text-dark mb-3">
+                        <div class="card-body text-center">
+                            <h3>@Model.OrdensServico.Count(os => os.Status == StatusOS.Concluida)</h3>
+                            <p class="mb-0">OS Concluídas</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Técnicos da Equipe -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user-hard-hat me-2"></i>Técnicos da Equipe
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.EquipesTecnico.Any(et => et.Ativo))
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Nome</th>
+                                        <th>Email</th>
+                                        <th>Telefone</th>
+                                        <th>Especialidade</th>
+                                        <th>Data de Entrada</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var equipeTecnico in Model.EquipesTecnico.Where(et => et.Ativo))
+                                    {
+                                        <tr>
+                                            <td>
+                                                <strong>@equipeTecnico.Tecnico.Nome</strong>
+                                            </td>
+                                            <td>@equipeTecnico.Tecnico.Email</td>
+                                            <td>@equipeTecnico.Tecnico.Telefone</td>
+                                            <td>@equipeTecnico.Tecnico.Especialidade</td>
+                                            <td>@equipeTecnico.DataEntrada.ToString("dd/MM/yyyy")</td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm" role="group">
+                                                    <a asp-controller="Tecnicos" asp-action="Details" asp-route-id="@equipeTecnico.TecnicoId" 
+                                                       class="btn btn-outline-info" title="Ver Detalhes">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    <a asp-controller="Tecnicos" asp-action="Edit" asp-route-id="@equipeTecnico.TecnicoId" 
+                                                       class="btn btn-outline-primary" title="Editar">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <i class="fas fa-user-slash fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">Nenhum técnico na equipe</h5>
+                            <p class="text-muted">Edite a equipe para adicionar técnicos.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ordens de Serviço -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="fas fa-clipboard-list me-2"></i>Ordens de Serviço Recentes
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.OrdensServico.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Número OS</th>
+                                        <th>Ativo</th>
+                                        <th>Tipo</th>
+                                        <th>Status</th>
+                                        <th>Prioridade</th>
+                                        <th>Data Abertura</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var os in Model.OrdensServico.OrderByDescending(o => o.DataAbertura).Take(10))
+                                    {
+                                        <tr>
+                                            <td><strong>@os.NumeroOS</strong></td>
+                                            <td>@os.Ativo.Nome</td>
+                                            <td>@os.TipoServico.GetDisplayName()</td>
+                                            <td>
+                                                <span class="badge bg-@(os.Status switch
+                                                {
+                                                    StatusOS.Aberta => "secondary",
+                                                    StatusOS.EmAndamento => "primary",
+                                                    StatusOS.AguardandoPecas => "warning",
+                                                    StatusOS.Concluida => "success",
+                                                    StatusOS.Cancelada => "danger",
+                                                    _ => "secondary"
+                                                })">
+                                                    @os.Status.GetDisplayName()
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-@(os.Prioridade switch
+                                                {
+                                                    PrioridadeOS.Baixa => "success",
+                                                    PrioridadeOS.Media => "info",
+                                                    PrioridadeOS.Alta => "warning",
+                                                    PrioridadeOS.Critica => "danger",
+                                                    _ => "secondary"
+                                                })">
+                                                    @os.Prioridade.GetDisplayName()
+                                                </span>
+                                            </td>
+                                            <td>@os.DataAbertura.ToString("dd/MM/yyyy")</td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm" role="group">
+                                                    <a asp-controller="OrdensServico" asp-action="Details" asp-route-id="@os.Id" 
+                                                       class="btn btn-outline-info" title="Ver Detalhes">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    <a asp-controller="OrdensServico" asp-action="Detalhada" asp-route-id="@os.Id" 
+                                                       class="btn btn-outline-success" title="Gestão Avançada">
+                                                        <i class="fas fa-cogs"></i>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                        @if (Model.OrdensServico.Count > 10)
+                        {
+                            <div class="text-center mt-3">
+                                <small class="text-muted">Exibindo apenas as 10 mais recentes de @Model.OrdensServico.Count ordens totais</small>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <i class="fas fa-clipboard fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">Nenhuma ordem de serviço</h5>
+                            <p class="text-muted">Esta equipe ainda não possui ordens de serviço atribuídas.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botões de Ação -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between">
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>Voltar à Lista
+                </a>
+                <div>
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
+                        <i class="fas fa-edit me-1"></i>Editar Equipe
+                    </a>
+                    @if (User.IsInRole("Administrador"))
+                    {
+                        <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger">
+                            <i class="fas fa-trash me-1"></i>Excluir
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

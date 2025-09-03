@@ -1,0 +1,352 @@
+@model MatMob.Models.ViewModels.DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="display-6 mb-0">
+            <i class="fas fa-tachometer-alt text-primary me-2"></i>Dashboard
+        </h1>
+        <p class="text-muted">Visão geral do sistema de gestão de ativos</p>
+    </div>
+</div>
+
+<!-- Cards de Resumo -->
+<div class="row mb-4">
+    <!-- Ativos -->
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Total de Ativos
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.TotalAtivos</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-cogs fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col">
+                        <small class="text-success">
+                            <i class="fas fa-check-circle"></i> @Model.AtivosAtivos Ativos
+                        </small>
+                    </div>
+                    <div class="col">
+                        <small class="text-warning">
+                            <i class="fas fa-wrench"></i> @Model.AtivosEmManutencao Em Manutenção
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ordens de Serviço -->
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Ordens de Serviço
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.TotalOrdensServico</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col">
+                        <small class="text-danger">
+                            <i class="fas fa-exclamation-circle"></i> @Model.OSAbertas Abertas
+                        </small>
+                    </div>
+                    <div class="col">
+                        <small class="text-info">
+                            <i class="fas fa-play-circle"></i> @Model.OSEmAndamento Em Andamento
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custo Mensal -->
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Custo do Mês
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.CustoMesAtual.ToString("C")</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estoque Baixo -->
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card border-left-danger shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                            Estoque Baixo
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.PecasEstoqueBaixo</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+                @if (Model.PecasEstoqueBaixo > 0)
+                {
+                    <div class="mt-2">
+                        <a href="@Url.Action("EstoqueBaixo", "Pecas")" class="btn btn-sm btn-outline-danger">
+                            <i class="fas fa-eye me-1"></i>Ver Detalhes
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Gráficos e Alertas -->
+<div class="row">
+    <!-- Gráficos -->
+    <div class="col-xl-8 col-lg-7">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">Ordens de Serviço por Status</h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-area">
+                    <canvas id="osStatusChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráfico de Custos -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Custos dos Últimos 6 Meses</h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-area">
+                    <canvas id="custosChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alertas -->
+    <div class="col-xl-4 col-lg-5">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">Alertas</h6>
+                <div class="dropdown no-arrow">
+                    <a class="dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-right shadow">
+                        <a class="dropdown-item" href="#" onclick="atualizarAlertas()">
+                            <i class="fas fa-sync fa-sm fa-fw mr-2 text-gray-400"></i>
+                            Atualizar
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                @if (Model.Alertas.Any())
+                {
+                    @foreach (var alerta in Model.Alertas)
+                    {
+                        <div class="alert @alerta.GetPrioridadeClass() py-2 px-3 mb-2">
+                            <div class="d-flex align-items-center">
+                                <i class="@alerta.GetIconClass() me-2"></i>
+                                <div class="flex-grow-1">
+                                    <h6 class="alert-heading mb-1 fs-6">@alerta.Titulo</h6>
+                                    <p class="mb-0 small">@alerta.Mensagem</p>
+                                    @if (!string.IsNullOrEmpty(alerta.Link))
+                                    {
+                                        <a href="@alerta.Link" class="btn btn-sm btn-outline-primary mt-1">
+                                            Ver Detalhes
+                                        </a>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-center py-4">
+                        <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                        <p class="text-muted">Nenhum alerta no momento!</p>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Resumo de Recursos -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Recursos</h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="border-end">
+                            <div class="h4 font-weight-bold text-primary">@Model.TecnicosAtivos</div>
+                            <div class="small text-muted">Técnicos Ativos</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="h4 font-weight-bold text-success">@Model.EquipesAtivas</div>
+                        <div class="small text-muted">Equipes Ativas</div>
+                    </div>
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="col-12">
+                        <a href="@Url.Action("Index", "Tecnicos")" class="btn btn-primary btn-sm me-2">
+                            <i class="fas fa-users me-1"></i>Gerenciar Técnicos
+                        </a>
+                        <a href="@Url.Action("Index", "Equipes")" class="btn btn-success btn-sm">
+                            <i class="fas fa-users-cog me-1"></i>Gerenciar Equipes
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Gráfico de OS por Status
+        const ctxOS = document.getElementById('osStatusChart').getContext('2d');
+        const osData = @Html.Raw(Json.Serialize(Model.OSPorStatus.Select(x => new { label = x.Status, data = x.Count })));
+        
+        new Chart(ctxOS, {
+            type: 'doughnut',
+            data: {
+                labels: osData.map(x => x.label),
+                datasets: [{
+                    data: osData.map(x => x.data),
+                    backgroundColor: [
+                        '#dc3545', // Aberta - Vermelho
+                        '#ffc107', // Em Andamento - Amarelo
+                        '#17a2b8', // Aguardando Peças - Azul
+                        '#28a745', // Concluída - Verde
+                        '#6c757d'  // Cancelada - Cinza
+                    ],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+
+        // Gráfico de Custos
+        const ctxCustos = document.getElementById('custosChart').getContext('2d');
+        const custosData = @Html.Raw(Json.Serialize(Model.CustosUltimosMeses));
+        
+        new Chart(ctxCustos, {
+            type: 'line',
+            data: {
+                labels: custosData.map(x => x.mes),
+                datasets: [{
+                    label: 'Custos (R$)',
+                    data: custosData.map(x => x.custo),
+                    borderColor: '#007bff',
+                    backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return 'R$ ' + value.toLocaleString('pt-BR');
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return 'Custos: R$ ' + context.raw.toLocaleString('pt-BR');
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Função para atualizar alertas
+        function atualizarAlertas() {
+            // Implementar chamada AJAX se necessário
+            location.reload();
+        }
+
+        // Auto-refresh dos alertas a cada 5 minutos
+        setInterval(function() {
+            fetch('@Url.Action("GetAlertas", "Dashboard")')
+                .then(response => response.text())
+                .then(html => {
+                    // Atualizar apenas a seção de alertas se necessário
+                });
+        }, 300000); // 5 minutos
+    </script>
+}
+
+<style>
+    .border-left-primary {
+        border-left: 0.25rem solid #4e73df !important;
+    }
+    .border-left-success {
+        border-left: 0.25rem solid #1cc88a !important;
+    }
+    .border-left-warning {
+        border-left: 0.25rem solid #f6c23e !important;
+    }
+    .border-left-danger {
+        border-left: 0.25rem solid #e74a3b !important;
+    }
+    .text-xs {
+        font-size: 0.7rem;
+    }
+    .text-gray-800 {
+        color: #5a5c69 !important;
+    }
+    .text-gray-300 {
+        color: #dddfeb !important;
+    }
+</style>

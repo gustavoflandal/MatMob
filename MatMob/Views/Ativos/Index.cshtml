@@ -1,0 +1,198 @@
+@model IEnumerable<MatMob.Models.Entities.Ativo>
+@{
+    ViewData["Title"] = "Ativos";
+}
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="display-6 mb-0">
+            <i class="fas fa-cogs text-primary me-2"></i>Ativos
+        </h1>
+        <p class="text-muted">Gestão de ativos de mobilidade urbana</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i>Novo Ativo
+        </a>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label for="searchString" class="form-label">Buscar</label>
+                <input type="text" class="form-control" id="searchString" name="searchString" 
+                       value="@ViewData["CurrentFilter"]" placeholder="Nome, localização ou número de série">
+            </div>
+            <div class="col-md-3">
+                <label for="tipoFilter" class="form-label">Tipo</label>
+                <select class="form-select" id="tipoFilter" name="tipoFilter">
+                    <option value="">Todos os tipos</option>
+                    @foreach (var tipo in ViewBag.Tipos as List<string> ?? new List<string>())
+                    {
+                        <option value="@tipo" selected="@(ViewData["TipoFilter"]?.ToString() == tipo)">@tipo</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="statusFilter" class="form-label">Status</label>
+                <select class="form-select" id="statusFilter" name="statusFilter">
+                    <option value="">Todos os status</option>
+                    @foreach (var status in Enum.GetValues<MatMob.Models.Entities.StatusAtivo>())
+                    {
+                        <option value="@((int)status)" selected="@(ViewData["StatusFilter"]?.ToString() == ((int)status).ToString())">
+                            @status.GetDisplayName()
+                        </option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-outline-primary me-2">
+                    <i class="fas fa-search me-1"></i>Filtrar
+                </button>
+                <a asp-action="Index" class="btn btn-outline-secondary">
+                    <i class="fas fa-times me-1"></i>Limpar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Tabela de Ativos -->
+<div class="card">
+    <div class="card-body">
+        @if (Model.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Nome</th>
+                            <th>Tipo</th>
+                            <th>Localização</th>
+                            <th>Status</th>
+                            <th>Data Instalação</th>
+                            <th class="text-center">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var ativo in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="fw-bold">@ativo.Nome</div>
+                                    @if (!string.IsNullOrEmpty(ativo.NumeroSerie))
+                                    {
+                                        <small class="text-muted">S/N: @ativo.NumeroSerie</small>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">@ativo.Tipo</span>
+                                </td>
+                                <td>@ativo.Localizacao</td>
+                                <td>
+                                    @switch (ativo.Status)
+                                    {
+                                        case MatMob.Models.Entities.StatusAtivo.Ativo:
+                                            <span class="badge bg-success"><i class="fas fa-check-circle me-1"></i>Ativo</span>
+                                            break;
+                                        case MatMob.Models.Entities.StatusAtivo.EmManutencao:
+                                            <span class="badge bg-warning"><i class="fas fa-wrench me-1"></i>Em Manutenção</span>
+                                            break;
+                                        case MatMob.Models.Entities.StatusAtivo.Inativo:
+                                            <span class="badge bg-secondary"><i class="fas fa-pause-circle me-1"></i>Inativo</span>
+                                            break;
+                                        case MatMob.Models.Entities.StatusAtivo.Descartado:
+                                            <span class="badge bg-danger"><i class="fas fa-trash me-1"></i>Descartado</span>
+                                            break;
+                                    }
+                                </td>
+                                <td>
+                                    @if (ativo.DataInstalacao.HasValue)
+                                    {
+                                        @ativo.DataInstalacao.Value.ToString("dd/MM/yyyy")
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group" role="group">
+                                        <a asp-action="Details" asp-route-id="@ativo.Id" 
+                                           class="btn btn-sm btn-outline-info" title="Detalhes">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a asp-action="Edit" asp-route-id="@ativo.Id" 
+                                           class="btn btn-sm btn-outline-primary" title="Editar">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        @if (User.IsInRole("Administrador"))
+                                        {
+                                            <a asp-action="Delete" asp-route-id="@ativo.Id" 
+                                               class="btn btn-sm btn-outline-danger" title="Excluir">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-5">
+                <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Nenhum ativo encontrado</h5>
+                <p class="text-muted">Tente ajustar os filtros ou cadastre um novo ativo.</p>
+                <a asp-action="Create" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i>Cadastrar Primeiro Ativo
+                </a>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Resumo -->
+@if (Model.Any())
+{
+    <div class="row mt-4">
+        <div class="col-md-3">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Total</h5>
+                    <h3 class="text-primary">@Model.Count()</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Ativos</h5>
+                    <h3 class="text-success">@Model.Count(a => a.Status == MatMob.Models.Entities.StatusAtivo.Ativo)</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Em Manutenção</h5>
+                    <h3 class="text-warning">@Model.Count(a => a.Status == MatMob.Models.Entities.StatusAtivo.EmManutencao)</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Inativos</h5>
+                    <h3 class="text-secondary">@Model.Count(a => a.Status == MatMob.Models.Entities.StatusAtivo.Inativo)</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+}

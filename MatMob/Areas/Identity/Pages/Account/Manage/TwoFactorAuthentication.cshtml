@@ -1,0 +1,247 @@
+@page
+@model MatMob.Areas.Identity.Pages.Account.Manage.TwoFactorAuthenticationModel
+@{
+    ViewData["Title"] = "Autenticação 2FA";
+    ViewData["ActivePage"] = ManageNavPages.TwoFactorAuthentication;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a asp-page="./Index">Gerenciar Perfil</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Autenticação 2FA</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-3">
+            <partial name="_ManageNav" />
+        </div>
+        <div class="col-md-9">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-shield-alt me-2"></i>Autenticação de Dois Fatores (2FA)
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <partial name="_StatusMessage" for="StatusMessage" />
+                    
+                    <!-- Status Atual -->
+                    <div class="row mb-4">
+                        <div class="col-md-8">
+                            <div class="card @(Model.Is2faEnabled ? "border-success" : "border-warning")">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center">
+                                        <div class="me-3">
+                                            @if (Model.Is2faEnabled)
+                                            {
+                                                <i class="fas fa-shield-alt fa-3x text-success"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="fas fa-shield-alt fa-3x text-warning"></i>
+                                            }
+                                        </div>
+                                        <div>
+                                            <h5 class="mb-1">
+                                                Status: 
+                                                @if (Model.Is2faEnabled)
+                                                {
+                                                    <span class="badge bg-success">Ativado</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-warning">Desativado</span>
+                                                }
+                                            </h5>
+                                            <p class="text-muted mb-0">
+                                                @if (Model.Is2faEnabled)
+                                                {
+                                                    <text>Sua conta está protegida com autenticação de dois fatores.</text>
+                                                }
+                                                else
+                                                {
+                                                    <text>Ative a 2FA para maior segurança da sua conta.</text>
+                                                }
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-info text-white">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-mobile-alt fa-2x mb-2"></i>
+                                    <h6>Códigos de Recuperação</h6>
+                                    <p class="small mb-2">@Model.RecoveryCodesLeft restantes</p>
+                                    @if (Model.RecoveryCodesLeft <= 3)
+                                    {
+                                        <span class="badge bg-warning">Poucos códigos!</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    @if (Model.Is2faEnabled)
+                    {
+                        <!-- 2FA Ativado - Opções de Gerenciamento -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h6 class="card-title">
+                                            <i class="fas fa-qrcode me-2 text-primary"></i>Aplicativo Autenticador
+                                        </h6>
+                                        <p class="card-text small text-muted">
+                                            Configure um aplicativo como Google Authenticator ou Microsoft Authenticator.
+                                        </p>
+                                        <a asp-page="./EnableAuthenticator" class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-cog me-1"></i>Reconfigurar App
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h6 class="card-title">
+                                            <i class="fas fa-key me-2 text-warning"></i>Códigos de Recuperação
+                                        </h6>
+                                        <p class="card-text small text-muted">
+                                            Use quando não tiver acesso ao seu aplicativo autenticador.
+                                        </p>
+                                        <a asp-page="./GenerateRecoveryCodes" class="btn btn-outline-warning btn-sm">
+                                            <i class="fas fa-sync me-1"></i>Gerar Novos Códigos
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <form method="post" asp-page-handler="Disable">
+                                <div class="alert alert-danger">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    <strong>Atenção:</strong> Desativar a 2FA reduzirá a segurança da sua conta.
+                                </div>
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="fas fa-times me-2"></i>Desativar 2FA
+                                </button>
+                            </form>
+                        </div>
+                    }
+                    else
+                    {
+                        <!-- 2FA Desativado - Opções de Ativação -->
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Por que usar 2FA?</strong><br>
+                            A autenticação de dois fatores adiciona uma camada extra de segurança à sua conta, 
+                            exigindo não apenas sua senha, mas também um código do seu dispositivo móvel.
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h6>Como funciona:</h6>
+                                <ol class="list-group list-group-numbered">
+                                    <li class="list-group-item d-flex align-items-start">
+                                        <div class="ms-2 me-auto">
+                                            <div class="fw-bold">Instale um aplicativo autenticador</div>
+                                            Google Authenticator, Microsoft Authenticator, ou similar
+                                        </div>
+                                        <span class="badge bg-primary rounded-pill">1</span>
+                                    </li>
+                                    <li class="list-group-item d-flex align-items-start">
+                                        <div class="ms-2 me-auto">
+                                            <div class="fw-bold">Escaneie o código QR</div>
+                                            Configure sua conta no aplicativo
+                                        </div>
+                                        <span class="badge bg-primary rounded-pill">2</span>
+                                    </li>
+                                    <li class="list-group-item d-flex align-items-start">
+                                        <div class="ms-2 me-auto">
+                                            <div class="fw-bold">Digite o código de verificação</div>
+                                            Confirme a configuração
+                                        </div>
+                                        <span class="badge bg-primary rounded-pill">3</span>
+                                    </li>
+                                </ol>
+                            </div>
+                            <div class="col-md-4 text-center">
+                                <i class="fas fa-mobile-alt fa-4x text-success mb-3"></i>
+                                <div>
+                                    <a asp-page="./EnableAuthenticator" class="btn btn-success btn-lg">
+                                        <i class="fas fa-shield-alt me-2"></i>Ativar 2FA
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+            
+            <!-- Outras Configurações de Segurança -->
+            <div class="card mt-4 shadow">
+                <div class="card-header bg-dark text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-lock me-2"></i>Outras Configurações de Segurança
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="loginAlerts" checked>
+                                <label class="form-check-label" for="loginAlerts">
+                                    <strong>Alertas de Login</strong><br>
+                                    <small class="text-muted">Receber notificação em novos logins</small>
+                                </label>
+                            </div>
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="sessionTimeout">
+                                <label class="form-check-label" for="sessionTimeout">
+                                    <strong>Timeout Automático</strong><br>
+                                    <small class="text-muted">Logout automático após inatividade</small>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="deviceTrust">
+                                <label class="form-check-label" for="deviceTrust">
+                                    <strong>Dispositivos Confiáveis</strong><br>
+                                    <small class="text-muted">Lembrar dispositivos conhecidos</small>
+                                </label>
+                            </div>
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="ipRestriction">
+                                <label class="form-check-label" for="ipRestriction">
+                                    <strong>Restrição de IP</strong><br>
+                                    <small class="text-muted">Permitir apenas IPs conhecidos</small>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <button class="btn btn-outline-dark">
+                            <i class="fas fa-save me-1"></i>Salvar Configurações
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

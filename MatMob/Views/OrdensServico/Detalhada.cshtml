@@ -1,0 +1,406 @@
+@model MatMob.Models.ViewModels.OrdemServicoDetalhadaViewModel
+@using MatMob.Models.Entities
+@using MatMob.Extensions
+@{
+    ViewData["Title"] = $"OS #{Model.OrdemServico.NumeroOS} - Detalhada";
+}
+
+<div class="container-fluid py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
+            <li class="breadcrumb-item"><a asp-controller="OrdensServico" asp-action="Index">Ordens de Serviço</a></li>
+            <li class="breadcrumb-item active">OS #@Model.OrdemServico.NumeroOS</li>
+        </ol>
+    </nav>
+
+    <!-- Cabeçalho da OS -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="fas fa-clipboard-list me-2"></i>
+                        OS #@Model.OrdemServico.NumeroOS - @Model.OrdemServico.Ativo.Nome
+                    </h4>
+                    <div>
+                        <span class="badge bg-@(Model.OrdemServico.Status == StatusOS.Concluida ? "success" : 
+                                               Model.OrdemServico.Status == StatusOS.EmAndamento ? "info" : 
+                                               Model.OrdemServico.Status == StatusOS.AguardandoPecas ? "warning" : "secondary") fs-6">
+                            @Model.OrdemServico.Status.GetDisplayName()
+                        </span>
+                        <span class="badge bg-@(Model.OrdemServico.Prioridade == PrioridadeOS.Critica ? "danger" : 
+                                               Model.OrdemServico.Prioridade == PrioridadeOS.Alta ? "warning" : 
+                                               Model.OrdemServico.Prioridade == PrioridadeOS.Media ? "info" : "success") fs-6 ms-2">
+                            @Model.OrdemServico.Prioridade.GetDisplayName()
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <p><strong>Tipo:</strong> @Model.OrdemServico.TipoServico.GetDisplayName()</p>
+                            <p><strong>Data Abertura:</strong> @Model.OrdemServico.DataAbertura.ToString("dd/MM/yyyy HH:mm")</p>
+                            <p><strong>Ativo:</strong> @Model.OrdemServico.Ativo.Nome (@Model.OrdemServico.Ativo.Localizacao)</p>
+                        </div>
+                        <div class="col-md-4">
+                            <p><strong>Responsável:</strong> @(Model.OrdemServico.TecnicoResponsavel?.Nome ?? "Não atribuído")</p>
+                            <p><strong>Equipe:</strong> @(Model.OrdemServico.Equipe?.Nome ?? "Não atribuída")</p>
+                            <p><strong>Data Início:</strong> @(Model.OrdemServico.DataInicio?.ToString("dd/MM/yyyy HH:mm") ?? "Não iniciada")</p>
+                        </div>
+                        <div class="col-md-4">
+                            <p><strong>Data Conclusão:</strong> @(Model.OrdemServico.DataConclusao?.ToString("dd/MM/yyyy HH:mm") ?? "Não concluída")</p>
+                            <p><strong>Custo Estimado:</strong> @(Model.OrdemServico.CustoEstimado?.ToString("C") ?? "Não informado")</p>
+                            <p><strong>Custo Real:</strong> @(Model.OrdemServico.CustoReal?.ToString("C") ?? "Não calculado")</p>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <p><strong>Descrição do Problema:</strong></p>
+                            <p class="bg-light p-3 border rounded">@Model.OrdemServico.DescricaoProblema</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cards de Resumo -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5>@Model.TotalMateriaisUtilizados</h5>
+                            <p class="mb-0">Materiais Utilizados</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-boxes fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5>@Model.TotalCustoMateriais.ToString("C")</h5>
+                            <p class="mb-0">Custo Materiais</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-dollar-sign fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5>@Model.TotalHorasTrabalhadas.ToString("F1")h</h5>
+                            <p class="mb-0">Horas Trabalhadas</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-clock fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5>@Model.TotalApontamentos</h5>
+                            <p class="mb-0">Apontamentos</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-list-check fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" data-bs-toggle="tab" href="#materiais">
+                                <i class="fas fa-boxes me-2"></i>Materiais Utilizados
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="tab" href="#apontamentos">
+                                <i class="fas fa-clock me-2"></i>Apontamento de Horas
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="tab" href="#agenda">
+                                <i class="fas fa-calendar me-2"></i>Agenda
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body">
+                    <div class="tab-content">
+                        <!-- Tab Materiais -->
+                        <div class="tab-pane fade show active" id="materiais">
+                            <!-- Formulário para adicionar material -->
+                            <div class="card mb-4">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-plus me-2"></i>Adicionar Material
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <form asp-action="AdicionarMaterial" method="post">
+                                        <input type="hidden" name="ordemServicoId" value="@Model.OrdemServico.Id" />
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <label class="form-label">Peça</label>
+                                                <select name="pecaId" class="form-select" required>
+                                                    <option value="">Selecione uma peça</option>
+                                                    @foreach (var peca in Model.PecasDisponiveis)
+                                                    {
+                                                        <option value="@peca.Id">@peca.Nome - Estoque: @peca.QuantidadeEstoque @peca.UnidadeMedida</option>
+                                                    }
+                                                </select>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label">Quantidade</label>
+                                                <input type="number" name="quantidadeUtilizada" class="form-control" step="0.01" min="0.01" required />
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label">Observações</label>
+                                                <input type="text" name="observacoesMaterial" class="form-control" />
+                                            </div>
+                                            <div class="col-md-2 d-flex align-items-end">
+                                                <button type="submit" class="btn btn-primary">
+                                                    <i class="fas fa-plus me-1"></i>Adicionar
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <!-- Lista de materiais utilizados -->
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>Peça</th>
+                                            <th>Quantidade</th>
+                                            <th>Preço Unit.</th>
+                                            <th>Valor Total</th>
+                                            <th>Data Utilização</th>
+                                            <th>Observações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var material in Model.MateriaisUtilizados)
+                                        {
+                                            <tr>
+                                                <td>@material.Peca.Nome</td>
+                                                <td>@material.QuantidadeUtilizada @material.Peca.UnidadeMedida</td>
+                                                <td>@(material.PrecoUnitario?.ToString("C") ?? "N/A")</td>
+                                                <td>@material.ValorTotal.ToString("C")</td>
+                                                <td>@material.DataUtilizacao.ToString("dd/MM/yyyy HH:mm")</td>
+                                                <td>@(material.Observacoes ?? "-")</td>
+                                            </tr>
+                                        }
+                                        @if (!Model.MateriaisUtilizados.Any())
+                                        {
+                                            <tr>
+                                                <td colspan="6" class="text-center text-muted">Nenhum material utilizado ainda</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Tab Apontamentos -->
+                        <div class="tab-pane fade" id="apontamentos">
+                            <!-- Formulário para apontamento -->
+                            <div class="card mb-4">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-plus me-2"></i>Registrar Apontamento
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <form asp-action="AdicionarApontamento" method="post">
+                                        <input type="hidden" name="ordemServicoId" value="@Model.OrdemServico.Id" />
+                                        <div class="row">
+                                            <div class="col-md-3">
+                                                <label class="form-label">Técnico</label>
+                                                <select name="tecnicoId" class="form-select" required>
+                                                    <option value="">Selecione um técnico</option>
+                                                    @foreach (var tecnico in Model.TecnicosDisponiveis)
+                                                    {
+                                                        <option value="@tecnico.Id">@tecnico.Nome</option>
+                                                    }
+                                                </select>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label">Data/Hora Início</label>
+                                                <input type="datetime-local" name="dataInicio" class="form-control" required />
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label">Data/Hora Fim</label>
+                                                <input type="datetime-local" name="dataFim" class="form-control" required />
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label">Descrição da Atividade</label>
+                                                <input type="text" name="descricaoAtividade" class="form-control" />
+                                            </div>
+                                            <div class="col-md-2 d-flex align-items-end">
+                                                <button type="submit" class="btn btn-success">
+                                                    <i class="fas fa-clock me-1"></i>Registrar
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="row mt-3">
+                                            <div class="col-md-10">
+                                                <label class="form-label">Observações</label>
+                                                <input type="text" name="observacoesHoras" class="form-control" />
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <!-- Lista de apontamentos -->
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>Técnico</th>
+                                            <th>Data/Hora Início</th>
+                                            <th>Data/Hora Fim</th>
+                                            <th>Horas</th>
+                                            <th>Atividade</th>
+                                            <th>Observações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var apontamento in Model.ApontamentosHoras)
+                                        {
+                                            <tr>
+                                                <td>@apontamento.Tecnico.Nome</td>
+                                                <td>@apontamento.DataInicio.ToString("dd/MM/yyyy HH:mm")</td>
+                                                <td>@apontamento.DataFim.ToString("dd/MM/yyyy HH:mm")</td>
+                                                <td>@apontamento.HorasTrabalhadas.ToString("F1")h</td>
+                                                <td>@(apontamento.DescricaoAtividade ?? "-")</td>
+                                                <td>@(apontamento.Observacoes ?? "-")</td>
+                                            </tr>
+                                        }
+                                        @if (!Model.ApontamentosHoras.Any())
+                                        {
+                                            <tr>
+                                                <td colspan="6" class="text-center text-muted">Nenhum apontamento registrado ainda</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Tab Agenda -->
+                        <div class="tab-pane fade" id="agenda">
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>Título</th>
+                                            <th>Data Prevista</th>
+                                            <th>Tipo</th>
+                                            <th>Status</th>
+                                            <th>Responsável</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var item in Model.AgendaItens)
+                                        {
+                                            <tr>
+                                                <td>@item.Titulo</td>
+                                                <td>@item.DataPrevista.ToString("dd/MM/yyyy HH:mm")</td>
+                                                <td>@item.Tipo.GetDisplayName()</td>
+                                                <td>
+                                                    <span class="badge bg-@(item.Status == StatusAgenda.Concluida ? "success" : 
+                                                                           item.Status == StatusAgenda.EmAndamento ? "info" : 
+                                                                           item.Status == StatusAgenda.Cancelada ? "danger" : "secondary")">
+                                                        @item.Status.GetDisplayName()
+                                                    </span>
+                                                </td>
+                                                <td>@item.Responsavel.Nome</td>
+                                            </tr>
+                                        }
+                                        @if (!Model.AgendaItens.Any())
+                                        {
+                                            <tr>
+                                                <td colspan="5" class="text-center text-muted">Nenhum item de agenda associado</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botões de Ação -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between">
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>Voltar à Lista
+                </a>
+                <div>
+                    <a asp-action="Edit" asp-route-id="@Model.OrdemServico.Id" class="btn btn-warning">
+                        <i class="fas fa-edit me-1"></i>Editar OS
+                    </a>
+                    <a asp-action="Details" asp-route-id="@Model.OrdemServico.Id" class="btn btn-info">
+                        <i class="fas fa-eye me-1"></i>Visualização Simples
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Auto-calcular horas quando alterar data/hora
+        document.addEventListener('DOMContentLoaded', function() {
+            const dataInicio = document.querySelector('input[name="dataInicio"]');
+            const dataFim = document.querySelector('input[name="dataFim"]');
+            
+            if (dataInicio && dataFim) {
+                // Definir valores padrão
+                const agora = new Date();
+                const agoraFormatted = agora.toISOString().slice(0, 16);
+                const depoisFormatted = new Date(agora.getTime() + 60*60*1000).toISOString().slice(0, 16);
+                
+                dataInicio.value = agoraFormatted;
+                dataFim.value = depoisFormatted;
+            }
+        });
+    </script>
+}
