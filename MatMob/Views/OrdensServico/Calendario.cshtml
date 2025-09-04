@@ -139,19 +139,42 @@
                                                 
                                                 @foreach (var evento in eventosNoDia.Take(3))
                                                 {
-                                                    var corBadge = evento.Status switch
+                                                    // Define a cor com base no tipo de evento
+                                                    var corBackground = "";
+                                                    var corTexto = "";
+                                                    
+                                                    if (evento.Tipo == TipoAgenda.OrdemServico)
                                                     {
-                                                        StatusAgenda.Concluida => "success",
-                                                        StatusAgenda.EmAndamento => "warning",
-                                                        StatusAgenda.Cancelada => "danger",
-                                                        _ => "secondary"
-                                                    };
-                                                    <div class="mb-1">
-                                                        <small class="badge bg-@corBadge d-block text-truncate" 
-                                                               style="max-width: 100%; font-size: 9px;"
-                                                               title="@evento.Titulo - @evento.DataPrevista.ToString("HH:mm")">
-                                                            @evento.Titulo.Substring(0, Math.Min(evento.Titulo.Length, 15))@(evento.Titulo.Length > 15 ? "..." : "")
-                                                        </small>
+                                                        corBackground = "#dc3545"; // Vermelho para O.S.
+                                                        corTexto = "white";
+                                                    }
+                                                    else
+                                                    {
+                                                        corBackground = "#ffc107"; // Amarelo para eventos comuns
+                                                        corTexto = "black";
+                                                    }
+                                                    
+                                                    <div class="mb-1 position-relative">
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <small class="badge d-block text-truncate" 
+                                                                   style="max-width: 70%; font-size: 9px; background-color: @corBackground; color: @corTexto;"
+                                                                   title="@evento.Titulo">
+                                                                @evento.Titulo.Substring(0, Math.Min(evento.Titulo.Length, 15))@(evento.Titulo.Length > 15 ? "..." : "")
+                                                            </small>
+                                                            @if (evento.Tipo != TipoAgenda.OrdemServico)
+                                                            {
+                                                                <div class="btn-group btn-group-sm" style="position: absolute; right: 0; top: 0;">
+                                                                    <button type="button" class="btn btn-sm p-0 me-1" style="min-width: 16px;" 
+                                                                            onclick="editarEvento(@evento.Id)" title="Editar">
+                                                                        <i class="fas fa-edit" style="font-size: 9px;"></i>
+                                                                    </button>
+                                                                    <button type="button" class="btn btn-sm p-0" style="min-width: 16px;" 
+                                                                            onclick="confirmarExclusao(@evento.Id, '@evento.Titulo')" title="Excluir">
+                                                                        <i class="fas fa-trash-alt" style="font-size: 9px;"></i>
+                                                                    </button>
+                                                                </div>
+                                                            }
+                                                        </div>
                                                     </div>
                                                 }
                                                 
@@ -188,8 +211,8 @@
                             <input asp-for="Titulo" class="form-control" required />
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Data/Hora</label>
-                            <input asp-for="DataPrevista" type="datetime-local" class="form-control" required />
+                            <label class="form-label">Data</label>
+                            <input asp-for="DataPrevista" type="date" class="form-control" required />
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Tipo</label>
@@ -293,6 +316,64 @@
     </div>
 </div>
 
+<!-- Modal para confirmação de exclusão -->
+<div class="modal fade" id="confirmarExclusaoModal" tabindex="-1" aria-labelledby="confirmarExclusaoModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="confirmarExclusaoModalLabel">Confirmar Exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja excluir o evento "<span id="eventoTitulo"></span>"?</p>
+                <p class="text-muted">Esta ação não pode ser desfeita.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="btnConfirmarExclusao">Excluir</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts para manipulação dos eventos -->
+@section Scripts {
+    <script>
+        // Variável para armazenar o ID do evento a ser excluído
+        let eventoIdParaExcluir = null;
+
+        // Função para abrir o modal de confirmação de exclusão
+        function confirmarExclusao(id, titulo) {
+            eventoIdParaExcluir = id;
+            document.getElementById('eventoTitulo').textContent = titulo;
+            const modal = new bootstrap.Modal(document.getElementById('confirmarExclusaoModal'));
+            modal.show();
+        }
+
+        // Configurar o botão de confirmação de exclusão
+        document.getElementById('btnConfirmarExclusao').addEventListener('click', function() {
+            if (eventoIdParaExcluir) {
+                window.location.href = `/OrdensServico/ExcluirEvento/${eventoIdParaExcluir}`;
+            }
+        });
+
+        // Função para redirecionar para a edição do evento
+        function editarEvento(id) {
+            window.location.href = `/OrdensServico/EditarEvento/${id}`;
+        }
+
+        // Definir data atual no formulário
+        document.addEventListener('DOMContentLoaded', function() {
+            const dataInput = document.querySelector('input[name="DataPrevista"]');
+            if (dataInput && !dataInput.value) {
+                const agora = new Date();
+                agora.setMinutes(agora.getMinutes() - agora.getTimezoneOffset());
+                dataInput.value = agora.toISOString().slice(0, 16);
+            }
+        });
+    </script>
+}
+
 <style>
 .calendario-table td {
     width: 14.28%;
@@ -307,17 +388,3 @@
     background-color: #f8f9fa;
 }
 </style>
-
-@section Scripts {
-    <script>
-        // Definir data atual no formulário
-        document.addEventListener('DOMContentLoaded', function() {
-            const dataInput = document.querySelector('input[name="DataPrevista"]');
-            if (dataInput && !dataInput.value) {
-                const agora = new Date();
-                agora.setMinutes(agora.getMinutes() - agora.getTimezoneOffset());
-                dataInput.value = agora.toISOString().slice(0, 16);
-            }
-        });
-    </script>
-}

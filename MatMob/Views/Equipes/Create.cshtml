@@ -56,7 +56,8 @@
                 <div class="row">
                     @if (ViewBag.Tecnicos != null)
                     {
-                        @foreach (var tecnico in ViewBag.Tecnicos as List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)
+                        var tecnicosList = ViewBag.Tecnicos as List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem> ?? new List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>();
+                        @foreach (var tecnico in tecnicosList)
                         {
                             <div class="col-md-4 mb-2">
                                 <div class="form-check">

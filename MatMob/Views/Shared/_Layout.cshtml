@@ -6,6 +6,8 @@
     <title>@ViewData["Title"] - MatMob</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/MatMob.styles.css" asp-append-version="true" />
 </head>
@@ -58,11 +60,14 @@
                     </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-boxes me-1"></i>Estoque
+                            <i class="fas fa-shopping-cart me-1"></i>Compras
                         </a>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" asp-controller="Pecas" asp-action="Index"><i class="fas fa-list me-1"></i>Peças</a></li>
-                            <li><a class="dropdown-item" asp-controller="Pecas" asp-action="EstoqueBaixo"><i class="fas fa-exclamation-triangle me-1"></i>Estoque Baixo</a></li>
+                            <li><a class="dropdown-item" asp-controller="Fornecedores" asp-action="Index"><i class="fas fa-building me-1"></i>Fornecedores</a></li>
+                            <li><a class="dropdown-item" asp-controller="Produtos" asp-action="Index"><i class="fas fa-box me-1"></i>Produtos</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" asp-controller="PedidosCompra" asp-action="Index"><i class="fas fa-clipboard-list me-1"></i>Pedidos de Compra</a></li>
+                            <li><a class="dropdown-item" asp-controller="NotasFiscais" asp-action="Index"><i class="fas fa-file-invoice me-1"></i>Notas Fiscais</a></li>
                         </ul>
                     </li>
                 </ul>
@@ -107,6 +112,8 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.all.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>

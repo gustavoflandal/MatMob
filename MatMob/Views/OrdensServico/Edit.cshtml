@@ -53,7 +53,7 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label asp-for="AtivoId" class="form-label">Ativo</label>
-                                    <select asp-for="AtivoId" asp-items="@((SelectList)ViewData["AtivoId"])" class="form-select">
+                                    <select asp-for="SolicitanteId" asp-items="@(ViewData["SolicitanteId"] as SelectList ?? new SelectList(Enumerable.Empty<SelectListItem>()))" class="form-select">
                                         <option value="">Selecionar ativo...</option>
                                     </select>
                                     <span asp-validation-for="AtivoId" class="text-danger"></span>
@@ -108,7 +108,7 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label asp-for="EquipeId" class="form-label">Equipe Responsável</label>
-                                    <select asp-for="EquipeId" asp-items="@((SelectList)ViewData["EquipeId"])" class="form-select">
+                                    <select asp-for="EquipeId" asp-items="@(ViewData["EquipeId"] as SelectList ?? new SelectList(Enumerable.Empty<SelectListItem>()))" class="form-select">
                                         <option value="">Selecionar equipe...</option>
                                     </select>
                                     <span asp-validation-for="EquipeId" class="text-danger"></span>
@@ -117,7 +117,7 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label asp-for="TecnicoResponsavelId" class="form-label">Técnico Responsável</label>
-                                    <select asp-for="TecnicoResponsavelId" asp-items="@((SelectList)ViewData["TecnicoResponsavelId"])" class="form-select">
+                                    <select asp-for="TecnicoResponsavelId" asp-items="@(ViewData["TecnicoResponsavelId"] as SelectList ?? new SelectList(Enumerable.Empty<SelectListItem>()))" class="form-select">
                                         <option value="">Selecionar técnico...</option>
                                     </select>
                                     <span asp-validation-for="TecnicoResponsavelId" class="text-danger"></span>

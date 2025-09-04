@@ -150,7 +150,7 @@ namespace MatMob.Services
                 {
                     Tipo = TipoAlerta.OSEmAtraso,
                     Titulo = "OS em Atraso",
-                    Mensagem = $"A OS #{os.NumeroOS} do ativo '{os.Ativo.Nome}' está há {diasAtraso} dias em aberto",
+                    Mensagem = $"A OS #{os.NumeroOS} do ativo '{os.Ativo?.Nome ?? "Desconhecido"}' está há {diasAtraso} dias em aberto",
                     DataCriacao = DateTime.Now,
                     Prioridade = diasAtraso > 15 ? PrioridadeAlerta.Alta : PrioridadeAlerta.Media,
                     Link = $"/OrdensServico/Details/{os.Id}"

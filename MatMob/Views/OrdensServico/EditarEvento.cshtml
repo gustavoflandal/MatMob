@@ -1,0 +1,156 @@
+@model MatMob.Models.ViewModels.CalendarioManutencaoViewModel
+@using MatMob.Models.Entities
+@{
+    ViewData["Title"] = "Editar Evento";
+}
+
+<div class="container-fluid py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
+            <li class="breadcrumb-item"><a asp-controller="OrdensServico" asp-action="Calendario">Calendário</a></li>
+            <li class="breadcrumb-item active">Editar Evento</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-edit me-2"></i>
+                        Editar Evento
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="EditarEvento" method="post">
+                        <input type="hidden" asp-for="Id" />
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="Titulo" class="form-label">Título *</label>
+                                    <input asp-for="Titulo" class="form-control" required />
+                                    <span asp-validation-for="Titulo" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="DataPrevista" class="form-label">Data *</label>
+                                    <input asp-for="DataPrevista" type="datetime-local" class="form-control" required />
+                                    <span asp-validation-for="DataPrevista" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="Tipo" class="form-label">Tipo de Evento *</label>
+                                    <select asp-for="Tipo" class="form-select" required>
+                                        <option value="">Selecione o tipo</option>
+                                        <option value="@((int)TipoAgenda.ManutencaoPreventiva)">Manutenção Preventiva</option>
+                                        <option value="@((int)TipoAgenda.ManutencaoCorretiva)">Manutenção Corretiva</option>
+                                        <option value="@((int)TipoAgenda.Inspecao)">Inspeção</option>
+                                        <option value="@((int)TipoAgenda.Calibracao)">Calibração</option>
+                                        <option value="@((int)TipoAgenda.Teste)">Teste</option>
+                                    </select>
+                                    <span asp-validation-for="Tipo" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="AtivoId" class="form-label">Ativo</label>
+                                    <select asp-for="AtivoId" class="form-select" asp-items="@(new SelectList(Model.AtivosDisponiveis, "Id", "Nome", Model.AtivoId))">
+                                        <option value="">Selecione um ativo (opcional)</option>
+                                    </select>
+                                    <span asp-validation-for="AtivoId" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="EquipeId" class="form-label">Equipe</label>
+                                    <select asp-for="EquipeId" class="form-select" asp-items="@(new SelectList(Model.EquipesDisponiveis, "Id", "Nome", Model.EquipeId))">
+                                        <option value="">Selecione uma equipe (opcional)</option>
+                                    </select>
+                                    <span asp-validation-for="EquipeId" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="ResponsavelId" class="form-label">Responsável *</label>
+                                    <select asp-for="ResponsavelId" class="form-select" required>
+                                        <option value="">Selecione o responsável</option>
+                                        @foreach (var tecnico in Model.TecnicosDisponiveis)
+                                        {
+                                            <option value="@tecnico.Id" selected="@(tecnico.Id == Model.ResponsavelId)">@tecnico.Nome</option>
+                                        }
+                                    </select>
+                                    <span asp-validation-for="ResponsavelId" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Descricao" class="form-label">Descrição</label>
+                            <textarea asp-for="Descricao" class="form-control" rows="3"></textarea>
+                            <span asp-validation-for="Descricao" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Observacoes" class="form-label">Observações</label>
+                            <textarea asp-for="Observacoes" class="form-control" rows="2"></textarea>
+                            <span asp-validation-for="Observacoes" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Calendario" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-1"></i> Voltar para o Calendário
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i> Salvar Alterações
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        // Inicializar os selects com o Select2 para melhorar a experiência do usuário
+        $(document).ready(function() {
+            $('#Tipo').select2({
+                placeholder: 'Selecione o tipo',
+                allowClear: true,
+                width: '100%'
+            });
+            
+            $('#AtivoId').select2({
+                placeholder: 'Selecione um ativo (opcional)',
+                allowClear: true,
+                width: '100%'
+            });
+            
+            $('#EquipeId').select2({
+                placeholder: 'Selecione uma equipe (opcional)',
+                allowClear: true,
+                width: '100%'
+            });
+            
+            $('#ResponsavelId').select2({
+                placeholder: 'Selecione o responsável',
+                allowClear: true,
+                width: '100%'
+            });
+        });
+    </script>
+}

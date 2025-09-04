@@ -1,0 +1,998 @@
+@model MatMob.Models.Entities.PedidoCompra
+
+@{
+    ViewData["Title"] = "Detalhes do Pedido de Compra";
+}
+
+<div class="container-fluid py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
+            <li class="breadcrumb-item"><a asp-controller="PedidosCompra" asp-action="Index">Pedidos de Compra</a></li>
+            <li class="breadcrumb-item active">Detalhes</li>
+        </ol>
+    </nav>
+
+    <!-- Cabeçalho -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-info">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-shopping-cart me-2"></i>
+                        Detalhes do Pedido: @Model.NumeroPedido
+                    </h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Informações do Pedido -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Dados Básicos -->
+                        <div class="col-md-6">
+                            <h5 class="mb-3 text-primary">
+                                <i class="fas fa-info-circle me-2"></i>Dados Básicos
+                            </h5>
+
+                            <div class="row mb-2">
+                                <div class="col-sm-4"><strong>Número:</strong></div>
+                                <div class="col-sm-8">
+                                    <span class="badge bg-secondary">@Model.NumeroPedido</span>
+                                </div>
+                            </div>
+
+                            <div class="row mb-2">
+                                <div class="col-sm-4"><strong>Fornecedor:</strong></div>
+                                <div class="col-sm-8">
+                                    <strong>@Model.Fornecedor?.Nome</strong>
+                                    @if (!string.IsNullOrEmpty(Model.Fornecedor?.NomeFantasia))
+                                    {
+                                        <br><small class="text-muted">@Model.Fornecedor?.NomeFantasia</small>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="row mb-2">
+                                <div class="col-sm-4"><strong>Status:</strong></div>
+                                <div class="col-sm-8">
+                                    <span class="badge @GetStatusBadgeClass(Model.Status)">
+                                        @Model.Status.ToString()
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="row mb-2">
+                                <div class="col-sm-4"><strong>Prioridade:</strong></div>
+                                <div class="col-sm-8">
+                                    <span class="badge @GetPrioridadeBadgeClass(Model.Prioridade)">
+                                        @Model.Prioridade.ToString()
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Datas e Valores -->
+                        <div class="col-md-6">
+                            <h5 class="mb-3 text-primary">
+                                <i class="fas fa-calendar me-2"></i>Datas e Valores
+                            </h5>
+
+                            <div class="row mb-2">
+                                <div class="col-sm-4"><strong>Data do Pedido:</strong></div>
+                                <div class="col-sm-8">@Model.DataPedido.ToString("dd/MM/yyyy HH:mm")</div>
+                            </div>
+
+                            @if (Model.DataAprovacao.HasValue)
+                            {
+                                <div class="row mb-2">
+                                    <div class="col-sm-4"><strong>Data Aprovação:</strong></div>
+                                    <div class="col-sm-8">@Model.DataAprovacao.Value.ToString("dd/MM/yyyy HH:mm")</div>
+                                </div>
+                            }
+
+                            @if (Model.DataPrevistaEntrega.HasValue)
+                            {
+                                <div class="row mb-2">
+                                    <div class="col-sm-4"><strong>Entrega Prevista:</strong></div>
+                                    <div class="col-sm-8">@Model.DataPrevistaEntrega.Value.ToString("dd/MM/yyyy")</div>
+                                </div>
+                            }
+
+                            @if (Model.DataEntrega.HasValue)
+                            {
+                                <div class="row mb-2">
+                                    <div class="col-sm-4"><strong>Data Entrega:</strong></div>
+                                    <div class="col-sm-8">@Model.DataEntrega.Value.ToString("dd/MM/yyyy HH:mm")</div>
+                                </div>
+                            }
+
+                            <div class="row mb-2">
+                                <div class="col-sm-4"><strong>Valor Total:</strong></div>
+                                <div class="col-sm-8">
+                                    <strong class="text-success">R$ @(Model.ValorTotal?.ToString("N2") ?? "0,00")</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div class="row">
+                        <!-- Condições -->
+                        <div class="col-md-6">
+                            <h5 class="mb-3 text-primary">
+                                <i class="fas fa-handshake me-2"></i>Condições
+                            </h5>
+
+                            @if (!string.IsNullOrEmpty(Model.CondicaoPagamento))
+                            {
+                                <div class="row mb-2">
+                                    <div class="col-sm-4"><strong>Pagamento:</strong></div>
+                                    <div class="col-sm-8">@Model.CondicaoPagamento</div>
+                                </div>
+                            }
+                            else
+                            {
+                                <p class="text-muted mb-0">Nenhuma condição de pagamento especificada.</p>
+                            }
+                        </div>
+
+                        <!-- Observações -->
+                        <div class="col-md-6">
+                            <h5 class="mb-3 text-primary">
+                                <i class="fas fa-sticky-note me-2"></i>Observações
+                            </h5>
+
+                            @if (!string.IsNullOrEmpty(Model.Observacoes))
+                            {
+                                <p class="mb-0">@Model.Observacoes</p>
+                            }
+                            else
+                            {
+                                <p class="text-muted mb-0">Nenhuma observação registrada.</p>
+                            }
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- Informações de auditoria -->
+                    <div class="row">
+                        <div class="col-12">
+                            <h5 class="mb-3 text-primary">
+                                <i class="fas fa-clock me-2"></i>Informações do Sistema
+                            </h5>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="row mb-2">
+                                        <div class="col-sm-4"><strong>Criado em:</strong></div>
+                                        <div class="col-sm-8">@Model.DataCadastro.ToString("dd/MM/yyyy HH:mm")</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="row mb-2">
+                                        <div class="col-sm-4"><strong>Última atualização:</strong></div>
+                                        <div class="col-sm-8">@(Model.UltimaAtualizacao?.ToString("dd/MM/yyyy HH:mm") ?? "Nunca")</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Itens do Pedido -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        Itens do Pedido (@(Model.Itens?.Count ?? 0))
+                    </h5>
+                    @if (Model.Status == MatMob.Models.Entities.StatusPedidoCompra.Aberto)
+                    {
+                        <button type="button" class="btn btn-primary btn-sm"
+                                data-bs-toggle="modal" data-bs-target="#modalAdicionarItem">
+                            <i class="fas fa-plus me-1"></i> Adicionar Item
+                        </button>
+                    }
+                </div>
+                <div class="card-body">
+                    @if (Model.Itens != null && Model.Itens.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Produto</th>
+                                        <th class="text-center">Quantidade Solicitada</th>
+                                        <th class="text-center">Quantidade Recebida</th>
+                                        <th class="text-end">Preço Unitário</th>
+                                        <th class="text-end">Valor Total</th>
+                                        <th class="text-center">Status</th>
+                                        <th class="text-center">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model.Itens)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <strong>@item.Produto?.Nome</strong>
+                                                @if (!string.IsNullOrEmpty(item.Produto?.Descricao))
+                                                {
+                                                    <br><small class="text-muted">@item.Produto?.Descricao</small>
+                                                }
+                                            </td>
+                                            <td class="text-center">@item.QuantidadeSolicitada.ToString("N2") @item.Produto?.UnidadeMedida</td>
+                                            <td class="text-center">@item.QuantidadeRecebida.ToString("N2") @item.Produto?.UnidadeMedida</td>
+                                            <td class="text-end">R$ @item.PrecoUnitario.ToString("N2")</td>
+                                            <td class="text-end">R$ @((item.QuantidadeSolicitada * item.PrecoUnitario).ToString("N2"))</td>
+                                            <td class="text-center">
+                                                @if (item.QuantidadeRecebida >= item.QuantidadeSolicitada)
+                                                {
+                                                    <span class="badge bg-success">Totalmente Recebido</span>
+                                                }
+                                                else if (item.QuantidadeRecebida > 0)
+                                                {
+                                                    <span class="badge bg-warning">Parcialmente Recebido</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-secondary">Pendente</span>
+                                                }
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="btn-group btn-group-sm" role="group">
+                                                    @if (Model.Status == MatMob.Models.Entities.StatusPedidoCompra.Aberto)
+                                                    {
+                                                        <button type="button" class="btn btn-outline-primary"
+                                                                onclick="editarItem(@item.Id)"
+                                                                title="Editar Item">
+                                                            <i class="fas fa-edit"></i>
+                                                        </button>
+                                                        <button type="button" class="btn btn-outline-danger"
+                                                                onclick="confirmarExclusaoItem(@item.Id, '@item.Produto?.Nome.Replace("'", "\"'"))')"
+                                                                title="Excluir Item">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    }
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                <tfoot class="table-dark">
+                                    <tr>
+                                        <th colspan="4" class="text-end">TOTAL DO PEDIDO:</th>
+                                        <th class="text-end">R$ @(Model.ValorTotal?.ToString("N2") ?? "0,00")</th>
+                                        <th colspan="2"></th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">Nenhum item adicionado ainda</h5>
+                            <p class="text-muted">Clique em "Adicionar Item" para começar a montar seu pedido.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notas Fiscais -->
+    @if (Model.NotasFiscais != null && Model.NotasFiscais.Any())
+    {
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-file-invoice me-2"></i>
+                            Notas Fiscais (@Model.NotasFiscais.Count)
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Número</th>
+                                        <th>Data Emissão</th>
+                                        <th>Valor Total</th>
+                                        <th>Status</th>
+                                        <th width="120px">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var nota in Model.NotasFiscais.OrderByDescending(n => n.DataEmissao))
+                                    {
+                                        <tr>
+                                            <td>@nota.NumeroNF</td>
+                                            <td>@nota.DataEmissao.ToString("dd/MM/yyyy")</td>
+                                            <td>R$ @(nota.ValorTotal?.ToString("N2") ?? "0,00")</td>
+                                            <td>
+                                                <span class="badge bg-success">Processada</span>
+                                            </td>
+                                            <td>
+                                                <a asp-controller="NotasFiscais" asp-action="Details" asp-route-id="@nota.Id"
+                                                   class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-eye"></i> Ver
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Botões de ação -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Voltar para pedidos
+                        </a>
+                        <div>
+                            @if (Model.Status == MatMob.Models.Entities.StatusPedidoCompra.Aberto)
+                            {
+                                <button type="button" class="btn btn-primary me-2"
+                                        data-bs-toggle="modal" data-bs-target="#modalAdicionarItem">
+                                    <i class="fas fa-plus me-1"></i> Adicionar Item
+                                </button>
+                            }
+                            <!-- Botões de editar e excluir removidos conforme solicitado -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@{
+    string GetStatusBadgeClass(MatMob.Models.Entities.StatusPedidoCompra status)
+    {
+        return status switch
+        {
+            MatMob.Models.Entities.StatusPedidoCompra.Aberto => "bg-primary",
+            MatMob.Models.Entities.StatusPedidoCompra.Aprovado => "bg-success",
+            MatMob.Models.Entities.StatusPedidoCompra.Rejeitado => "bg-danger",
+            MatMob.Models.Entities.StatusPedidoCompra.ParcialmenteRecebido => "bg-warning",
+            MatMob.Models.Entities.StatusPedidoCompra.TotalmenteRecebido => "bg-info",
+            MatMob.Models.Entities.StatusPedidoCompra.Cancelado => "bg-secondary",
+            _ => "bg-light"
+        };
+    }
+
+    string GetPrioridadeBadgeClass(MatMob.Models.Entities.PrioridadePedidoCompra prioridade)
+    {
+        return prioridade switch
+        {
+            MatMob.Models.Entities.PrioridadePedidoCompra.Baixa => "bg-secondary",
+            MatMob.Models.Entities.PrioridadePedidoCompra.Media => "bg-info",
+            MatMob.Models.Entities.PrioridadePedidoCompra.Alta => "bg-warning",
+            MatMob.Models.Entities.PrioridadePedidoCompra.Urgente => "bg-danger",
+            _ => "bg-light"
+        };
+    }
+}
+
+<!-- Modal Adicionar Item -->
+<div class="modal fade" id="modalAdicionarItem" tabindex="-1" aria-labelledby="modalAdicionarItemLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="modalAdicionarItemLabel">Adicionar Item ao Pedido</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <form id="formAdicionarItem" method="post" asp-action="AdicionarItemAjax">
+                <input type="hidden" name="pedidoCompraId" value="@Model.Id" />
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="produtoId" class="form-label">Produto *</label>
+                            <select class="form-select" id="produtoId" name="produtoId" required>
+                                <option value="">Selecione um produto...</option>
+                                @if (ViewBag.Produtos != null)
+                                {
+                                    foreach (var produto in ViewBag.Produtos)
+                                    {
+                                        <option value="@produto.Id">@produto.Nome (@produto.Codigo) - @produto.UnidadeMedida</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="quantidade" class="form-label">Quantidade *</label>
+                            <input type="number" class="form-control" id="quantidade" name="quantidade" min="0.01" step="0.01" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="precoUnitario" class="form-label">Preço Unitário *</label>
+                            <div class="input-group">
+                                <span class="input-group-text">R$</span>
+                                <input type="number" class="form-control" id="precoUnitario" name="precoUnitario" min="0.01" step="0.01" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="observacoes" class="form-label">Observações</label>
+                        <textarea class="form-control" id="observacoes" name="observacoes" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Adicionar Item</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar Item -->
+<div class="modal fade" id="modalEditarItem" tabindex="-1" aria-labelledby="modalEditarItemLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-white">
+                <h5 class="modal-title" id="modalEditarItemLabel">Editar Item do Pedido</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <form id="formEditarItem" method="post" asp-action="EditarItem">
+                <input type="hidden" id="itemId" name="itemId" />
+                <input type="hidden" name="pedidoCompraId" value="@Model.Id" />
+                <div class="modal-body">
+                    <!-- Área de mensagens de erro -->
+                    <div class="row mb-3" id="errorMessageContainer" style="display: none;">
+                        <div class="col-md-12">
+                            <div class="alert alert-danger" id="errorMessage">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <span id="errorMessageText"></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Área de mensagens de sucesso -->
+                    <div class="row mb-3" id="successMessageContainer" style="display: none;">
+                        <div class="col-md-12">
+                            <div class="alert alert-success" id="successMessage">
+                                <i class="fas fa-check-circle me-2"></i>
+                                <span id="successMessageText"></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <div class="alert alert-info">
+                                <strong>Produto:</strong> <span id="produtoNome"></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="quantidadeEditar" class="form-label">Quantidade Solicitada <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="quantidadeEditar" name="quantidadeSolicitada" 
+                                   min="0.01" step="0.01" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="precoUnitarioEditar" class="form-label">Preço Unitário <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text">R$</span>
+                                <input type="number" class="form-control" id="precoUnitarioEditar" name="precoUnitario" 
+                                       min="0.01" step="0.01" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label for="observacoesEditar" class="form-label">Observações</label>
+                            <textarea class="form-control" id="observacoesEditar" name="observacoes" rows="3" 
+                                      placeholder="Observações opcionais sobre o item..."></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="alert alert-info">
+                                <strong>Valor Total do Item:</strong> R$ <span id="valorTotalItemEditar">0,00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-warning" id="btnSalvarEdicao">
+                        <i class="fas fa-save me-2"></i>Salvar Alterações
+                    </button>
+                    <!-- Indicador de carregamento -->
+                    <div id="loadingIndicator" style="display: none;" class="ms-2">
+                        <div class="spinner-border spinner-border-sm text-warning" role="status">
+                            <span class="visually-hidden">Carregando...</span>
+                        </div>
+                        <span class="ms-2 text-muted">Salvando...</span>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @Html.AntiForgeryToken()
+    <script>
+        // Debug: Verificar se o JavaScript está carregando
+        console.log('JavaScript carregado para PedidosCompra Details');
+
+        let produtos = @Html.Raw(Json.Serialize(ViewBag.Produtos ?? new List<object>()));
+        console.log('Produtos carregados:', produtos);
+
+        // Verificar se o modal existe
+        $(document).ready(function() {
+            console.log('Documento pronto');
+            console.log('Modal existe:', $('#modalAdicionarItem').length > 0);
+            console.log('Form existe:', $('#formAdicionarItem').length > 0);
+            
+            // Verificar se o botão abre o modal
+            $('[data-bs-target="#modalAdicionarItem"]').on('click', function() {
+                console.log('Botão clicado para abrir modal');
+                $('#modalAdicionarItem').modal('show');
+            });
+            
+            // Verificar se o modal está sendo mostrado
+            $('#modalAdicionarItem').on('show.bs.modal', function() {
+                console.log('Modal está sendo mostrado');
+            });
+            
+            $('#modalAdicionarItem').on('shown.bs.modal', function() {
+                console.log('Modal foi mostrado');
+            });
+        });
+
+        // Função para editar um item do pedido
+        function editarItem(itemId) {
+            // Limpar mensagens anteriores
+            hideErrorMessage();
+            hideSuccessMessage();
+            
+            // Buscar dados do item via AJAX
+            $.ajax({
+                url: '/PedidosCompra/ObterItem/' + itemId,
+                type: 'GET',
+                success: function (data) {
+                    if (data.success) {
+                        // Preencher o modal com os dados
+                        $('#itemId').val(data.item.id);
+                        $('#produtoNome').text(data.item.produtoNome);
+                        $('#quantidadeEditar').val(data.item.quantidadeSolicitada);
+                        $('#precoUnitarioEditar').val(data.item.precoUnitario);
+                        $('#observacoesEditar').val(data.item.observacoes || '');
+                        
+                        // Calcular valor total
+                        calcularValorTotalEditar();
+                        
+                        // Abrir modal
+                        $('#modalEditarItem').modal('show');
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Erro',
+                            text: data.message || 'Erro ao carregar dados do item'
+                        });
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('Erro ao carregar item:', xhr.responseText, status, error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Erro',
+                        text: 'Erro ao carregar dados do item'
+                    });
+                }
+            });
+        }
+
+        // Funções para controlar mensagens de erro e sucesso no modal
+        function showErrorMessage(message) {
+            $('#errorMessageText').text(message);
+            $('#errorMessageContainer').show();
+            $('#successMessageContainer').hide();
+            
+            // Rolar para o topo do modal para mostrar a mensagem
+            $('.modal-body').animate({ scrollTop: 0 }, 300);
+        }
+
+        function hideErrorMessage() {
+            $('#errorMessageContainer').hide();
+        }
+
+        function showSuccessMessage(message) {
+            $('#successMessageText').text(message);
+            $('#successMessageContainer').show();
+            $('#errorMessageContainer').hide();
+            
+            // Rolar para o topo do modal para mostrar a mensagem
+            $('.modal-body').animate({ scrollTop: 0 }, 300);
+        }
+
+        function hideSuccessMessage() {
+            $('#successMessageContainer').hide();
+        }
+
+        // Validação do formulário
+        function validarFormularioEdicao() {
+            const itemId = $('#itemId').val();
+            const pedidoCompraId = $('#formEditarItem input[name="pedidoCompraId"]').val();
+            const quantidade = parseFloat($('#quantidadeEditar').val());
+            const preco = parseFloat($('#precoUnitarioEditar').val());
+            
+            if (!itemId || itemId <= 0) {
+                showErrorMessage('ID do item é inválido.');
+                return false;
+            }
+            
+            if (!pedidoCompraId || pedidoCompraId <= 0) {
+                showErrorMessage('ID do pedido é inválido.');
+                return false;
+            }
+            
+            if (!quantidade || quantidade <= 0) {
+                showErrorMessage('A quantidade deve ser maior que zero.');
+                $('#quantidadeEditar').focus();
+                return false;
+            }
+            
+            if (!preco || preco <= 0) {
+                showErrorMessage('O preço unitário deve ser maior que zero.');
+                $('#precoUnitarioEditar').focus();
+                return false;
+            }
+            
+            if (quantidade > 999999) {
+                showErrorMessage('A quantidade não pode ser maior que 999.999.');
+                $('#quantidadeEditar').focus();
+                return false;
+            }
+            
+            if (preco > 999999) {
+                showErrorMessage('O preço unitário não pode ser maior que R$ 999.999,00.');
+                $('#precoUnitarioEditar').focus();
+                return false;
+            }
+            
+            return true;
+        }
+
+        function calcularValorTotalEditar() {
+            const quantidade = parseFloat($('#quantidadeEditar').val()) || 0;
+            const precoUnitario = parseFloat($('#precoUnitarioEditar').val()) || 0;
+            const valorTotal = quantidade * precoUnitario;
+            
+            $('#valorTotalItemEditar').text(valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+        }
+
+        // Eventos para recalcular valor total ao alterar quantidade ou preço
+        $('#quantidadeEditar, #precoUnitarioEditar').on('input', function() {
+            calcularValorTotalEditar();
+            // Limpar mensagens de erro quando o usuário começar a digitar
+            hideErrorMessage();
+        });
+
+        // Limpar mensagens quando o modal for fechado
+        $('#modalEditarItem').on('hidden.bs.modal', function() {
+            hideErrorMessage();
+            hideSuccessMessage();
+            
+            // Resetar botão e indicador de carregamento
+            $('#btnSalvarEdicao').prop('disabled', false).html('<i class="fas fa-save me-2"></i>Salvar Alterações');
+            $('#loadingIndicator').hide();
+        });
+
+        // Limpar mensagens quando o modal for aberto
+        $('#modalEditarItem').on('show.bs.modal', function() {
+            hideErrorMessage();
+            hideSuccessMessage();
+            $('#loadingIndicator').hide();
+        });
+
+        // Submissão do formulário de edição
+        $('#formEditarItem').on('submit', function(e) {
+            e.preventDefault();
+            
+            // Limpar mensagens anteriores
+            hideErrorMessage();
+            hideSuccessMessage();
+            
+            // Validar formulário
+            if (!validarFormularioEdicao()) {
+                return;
+            }
+            
+            // Coletar dados do formulário
+            const formData = {
+                itemId: $('#itemId').val(),
+                pedidoCompraId: $('#formEditarItem input[name="pedidoCompraId"]').val(),
+                quantidadeSolicitada: parseFloat($('#quantidadeEditar').val()),
+                precoUnitario: parseFloat($('#precoUnitarioEditar').val()),
+                observacoes: $('#observacoesEditar').val() || '',
+                __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+            };
+            
+            // Debug log
+            console.log('Dados do formulário:', formData);
+            
+            // Mostrar indicadores de carregamento
+            $('#btnSalvarEdicao').prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i>Salvando...');
+            $('#loadingIndicator').show();
+            
+            $.ajax({
+                url: $(this).attr('action'),
+                type: 'POST',
+                data: formData,
+                timeout: 30000, // 30 segundos de timeout
+                success: function (data) {
+                    console.log('Resposta do servidor:', data);
+                    
+                    if (data && data.success) {
+                        showSuccessMessage('Item atualizado com sucesso!');
+                        
+                        // Atualizar os valores exibidos se fornecidos
+                        if (data.data) {
+                            $('#quantidadeEditar').val(data.data.quantidadeSolicitada);
+                            $('#precoUnitarioEditar').val(data.data.precoUnitario);
+                            calcularValorTotalEditar();
+                        }
+                        
+                        setTimeout(function() {
+                            $('#modalEditarItem').modal('hide');
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        const errorMsg = (data && data.message) ? data.message : 'Erro ao atualizar item';
+                        showErrorMessage(errorMsg);
+                        
+                        // Log adicional de erro se disponível
+                        if (data && data.error) {
+                            console.error('Erro detalhado:', data.error);
+                        }
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('Erro AJAX:', {
+                        status: xhr.status,
+                        statusText: xhr.statusText,
+                        responseText: xhr.responseText,
+                        error: error
+                    });
+                    
+                    let errorMessage = 'Erro ao atualizar item.';
+                    
+                    if (xhr.status === 0) {
+                        errorMessage = 'Erro de conexão. Verifique sua internet.';
+                    } else if (xhr.status === 400) {
+                        errorMessage = 'Dados inválidos. Verifique os valores informados.';
+                    } else if (xhr.status === 403) {
+                        errorMessage = 'Erro de segurança. Tente recarregar a página.';
+                    } else if (xhr.status === 404) {
+                        errorMessage = 'Recurso não encontrado.';
+                    } else if (xhr.status === 500) {
+                        errorMessage = 'Erro interno do servidor.';
+                    } else if (status === 'timeout') {
+                        errorMessage = 'Tempo limite excedido. Tente novamente.';
+                    }
+                    
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    }
+                    
+                    showErrorMessage(errorMessage);
+                },
+                complete: function() {
+                    // Ocultar indicadores de carregamento
+                    $('#btnSalvarEdicao').prop('disabled', false).html('<i class="fas fa-save me-2"></i>Salvar Alterações');
+                    $('#loadingIndicator').hide();
+                }
+            });
+        });
+
+        // Função para visualizar detalhes de um item
+        function visualizarItem(itemId) {
+            // Implementar a lógica para visualizar detalhes do item
+            window.location.href = `@Url.Action("DetalhesItem", "PedidosCompra")?id=${itemId}`;
+        }
+
+        // Função para confirmar a exclusão de um item
+        function confirmarExclusaoItem(itemId, produtoNome) {
+            Swal.fire({
+                title: 'Confirmar Exclusão',
+                html: `Tem certeza que deseja excluir o item <strong>${produtoNome}</strong>?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sim, excluir!',
+                cancelButtonText: 'Cancelar',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Chamar a função para excluir o item
+                    excluirItem(itemId);
+                }
+            });
+        }
+
+        // Função para excluir um item do pedido
+        function excluirItem(itemId) {
+            // Mostrar loading
+            Swal.fire({
+                title: 'Aguarde...',
+                text: 'Excluindo item do pedido',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            // Fazer a requisição AJAX para excluir o item
+            fetch(`@Url.Action("ExcluirItem", "PedidosCompra")?id=${itemId}`, {
+                method: 'POST',
+                headers: {
+                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val(),
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => {
+                        throw new Error(err.message || 'Erro ao excluir o item');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        title: 'Sucesso!',
+                        text: data.message || 'Item excluído com sucesso!',
+                        icon: 'success',
+                        confirmButtonText: 'OK'
+                    }).then(() => {
+                        // Recarregar a página para atualizar a lista
+                        window.location.reload();
+                    });
+                } else {
+                    throw new Error(data.message || 'Erro ao excluir o item');
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                Swal.fire({
+                    title: 'Erro!',
+                    text: error.message || 'Ocorreu um erro ao excluir o item. Por favor, tente novamente.',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+            });
+        }
+
+        // Submissão do formulário de adicionar item
+        $('#formAdicionarItem').on('submit', function(e) {
+            e.preventDefault();
+            
+            // Coletar dados do formulário
+            const formData = {
+                pedidoCompraId: $('#formAdicionarItem input[name="pedidoCompraId"]').val(),
+                produtoId: $('#produtoId').val(),
+                quantidadeSolicitada: parseFloat($('#quantidade').val()),
+                precoUnitario: parseFloat($('#precoUnitario').val()),
+                observacoes: $('#observacoes').val() || '',
+                __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+            };
+            
+            // Validar dados
+            if (!formData.produtoId || formData.produtoId <= 0) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Selecione um produto válido.'
+                });
+                return;
+            }
+            
+            if (!formData.quantidadeSolicitada || formData.quantidadeSolicitada <= 0) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'A quantidade deve ser maior que zero.'
+                });
+                return;
+            }
+            
+            if (!formData.precoUnitario || formData.precoUnitario <= 0) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'O preço unitário deve ser maior que zero.'
+                });
+                return;
+            }
+            
+            // Mostrar loading
+            Swal.fire({
+                title: 'Aguarde...',
+                text: 'Adicionando item ao pedido',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            
+            // Fazer requisição AJAX
+            $.ajax({
+                url: $(this).attr('action'),
+                type: 'POST',
+                data: formData,
+                success: function(data) {
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Sucesso!',
+                            text: data.message || 'Item adicionado com sucesso!',
+                            confirmButtonText: 'OK'
+                        }).then(() => {
+                            $('#modalAdicionarItem').modal('hide');
+                            location.reload(); // Recarregar página para atualizar lista
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Erro',
+                            text: data.message || 'Erro ao adicionar item'
+                        });
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Erro AJAX:', xhr.responseText, status, error);
+                    let errorMessage = 'Erro ao adicionar item.';
+                    
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    }
+                    
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Erro',
+                        text: errorMessage
+                    });
+                }
+            });
+        });
+        // Limpar formulário quando o modal for fechado
+        $('#modalAdicionarItem').on('hidden.bs.modal', function() {
+            $('#formAdicionarItem')[0].reset();
+        });
+    </script>
+}

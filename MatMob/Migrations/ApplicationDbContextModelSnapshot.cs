@@ -87,7 +87,7 @@ namespace MatMob.Migrations
 
                     b.HasIndex("ResponsavelId");
 
-                    b.ToTable("AgendaManutencao");
+                    b.ToTable("AgendaManutencao", (string)null);
                 });
 
             modelBuilder.Entity("MatMob.Models.Entities.ApontamentoHoras", b =>
@@ -134,7 +134,7 @@ namespace MatMob.Migrations
 
                     b.HasIndex("TecnicoId");
 
-                    b.ToTable("ApontamentosHoras");
+                    b.ToTable("ApontamentosHoras", (string)null);
                 });
 
             modelBuilder.Entity("MatMob.Models.Entities.Ativo", b =>
@@ -185,7 +185,7 @@ namespace MatMob.Migrations
                     b.HasIndex("NumeroSerie")
                         .IsUnique();
 
-                    b.ToTable("Ativos");
+                    b.ToTable("Ativos", (string)null);
 
                     b.HasData(
                         new
@@ -235,7 +235,7 @@ namespace MatMob.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Equipes");
+                    b.ToTable("Equipes", (string)null);
                 });
 
             modelBuilder.Entity("MatMob.Models.Entities.EquipeTecnico", b =>
@@ -268,7 +268,210 @@ namespace MatMob.Migrations
                     b.HasIndex("EquipeId", "TecnicoId", "Ativo")
                         .IsUnique();
 
-                    b.ToTable("EquipesTecnico");
+                    b.ToTable("EquipesTecnico", (string)null);
+                });
+
+            modelBuilder.Entity("MatMob.Models.Entities.Fornecedor", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Bairro")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<string>("CEP")
+                        .IsRequired()
+                        .HasMaxLength(9)
+                        .HasColumnType("varchar(9)");
+
+                    b.Property<string>("CNPJ")
+                        .IsRequired()
+                        .HasMaxLength(18)
+                        .HasColumnType("varchar(18)");
+
+                    b.Property<string>("Celular")
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<string>("Cidade")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<DateTime>("DataCadastro")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<string>("Endereco")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .HasMaxLength(2)
+                        .HasColumnType("varchar(2)");
+
+                    b.Property<string>("InscricaoEstadual")
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<string>("NomeContato")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<string>("NomeFantasia")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<string>("Observacoes")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Telefone")
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<DateTime?>("UltimaAtualizacao")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CNPJ")
+                        .IsUnique();
+
+                    b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.ToTable("Fornecedores", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 100,
+                            Bairro = "Centro",
+                            CEP = "01234-567",
+                            CNPJ = "12.345.678/0001-90",
+                            Celular = "(11) 99999-8888",
+                            Cidade = "São Paulo",
+                            DataCadastro = new DateTime(2025, 9, 1, 21, 30, 16, 0, DateTimeKind.Utc),
+                            Email = "vendas@tecnoled.com.br",
+                            Endereco = "Rua das Tecnologias, 123",
+                            Estado = "SP",
+                            InscricaoEstadual = "123456789",
+                            Nome = "TecnoLED Ltda",
+                            NomeContato = "João Silva",
+                            NomeFantasia = "TecnoLED",
+                            Observacoes = "Especialista em iluminação LED",
+                            Status = 1,
+                            Telefone = "(11) 3333-4444"
+                        },
+                        new
+                        {
+                            Id = 101,
+                            Bairro = "Industrial",
+                            CEP = "20000-000",
+                            CNPJ = "98.765.432/0001-10",
+                            Celular = "(21) 88888-7777",
+                            Cidade = "Rio de Janeiro",
+                            DataCadastro = new DateTime(2025, 9, 1, 21, 30, 16, 0, DateTimeKind.Utc),
+                            Email = "compras@sinalmod.com.br",
+                            Endereco = "Av. dos Sinais, 456",
+                            Estado = "RJ",
+                            InscricaoEstadual = "987654321",
+                            Nome = "Sinalizações Modernas S.A.",
+                            NomeContato = "Maria Santos",
+                            NomeFantasia = "SinalMod",
+                            Observacoes = "Fornecedor de equipamentos de sinalização",
+                            Status = 1,
+                            Telefone = "(21) 2222-3333"
+                        },
+                        new
+                        {
+                            Id = 102,
+                            Bairro = "Tecnológico",
+                            CEP = "30000-000",
+                            CNPJ = "11.222.333/0001-44",
+                            Celular = "(31) 77777-6666",
+                            Cidade = "Belo Horizonte",
+                            DataCadastro = new DateTime(2025, 9, 1, 21, 30, 16, 0, DateTimeKind.Utc),
+                            Email = "vendas@compelet.com.br",
+                            Endereco = "Rua dos Componentes, 789",
+                            Estado = "MG",
+                            InscricaoEstadual = "112223334",
+                            Nome = "Componentes Eletrônicos Ltda",
+                            NomeContato = "Pedro Costa",
+                            NomeFantasia = "CompElet",
+                            Observacoes = "Componentes eletrônicos diversos",
+                            Status = 1,
+                            Telefone = "(31) 1111-2222"
+                        });
+                });
+
+            modelBuilder.Entity("MatMob.Models.Entities.ItemNotaFiscal", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ItemPedidoCompraId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NotaFiscalId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Observacoes")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<decimal>("PrecoUnitario")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<int>("ProdutoId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("QuantidadeRecebida")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<decimal?>("ValorCOFINS")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<decimal?>("ValorICMS")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<decimal?>("ValorIPI")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<decimal?>("ValorPIS")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ItemPedidoCompraId");
+
+                    b.HasIndex("NotaFiscalId");
+
+                    b.HasIndex("ProdutoId");
+
+                    b.ToTable("ItensNotaFiscal", (string)null);
                 });
 
             modelBuilder.Entity("MatMob.Models.Entities.ItemOrdemServico", b =>
@@ -300,7 +503,43 @@ namespace MatMob.Migrations
 
                     b.HasIndex("PecaId");
 
-                    b.ToTable("ItensOrdemServico");
+                    b.ToTable("ItensOrdemServico", (string)null);
+                });
+
+            modelBuilder.Entity("MatMob.Models.Entities.ItemPedidoCompra", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Observacoes")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<int>("PedidoCompraId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("PrecoUnitario")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<int>("ProdutoId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("QuantidadeRecebida")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<decimal>("QuantidadeSolicitada")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PedidoCompraId");
+
+                    b.HasIndex("ProdutoId");
+
+                    b.ToTable("ItensPedidoCompra", (string)null);
                 });
 
             modelBuilder.Entity("MatMob.Models.Entities.MaterialOrdemServico", b =>
@@ -343,7 +582,7 @@ namespace MatMob.Migrations
 
                     b.HasIndex("PecaId");
 
-                    b.ToTable("MateriaisOrdemServico");
+                    b.ToTable("MateriaisOrdemServico", (string)null);
                 });
 
             modelBuilder.Entity("MatMob.Models.Entities.MovimentacaoEstoque", b =>
@@ -379,7 +618,78 @@ namespace MatMob.Migrations
 
                     b.HasIndex("PecaId");
 
-                    b.ToTable("MovimentacoesEstoque");
+                    b.ToTable("MovimentacoesEstoque", (string)null);
+                });
+
+            modelBuilder.Entity("MatMob.Models.Entities.NotaFiscal", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ChaveAcesso")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<DateTime>("DataCadastro")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("DataEmissao")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("DataEntrada")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("FornecedorId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("NumeroNF")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<string>("Observacoes")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<int>("PedidoCompraId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Serie")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("varchar(10)");
+
+                    b.Property<decimal?>("ValorCOFINS")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<decimal?>("ValorICMS")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<decimal?>("ValorIPI")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<decimal?>("ValorPIS")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<decimal?>("ValorProdutos")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<decimal?>("ValorTotal")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FornecedorId");
+
+                    b.HasIndex("PedidoCompraId");
+
+                    b.HasIndex("NumeroNF", "Serie")
+                        .IsUnique();
+
+                    b.ToTable("NotasFiscais", (string)null);
                 });
 
             modelBuilder.Entity("MatMob.Models.Entities.OrdemServico", b =>
@@ -433,6 +743,9 @@ namespace MatMob.Migrations
                     b.Property<int>("Prioridade")
                         .HasColumnType("int");
 
+                    b.Property<int?>("SolicitanteId")
+                        .HasColumnType("int");
+
                     b.Property<string>("SolucaoAplicada")
                         .HasMaxLength(1000)
                         .HasColumnType("varchar(1000)");
@@ -460,7 +773,7 @@ namespace MatMob.Migrations
 
                     b.HasIndex("TecnicoResponsavelId");
 
-                    b.ToTable("OrdensServico");
+                    b.ToTable("OrdensServico", (string)null);
                 });
 
             modelBuilder.Entity("MatMob.Models.Entities.Peca", b =>
@@ -516,7 +829,7 @@ namespace MatMob.Migrations
                     b.HasIndex("Codigo")
                         .IsUnique();
 
-                    b.ToTable("Pecas");
+                    b.ToTable("Pecas", (string)null);
 
                     b.HasData(
                         new
@@ -555,6 +868,67 @@ namespace MatMob.Migrations
                             QuantidadeEstoque = 40,
                             UnidadeMedida = "UN"
                         });
+                });
+
+            modelBuilder.Entity("MatMob.Models.Entities.PedidoCompra", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CondicaoPagamento")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<DateTime?>("DataAprovacao")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("DataCadastro")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("DataEntrega")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("DataPedido")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("DataPrevistaEntrega")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("FornecedorId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("NumeroPedido")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<string>("Observacoes")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<int>("Prioridade")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UltimaAtualizacao")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<decimal?>("ValorTotal")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FornecedorId");
+
+                    b.HasIndex("NumeroPedido")
+                        .IsUnique();
+
+                    b.ToTable("PedidosCompra", (string)null);
                 });
 
             modelBuilder.Entity("MatMob.Models.Entities.PlanoManutencao", b =>
@@ -599,7 +973,283 @@ namespace MatMob.Migrations
 
                     b.HasIndex("AtivoId");
 
-                    b.ToTable("PlanosManutencao");
+                    b.ToTable("PlanosManutencao", (string)null);
+                });
+
+            modelBuilder.Entity("MatMob.Models.Entities.Produto", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Codigo")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<DateTime>("DataCadastro")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Descricao")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<decimal>("EstoqueAtual")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<decimal>("EstoqueMinimo")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<string>("Observacoes")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UltimaAtualizacao")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("UnidadeMedida")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Codigo")
+                        .IsUnique();
+
+                    b.ToTable("Produtos", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 100,
+                            Codigo = "LED-VERM-001",
+                            DataCadastro = new DateTime(2025, 9, 1, 21, 30, 16, 0, DateTimeKind.Utc),
+                            Descricao = "Lâmpada LED vermelha para semáforos, 12V, alta durabilidade",
+                            EstoqueAtual = 0m,
+                            EstoqueMinimo = 20m,
+                            Nome = "Lâmpada LED Vermelha 12V",
+                            Observacoes = "Produto essencial para manutenção de semáforos",
+                            Status = 1,
+                            UnidadeMedida = "UN"
+                        },
+                        new
+                        {
+                            Id = 101,
+                            Codigo = "LED-AMAR-001",
+                            DataCadastro = new DateTime(2025, 9, 1, 21, 30, 16, 0, DateTimeKind.Utc),
+                            Descricao = "Lâmpada LED amarela para semáforos, 12V, alta durabilidade",
+                            EstoqueAtual = 0m,
+                            EstoqueMinimo = 20m,
+                            Nome = "Lâmpada LED Amarela 12V",
+                            Observacoes = "Produto essencial para manutenção de semáforos",
+                            Status = 1,
+                            UnidadeMedida = "UN"
+                        },
+                        new
+                        {
+                            Id = 102,
+                            Codigo = "LED-VERD-001",
+                            DataCadastro = new DateTime(2025, 9, 1, 21, 30, 16, 0, DateTimeKind.Utc),
+                            Descricao = "Lâmpada LED verde para semáforos, 12V, alta durabilidade",
+                            EstoqueAtual = 0m,
+                            EstoqueMinimo = 20m,
+                            Nome = "Lâmpada LED Verde 12V",
+                            Observacoes = "Produto essencial para manutenção de semáforos",
+                            Status = 1,
+                            UnidadeMedida = "UN"
+                        },
+                        new
+                        {
+                            Id = 103,
+                            Codigo = "CONTROL-001",
+                            DataCadastro = new DateTime(2025, 9, 1, 21, 30, 16, 0, DateTimeKind.Utc),
+                            Descricao = "Controlador eletrônico para semáforos com timer programável",
+                            EstoqueAtual = 0m,
+                            EstoqueMinimo = 5m,
+                            Nome = "Controlador de Semáforo",
+                            Observacoes = "Equipamento de controle para semáforos",
+                            Status = 1,
+                            UnidadeMedida = "UN"
+                        },
+                        new
+                        {
+                            Id = 104,
+                            Codigo = "SENSOR-001",
+                            DataCadastro = new DateTime(2025, 9, 1, 21, 30, 16, 0, DateTimeKind.Utc),
+                            Descricao = "Sensor infravermelho para detecção de veículos",
+                            EstoqueAtual = 0m,
+                            EstoqueMinimo = 10m,
+                            Nome = "Sensor de Presença",
+                            Observacoes = "Sensor para otimização do tráfego",
+                            Status = 1,
+                            UnidadeMedida = "UN"
+                        });
+                });
+
+            modelBuilder.Entity("MatMob.Models.Entities.ProdutoFornecedor", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CodigoFornecedor")
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<string>("CondicaoPagamento")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<DateTime>("DataAtualizacao")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("DataValidade")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("FornecedorId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ModoFaturamento")
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<string>("Observacoes")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<int?>("PrazoEntregaDias")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Preco")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<int>("ProdutoId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("QuantidadeEmbalagem")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FornecedorId");
+
+                    b.HasIndex("ProdutoId");
+
+                    b.ToTable("ProdutosFornecedores", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 100,
+                            CodigoFornecedor = "TL-LED-VERM-12V",
+                            CondicaoPagamento = "30 dias",
+                            DataAtualizacao = new DateTime(2025, 9, 1, 21, 30, 16, 0, DateTimeKind.Utc),
+                            DataValidade = new DateTime(2026, 3, 1, 21, 30, 16, 0, DateTimeKind.Utc),
+                            FornecedorId = 100,
+                            ModoFaturamento = "Caixa com 10 unidades",
+                            Observacoes = "Preço promocional para compras acima de 50 unidades",
+                            PrazoEntregaDias = 7,
+                            Preco = 25.90m,
+                            ProdutoId = 100,
+                            QuantidadeEmbalagem = 10m,
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = 101,
+                            CodigoFornecedor = "SM-LED-VERM-001",
+                            CondicaoPagamento = "15 dias",
+                            DataAtualizacao = new DateTime(2025, 9, 1, 21, 30, 16, 0, DateTimeKind.Utc),
+                            DataValidade = new DateTime(2025, 12, 1, 21, 30, 16, 0, DateTimeKind.Utc),
+                            FornecedorId = 101,
+                            ModoFaturamento = "Caixa com 5 unidades",
+                            Observacoes = "Entrega rápida disponível",
+                            PrazoEntregaDias = 5,
+                            Preco = 28.50m,
+                            ProdutoId = 100,
+                            QuantidadeEmbalagem = 5m,
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = 102,
+                            CodigoFornecedor = "TL-LED-AMAR-12V",
+                            CondicaoPagamento = "30 dias",
+                            DataAtualizacao = new DateTime(2025, 9, 1, 21, 30, 16, 0, DateTimeKind.Utc),
+                            DataValidade = new DateTime(2026, 3, 1, 21, 30, 16, 0, DateTimeKind.Utc),
+                            FornecedorId = 100,
+                            ModoFaturamento = "Caixa com 10 unidades",
+                            Observacoes = "Preço promocional para compras acima de 50 unidades",
+                            PrazoEntregaDias = 7,
+                            Preco = 25.90m,
+                            ProdutoId = 101,
+                            QuantidadeEmbalagem = 10m,
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = 103,
+                            CodigoFornecedor = "TL-LED-VERD-12V",
+                            CondicaoPagamento = "30 dias",
+                            DataAtualizacao = new DateTime(2025, 9, 1, 21, 30, 16, 0, DateTimeKind.Utc),
+                            DataValidade = new DateTime(2026, 3, 1, 21, 30, 16, 0, DateTimeKind.Utc),
+                            FornecedorId = 100,
+                            ModoFaturamento = "Caixa com 10 unidades",
+                            Observacoes = "Preço promocional para compras acima de 50 unidades",
+                            PrazoEntregaDias = 7,
+                            Preco = 25.90m,
+                            ProdutoId = 102,
+                            QuantidadeEmbalagem = 10m,
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = 104,
+                            CodigoFornecedor = "CE-CONTROL-001",
+                            CondicaoPagamento = "45 dias",
+                            DataAtualizacao = new DateTime(2025, 9, 1, 21, 30, 16, 0, DateTimeKind.Utc),
+                            DataValidade = new DateTime(2026, 9, 1, 21, 30, 16, 0, DateTimeKind.Utc),
+                            FornecedorId = 102,
+                            ModoFaturamento = "Unidade",
+                            Observacoes = "Inclui garantia de 2 anos",
+                            PrazoEntregaDias = 15,
+                            Preco = 450.00m,
+                            ProdutoId = 103,
+                            QuantidadeEmbalagem = 1m,
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = 105,
+                            CodigoFornecedor = "CE-SENSOR-IR-001",
+                            CondicaoPagamento = "30 dias",
+                            DataAtualizacao = new DateTime(2025, 9, 1, 21, 30, 16, 0, DateTimeKind.Utc),
+                            DataValidade = new DateTime(2026, 9, 1, 21, 30, 16, 0, DateTimeKind.Utc),
+                            FornecedorId = 102,
+                            ModoFaturamento = "Unidade",
+                            Observacoes = "Sensor com alcance de 50 metros",
+                            PrazoEntregaDias = 10,
+                            Preco = 120.00m,
+                            ProdutoId = 104,
+                            QuantidadeEmbalagem = 1m,
+                            Status = 1
+                        });
                 });
 
             modelBuilder.Entity("MatMob.Models.Entities.Tecnico", b =>
@@ -665,7 +1315,7 @@ namespace MatMob.Migrations
                     b.HasIndex("Email")
                         .IsUnique();
 
-                    b.ToTable("Tecnicos");
+                    b.ToTable("Tecnicos", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -938,6 +1588,33 @@ namespace MatMob.Migrations
                     b.Navigation("Tecnico");
                 });
 
+            modelBuilder.Entity("MatMob.Models.Entities.ItemNotaFiscal", b =>
+                {
+                    b.HasOne("MatMob.Models.Entities.ItemPedidoCompra", "ItemPedidoCompra")
+                        .WithMany("ItensNotaFiscal")
+                        .HasForeignKey("ItemPedidoCompraId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MatMob.Models.Entities.NotaFiscal", "NotaFiscal")
+                        .WithMany("Itens")
+                        .HasForeignKey("NotaFiscalId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MatMob.Models.Entities.Produto", "Produto")
+                        .WithMany("ItensNotaFiscal")
+                        .HasForeignKey("ProdutoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ItemPedidoCompra");
+
+                    b.Navigation("NotaFiscal");
+
+                    b.Navigation("Produto");
+                });
+
             modelBuilder.Entity("MatMob.Models.Entities.ItemOrdemServico", b =>
                 {
                     b.HasOne("MatMob.Models.Entities.OrdemServico", "OrdemServico")
@@ -955,6 +1632,25 @@ namespace MatMob.Migrations
                     b.Navigation("OrdemServico");
 
                     b.Navigation("Peca");
+                });
+
+            modelBuilder.Entity("MatMob.Models.Entities.ItemPedidoCompra", b =>
+                {
+                    b.HasOne("MatMob.Models.Entities.PedidoCompra", "PedidoCompra")
+                        .WithMany("Itens")
+                        .HasForeignKey("PedidoCompraId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MatMob.Models.Entities.Produto", "Produto")
+                        .WithMany("ItensPedidoCompra")
+                        .HasForeignKey("ProdutoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("PedidoCompra");
+
+                    b.Navigation("Produto");
                 });
 
             modelBuilder.Entity("MatMob.Models.Entities.MaterialOrdemServico", b =>
@@ -994,6 +1690,25 @@ namespace MatMob.Migrations
                     b.Navigation("Peca");
                 });
 
+            modelBuilder.Entity("MatMob.Models.Entities.NotaFiscal", b =>
+                {
+                    b.HasOne("MatMob.Models.Entities.Fornecedor", "Fornecedor")
+                        .WithMany()
+                        .HasForeignKey("FornecedorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MatMob.Models.Entities.PedidoCompra", "PedidoCompra")
+                        .WithMany("NotasFiscais")
+                        .HasForeignKey("PedidoCompraId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Fornecedor");
+
+                    b.Navigation("PedidoCompra");
+                });
+
             modelBuilder.Entity("MatMob.Models.Entities.OrdemServico", b =>
                 {
                     b.HasOne("MatMob.Models.Entities.Ativo", "Ativo")
@@ -1019,6 +1734,17 @@ namespace MatMob.Migrations
                     b.Navigation("TecnicoResponsavel");
                 });
 
+            modelBuilder.Entity("MatMob.Models.Entities.PedidoCompra", b =>
+                {
+                    b.HasOne("MatMob.Models.Entities.Fornecedor", "Fornecedor")
+                        .WithMany("PedidosCompra")
+                        .HasForeignKey("FornecedorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Fornecedor");
+                });
+
             modelBuilder.Entity("MatMob.Models.Entities.PlanoManutencao", b =>
                 {
                     b.HasOne("MatMob.Models.Entities.Ativo", "Ativo")
@@ -1028,6 +1754,25 @@ namespace MatMob.Migrations
                         .IsRequired();
 
                     b.Navigation("Ativo");
+                });
+
+            modelBuilder.Entity("MatMob.Models.Entities.ProdutoFornecedor", b =>
+                {
+                    b.HasOne("MatMob.Models.Entities.Fornecedor", "Fornecedor")
+                        .WithMany("ProdutosFornecidos")
+                        .HasForeignKey("FornecedorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MatMob.Models.Entities.Produto", "Produto")
+                        .WithMany("Fornecedores")
+                        .HasForeignKey("ProdutoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Fornecedor");
+
+                    b.Navigation("Produto");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -1095,6 +1840,23 @@ namespace MatMob.Migrations
                     b.Navigation("OrdensServico");
                 });
 
+            modelBuilder.Entity("MatMob.Models.Entities.Fornecedor", b =>
+                {
+                    b.Navigation("PedidosCompra");
+
+                    b.Navigation("ProdutosFornecidos");
+                });
+
+            modelBuilder.Entity("MatMob.Models.Entities.ItemPedidoCompra", b =>
+                {
+                    b.Navigation("ItensNotaFiscal");
+                });
+
+            modelBuilder.Entity("MatMob.Models.Entities.NotaFiscal", b =>
+                {
+                    b.Navigation("Itens");
+                });
+
             modelBuilder.Entity("MatMob.Models.Entities.OrdemServico", b =>
                 {
                     b.Navigation("AgendaItens");
@@ -1111,6 +1873,22 @@ namespace MatMob.Migrations
                     b.Navigation("ItensOrdemServico");
 
                     b.Navigation("MovimentacoesEstoque");
+                });
+
+            modelBuilder.Entity("MatMob.Models.Entities.PedidoCompra", b =>
+                {
+                    b.Navigation("Itens");
+
+                    b.Navigation("NotasFiscais");
+                });
+
+            modelBuilder.Entity("MatMob.Models.Entities.Produto", b =>
+                {
+                    b.Navigation("Fornecedores");
+
+                    b.Navigation("ItensNotaFiscal");
+
+                    b.Navigation("ItensPedidoCompra");
                 });
 
             modelBuilder.Entity("MatMob.Models.Entities.Tecnico", b =>

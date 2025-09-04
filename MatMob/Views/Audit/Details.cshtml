@@ -1,0 +1,105 @@
+@model MatMob.Models.Entities.AuditLog
+
+@{
+    ViewData["Title"] = "Detalhes do Log de Auditoria";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-eye"></i> Detalhes do Log de Auditoria
+                    </h3>
+                    <div class="card-tools">
+                        <a href="@Url.Action("Index", "Audit")" class="btn btn-secondary btn-sm">
+                            <i class="fas fa-arrow-left"></i> Voltar
+                        </a>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-3">ID</dt>
+                        <dd class="col-sm-9">@Model.Id</dd>
+
+                        <dt class="col-sm-3">Data/Hora</dt>
+                        <dd class="col-sm-9">@Model.Timestamp.ToString("dd/MM/yyyy HH:mm:ss")</dd>
+
+                        <dt class="col-sm-3">Usuário</dt>
+                        <dd class="col-sm-9">@Model.UserName</dd>
+
+                        <dt class="col-sm-3">Ação</dt>
+                        <dd class="col-sm-9">
+                            <span class="badge badge-primary">@Model.Action</span>
+                        </dd>
+
+                        <dt class="col-sm-3">Entidade</dt>
+                        <dd class="col-sm-9">@Model.EntityName</dd>
+
+                        <dt class="col-sm-3">ID da Entidade</dt>
+                        <dd class="col-sm-9">@Model.EntityId</dd>
+
+                        <dt class="col-sm-3">Descrição</dt>
+                        <dd class="col-sm-9">@Model.Description</dd>
+
+                        <dt class="col-sm-3">Categoria</dt>
+                        <dd class="col-sm-9">
+                            <span class="badge badge-info">@Model.Category</span>
+                        </dd>
+
+                        <dt class="col-sm-3">Severidade</dt>
+                        <dd class="col-sm-9">
+                            @switch (Model.Severity)
+                            {
+                                case "CRITICAL":
+                                    <span class="badge badge-danger">CRÍTICO</span>
+                                    break;
+                                case "ERROR":
+                                    <span class="badge badge-danger">ERRO</span>
+                                    break;
+                                case "WARNING":
+                                    <span class="badge badge-warning">AVISO</span>
+                                    break;
+                                case "INFO":
+                                    <span class="badge badge-info">INFO</span>
+                                    break;
+                                case "DEBUG":
+                                    <span class="badge badge-secondary">DEBUG</span>
+                                    break;
+                                default:
+                                    <span class="badge badge-secondary">@Model.Severity</span>
+                                    break;
+                            }
+                        </dd>
+
+                        <dt class="col-sm-3">Endereço IP</dt>
+                        <dd class="col-sm-9">@Model.IpAddress</dd>
+
+                        <dt class="col-sm-3">User Agent</dt>
+                        <dd class="col-sm-9">
+                            <small class="text-muted">@Model.UserAgent</small>
+                        </dd>
+                    </dl>
+
+                    @if (!string.IsNullOrEmpty(Model.OldData))
+                    {
+                        <div class="mt-4">
+                            <h5>Valores Anteriores</h5>
+                            <pre class="bg-light p-3 rounded"><code>@Model.OldData</code></pre>
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(Model.NewData))
+                    {
+                        <div class="mt-4">
+                            <h5>Valores Novos</h5>
+                            <pre class="bg-light p-3 rounded"><code>@Model.NewData</code></pre>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

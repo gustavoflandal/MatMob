@@ -45,7 +45,7 @@ namespace MatMob.Controllers
                 {
                     diagnostico.UsuarioAdminExiste = true;
                     diagnostico.AdminEmailConfirmado = adminUser.EmailConfirmed;
-                    diagnostico.AdminUserName = adminUser.UserName;
+                    diagnostico.AdminUserName = adminUser.UserName ?? string.Empty;
                     diagnostico.AdminId = adminUser.Id;
                     diagnostico.AdminLockoutEnabled = adminUser.LockoutEnabled;
                     diagnostico.AdminLockoutEnd = adminUser.LockoutEnd;
@@ -53,7 +53,7 @@ namespace MatMob.Controllers
 
                     // Verificar roles do usuário admin
                     var userRoles = await _userManager.GetRolesAsync(adminUser);
-                    diagnostico.AdminRoles = userRoles.ToList();
+                    diagnostico.AdminRoles = userRoles?.ToList() ?? new List<string>();
 
                     // Verificar se a senha está correta
                     var senhaCorreta = await _userManager.CheckPasswordAsync(adminUser, "Admin123!");

@@ -172,7 +172,7 @@
             <div class="card bg-light">
                 <div class="card-body text-center">
                     <h5 class="card-title">Valor Total</h5>
-                    <h3 class="text-info">@Model.Where(p => p.PrecoUnitario.HasValue).Sum(p => p.PrecoUnitario.Value * p.QuantidadeEstoque).ToString("C")</h3>
+                    <h3 class="text-info">@Model.Where(p => p.PrecoUnitario.HasValue).Sum(p => p.PrecoUnitario!.Value * p.QuantidadeEstoque).ToString("C")</h3>
                 </div>
             </div>
         </div>

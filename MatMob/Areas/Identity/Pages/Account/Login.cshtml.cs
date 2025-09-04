@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
+using MatMob.Services;
 
 namespace MatMob.Areas.Identity.Pages.Account
 {
@@ -17,14 +18,17 @@ namespace MatMob.Areas.Identity.Pages.Account
         private readonly UserManager<IdentityUser> _userManager;
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly ILogger<LoginModel> _logger;
+        private readonly IAuditService _auditService;
 
         public LoginModel(SignInManager<IdentityUser> signInManager, 
             ILogger<LoginModel> logger,
-            UserManager<IdentityUser> userManager)
+            UserManager<IdentityUser> userManager,
+            IAuditService auditService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _logger = logger;
+            _auditService = auditService;
         }
 
         [BindProperty]
@@ -86,6 +90,9 @@ namespace MatMob.Areas.Identity.Pages.Account
                     _logger.LogInformation($"User logged in successfully. Redirecting to: {returnUrl}");
                     Console.WriteLine($"LOGIN SUCCESS: User {Input.Email} logged in. ReturnUrl: {returnUrl}");
                     
+                    // Registrar auditoria de login bem-sucedido
+                    await _auditService.LogLoginAttemptAsync(Input.Email, true);
+                    
                     // Verificar se o usuário está autenticado após o login
                     var isAuthenticated = HttpContext.User.Identity?.IsAuthenticated ?? false;
                     Console.WriteLine($"Is Authenticated after login: {isAuthenticated}");
@@ -121,6 +128,10 @@ namespace MatMob.Areas.Identity.Pages.Account
                     {
                         ModelState.AddModelError(string.Empty, "Senha incorreta. Verifique sua senha ou use a opção 'Esqueceu a senha?' para redefini-la.");
                     }
+                    
+                    // Registrar auditoria de tentativa de login falhada
+                    await _auditService.LogLoginAttemptAsync(Input.Email, false, "Credenciais inválidas");
+                    
                     return Page();
                 }
             }

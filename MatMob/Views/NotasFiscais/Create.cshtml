@@ -1,0 +1,373 @@
+@model MatMob.ViewModels.NotaFiscalViewModel
+
+@{
+    ViewData["Title"] = "Nova Nota Fiscal";
+}
+
+<div class="container-fluid py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
+            <li class="breadcrumb-item"><a asp-controller="NotasFiscais" asp-action="Index">Notas Fiscais</a></li>
+            <li class="breadcrumb-item active">Nova</li>
+        </ol>
+    </nav>
+
+    <!-- Cabeçalho -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-plus me-2"></i>
+                        Cadastrar Nova Nota Fiscal
+                    </h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulário -->
+    <form asp-action="Create" method="post" id="notaForm">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <!-- Dados Básicos -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5 class="mb-3">Dados Básicos</h5>
+
+                                <!-- Fornecedor (Primeiro campo) -->
+                                <div class="mb-3">
+                                    <label asp-for="FornecedorId" class="form-label"></label>
+                                    <select asp-for="FornecedorId" class="form-select" id="fornecedorSelect" required>
+                                        <option value="">Selecione um fornecedor</option>
+                                        @if (ViewBag.Fornecedores != null)
+                                        {
+                                            @foreach (var fornecedor in ViewBag.Fornecedores as IEnumerable<MatMob.Models.Entities.Fornecedor>)
+                                            {
+                                                <option value="@fornecedor.Id">@fornecedor.Nome</option>
+                                            }
+                                        }
+                                    </select>
+                                    <span asp-validation-for="FornecedorId" class="text-danger"></span>
+                                </div>
+
+                                <!-- Pedido de Compra (Segundo campo) -->
+                                <div class="mb-3">
+                                    <label asp-for="PedidoCompraId" class="form-label"></label>
+                                    <select asp-for="PedidoCompraId" class="form-select" id="pedidoSelect">
+                                        <option value="">Selecione um pedido (opcional)</option>
+                                        @if (ViewBag.PedidosCompra != null)
+                                        {
+                                            @foreach (var pedido in ViewBag.PedidosCompra as IEnumerable<MatMob.Models.Entities.PedidoCompra>)
+                                            {
+                                                <option value="@pedido.Id" data-fornecedor="@pedido.FornecedorId">@pedido.NumeroPedido - @(pedido.Fornecedor?.Nome ?? "Fornecedor não informado")</option>
+                                            }
+                                        }
+                                    </select>
+                                    <span asp-validation-for="PedidoCompraId" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="NumeroNF" class="form-label"></label>
+                                    <input asp-for="NumeroNF" class="form-control" required />
+                                    <span asp-validation-for="NumeroNF" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="Serie" class="form-label"></label>
+                                    <input asp-for="Serie" class="form-control" required />
+                                    <span asp-validation-for="Serie" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="DataEmissao" class="form-label"></label>
+                                    <input asp-for="DataEmissao" type="date" class="form-control" required />
+                                    <span asp-validation-for="DataEmissao" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="ChaveAcesso" class="form-label"></label>
+                                    <input asp-for="ChaveAcesso" class="form-control" />
+                                    <span asp-validation-for="ChaveAcesso" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                        <!-- Valores Fiscais -->
+                        <div class="row">
+                            <div class="col-12">
+                                <h5 class="mb-3">Valores Fiscais</h5>
+
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="mb-3">
+                                            <label asp-for="ValorProdutos" class="form-label"></label>
+                                            <input asp-for="ValorProdutos" type="number" step="0.01" min="0" class="form-control valor-input" />
+                                            <span asp-validation-for="ValorProdutos" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="mb-3">
+                                            <label asp-for="ValorICMS" class="form-label"></label>
+                                            <input asp-for="ValorICMS" type="number" step="0.01" min="0" class="form-control valor-input" />
+                                            <span asp-validation-for="ValorICMS" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="mb-3">
+                                            <label asp-for="ValorIPI" class="form-label"></label>
+                                            <input asp-for="ValorIPI" type="number" step="0.01" min="0" class="form-control valor-input" />
+                                            <span asp-validation-for="ValorIPI" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="mb-3">
+                                            <label asp-for="ValorPIS" class="form-label"></label>
+                                            <input asp-for="ValorPIS" type="number" step="0.01" min="0" class="form-control valor-input" />
+                                            <span asp-validation-for="ValorPIS" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="mb-3">
+                                            <label asp-for="ValorCOFINS" class="form-label"></label>
+                                            <input asp-for="ValorCOFINS" type="number" step="0.01" min="0" class="form-control valor-input" />
+                                            <span asp-validation-for="ValorCOFINS" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-1">
+                                        <div class="mb-3">
+                                            <label class="form-label">Total</label>
+                                            <input type="text" class="form-control" id="valorTotal" readonly />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Observações -->
+                        <div class="row">
+                            <div class="col-12">
+                                <h5 class="mb-3">Observações</h5>
+
+                                <div class="mb-3">
+                                    <label asp-for="Observacoes" class="form-label"></label>
+                                    <textarea asp-for="Observacoes" class="form-control" rows="3"></textarea>
+                                    <span asp-validation-for="Observacoes" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Itens da Nota Fiscal -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-list me-2"></i>Itens da Nota Fiscal
+                        </h5>
+                        <button type="button" class="btn btn-success btn-sm" id="addItemBtn">
+                            <i class="fas fa-plus me-2"></i>Adicionar Item
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="itensContainer">
+                            <!-- Itens serão adicionados dinamicamente aqui -->
+                        </div>
+
+                        <!-- Totais -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-8">
+                                                <h6>Resumo da Nota Fiscal</h6>
+                                                <div id="resumoNota">
+                                                    <p class="mb-1">Itens: <span id="totalItens">0</span></p>
+                                                    <p class="mb-0">Valor Total dos Itens: R$ <span id="valorItensTotal">0,00</span></p>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4 text-end">
+                                                <button type="submit" class="btn btn-primary">
+                                                    <i class="fas fa-save me-2"></i>Salvar Nota Fiscal
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botões -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between">
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Voltar
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Salvar Nota Fiscal
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        let itemIndex = 0;
+        const produtos = @Html.Raw(Json.Serialize(ViewBag.Produtos));
+
+        // Função para carregar pedidos por fornecedor
+        function carregarPedidosPorFornecedor(fornecedorId) {
+            const pedidoSelect = document.getElementById('pedidoSelect');
+
+            if (!fornecedorId) {
+                // Limpar pedidos se nenhum fornecedor selecionado
+                pedidoSelect.innerHTML = '<option value="">Selecione um pedido (opcional)</option>';
+                return;
+            }
+
+            // Mostrar loading
+            pedidoSelect.innerHTML = '<option value="">Carregando pedidos...</option>';
+
+            // Fazer chamada AJAX
+            fetch(`/NotasFiscais/GetPedidosPorFornecedor/${fornecedorId}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Limpar select
+                    pedidoSelect.innerHTML = '<option value="">Selecione um pedido (opcional)</option>';
+
+                    // Adicionar opções
+                    data.forEach(pedido => {
+                        const option = document.createElement('option');
+                        option.value = pedido.id;
+                        option.textContent = `${pedido.numeroPedido} - ${pedido.fornecedorNome} (${pedido.itensPendentes} itens pendentes - R$ ${pedido.valorTotal.toFixed(2)})`;
+                        pedidoSelect.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar pedidos:', error);
+                    pedidoSelect.innerHTML = '<option value="">Erro ao carregar pedidos</option>';
+                });
+        }
+
+        // Event listener para mudança de fornecedor
+        document.getElementById('fornecedorSelect').addEventListener('change', function() {
+            const fornecedorId = this.value;
+            carregarPedidosPorFornecedor(fornecedorId);
+        });
+
+        // Função para adicionar item
+        function addItem() {
+            const container = document.getElementById('itensContainer');
+            const itemHtml = `
+                <div class="item-row border rounded p-3 mb-3" data-index="${itemIndex}">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label class="form-label">Produto</label>
+                            <select name="Itens[${itemIndex}].ProdutoId" class="form-select produto-select" required>
+                                <option value="">Selecione um produto</option>
+                                ${produtos.map(p => `<option value="${p.id}">${p.nome}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Quantidade</label>
+                            <input name="Itens[${itemIndex}].Quantidade" type="number" step="0.01" min="0.01"
+                                   class="form-control quantidade-input" required />
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Valor Unitário</label>
+                            <input name="Itens[${itemIndex}].ValorUnitario" type="number" step="0.01" min="0.01"
+                                   class="form-control valor-unitario-input" required />
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Valor Total</label>
+                            <input type="text" class="form-control valor-total-input" readonly />
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="button" class="btn btn-danger btn-sm remove-item-btn">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-12">
+                            <label class="form-label">Observações</label>
+                            <input name="Itens[${itemIndex}].Observacoes" class="form-control" />
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', itemHtml);
+            itemIndex++;
+            updateTotals();
+        }
+
+        // Função para remover item
+        function removeItem(button) {
+            button.closest('.item-row').remove();
+            updateTotals();
+        }
+
+        // Função para atualizar totais
+        function updateTotals() {
+            const itemRows = document.querySelectorAll('.item-row');
+            let totalItens = itemRows.length;
+            let valorItensTotal = 0;
+
+            itemRows.forEach(row => {
+                const quantidade = parseFloat(row.querySelector('.quantidade-input').value) || 0;
+                const valorUnitario = parseFloat(row.querySelector('.valor-unitario-input').value) || 0;
+                const valorTotal = quantidade * valorUnitario;
+                row.querySelector('.valor-total-input').value = valorTotal.toFixed(2);
+                valorItensTotal += valorTotal;
+            });
+
+            document.getElementById('totalItens').textContent = totalItens;
+            document.getElementById('valorItensTotal').textContent = valorItensTotal.toFixed(2);
+
+            // Atualizar valor total da NF
+            const valorProdutos = parseFloat(document.getElementById('ValorProdutos').value) || 0;
+            const valorICMS = parseFloat(document.getElementById('ValorICMS').value) || 0;
+            const valorIPI = parseFloat(document.getElementById('ValorIPI').value) || 0;
+            const valorPIS = parseFloat(document.getElementById('ValorPIS').value) || 0;
+            const valorCOFINS = parseFloat(document.getElementById('ValorCOFINS').value) || 0;
+
+            const valorTotalNF = valorProdutos + valorICMS + valorIPI + valorPIS + valorCOFINS;
+            document.getElementById('valorTotal').value = valorTotalNF.toFixed(2);
+        }
+
+        // Event listeners
+        document.getElementById('addItemBtn').addEventListener('click', addItem);
+
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('remove-item-btn')) {
+                removeItem(e.target);
+            }
+        });
+
+        document.addEventListener('input', function(e) {
+            if (e.target.classList.contains('quantidade-input') ||
+                e.target.classList.contains('valor-unitario-input') ||
+                e.target.classList.contains('valor-input')) {
+                updateTotals();
+            }
+        });
+
+        // Adicionar primeiro item automaticamente
+        addItem();
+    </script>
+}

@@ -1,0 +1,238 @@
+@model MatMob.ViewModels.NotaFiscalViewModel
+
+@{
+    ViewData["Title"] = "Excluir Nota Fiscal";
+}
+
+<div class="container-fluid py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
+            <li class="breadcrumb-item"><a asp-controller="NotasFiscais" asp-action="Index">Notas Fiscais</a></li>
+            <li class="breadcrumb-item active">Excluir</li>
+        </ol>
+    </nav>
+
+    <!-- Cabeçalho -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Confirmar Exclusão da Nota Fiscal
+                    </h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alerta de Confirmação -->
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-warning" role="alert">
+                <h5 class="alert-heading">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Atenção!
+                </h5>
+                <p class="mb-0">
+                    Você está prestes a excluir a nota fiscal <strong>@Model.NumeroNF</strong>.
+                    Esta ação não pode ser desfeita e pode afetar o controle de estoque e relatórios financeiros.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Informações da Nota Fiscal -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-file-invoice me-2"></i>Informações da Nota Fiscal
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">Número da NF:</dt>
+                                <dd class="col-sm-8">
+                                    <span class="badge bg-primary fs-6">@Model.NumeroNF</span>
+                                </dd>
+
+                                <dt class="col-sm-4">Série:</dt>
+                                <dd class="col-sm-8">@Model.Serie</dd>
+
+                                <dt class="col-sm-4">Data de Emissão:</dt>
+                                <dd class="col-sm-8">@Model.DataEmissao.ToString("dd/MM/yyyy")</dd>
+
+                                <dt class="col-sm-4">Fornecedor:</dt>
+                                <dd class="col-sm-8">
+                                    @if (Model.Fornecedor != null)
+                                    {
+                                        <strong>@Model.Fornecedor.Nome</strong>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Não informado</span>
+                                    }
+                                </dd>
+                            </dl>
+                        </div>
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">Valor Total:</dt>
+                                <dd class="col-sm-8">
+                                    <span class="text-success fw-bold fs-5">R$ @Model.ValorTotal.ToString("F2")</span>
+                                </dd>
+
+                                <dt class="col-sm-4">Quantidade de Itens:</dt>
+                                <dd class="col-sm-8">@Model.QuantidadeItens</dd>
+
+                                <dt class="col-sm-4">Pedido de Compra:</dt>
+                                <dd class="col-sm-8">
+                                    @if (Model.PedidoCompra != null)
+                                    {
+                                        @Model.PedidoCompra.NumeroPedido
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Não vinculado</span>
+                                    }
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Impactos da Exclusão -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card border-warning">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exclamation-circle me-2"></i>Impactos da Exclusão
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-danger">Efeitos no Sistema:</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-times text-danger me-2"></i>Remoção permanente da nota fiscal</li>
+                                <li><i class="fas fa-times text-danger me-2"></i>Perda do histórico de entrada de produtos</li>
+                                <li><i class="fas fa-times text-danger me-2"></i>Impacto nos relatórios financeiros</li>
+                                @if (Model.PedidoCompra != null)
+                                {
+                                    <li><i class="fas fa-times text-danger me-2"></i>Desvinculação do pedido de compra</li>
+                                }
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-warning">Considerações:</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-info-circle text-info me-2"></i>Verifique se há dependências</li>
+                                <li><i class="fas fa-info-circle text-info me-2"></i>Considere os impactos no estoque</li>
+                                <li><i class="fas fa-info-circle text-info me-2"></i>Esta ação não pode ser desfeita</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Itens que serão afetados -->
+    @if (Model.Itens != null && Model.Itens.Any())
+    {
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-list me-2"></i>Itens que serão removidos (@Model.QuantidadeItens itens)
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Produto</th>
+                                        <th class="text-center">Quantidade</th>
+                                        <th class="text-end">Valor Unitário</th>
+                                        <th class="text-end">Valor Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model.Itens)
+                                    {
+                                        <tr>
+                                            <td>
+                                                @if (item.Produto != null)
+                                                {
+                                                    <strong>@item.Produto.Nome</strong>
+                                                    @if (!string.IsNullOrEmpty(item.Produto.Codigo))
+                                                    {
+                                                        <br /><small class="text-muted">Código: @item.Produto.Codigo</small>
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">Produto não encontrado</span>
+                                                }
+                                            </td>
+                                            <td class="text-center">@item.Quantidade.ToString("F2")</td>
+                                            <td class="text-end">R$ @item.ValorUnitario.ToString("F2")</td>
+                                            <td class="text-end">R$ @item.ValorTotal.ToString("F2")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                <tfoot class="table-dark">
+                                    <tr>
+                                        <th colspan="3" class="text-end">Valor Total dos Itens:</th>
+                                        <th class="text-end">R$ @Model.ValorProdutos.ToString("F2")</th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Formulário de Confirmação -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form asp-action="DeleteConfirmed" method="post">
+                        <input type="hidden" asp-for="Id" />
+
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <p class="mb-0 text-muted">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    Clique em "Excluir" para confirmar a remoção da nota fiscal.
+                                </p>
+                            </div>
+                            <div>
+                                <a asp-action="Index" class="btn btn-secondary me-2">
+                                    <i class="fas fa-arrow-left me-2"></i>Cancelar
+                                </a>
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="fas fa-trash me-2"></i>Excluir Nota Fiscal
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

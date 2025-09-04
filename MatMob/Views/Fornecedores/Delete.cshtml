@@ -1,0 +1,213 @@
+@model MatMob.Models.Entities.Fornecedor
+
+@{
+    ViewData["Title"] = "Excluir Fornecedor";
+}
+
+<div class="container-fluid py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Fornecedores" asp-action="Index">Fornecedores</a></li>
+            <li class="breadcrumb-item active">Excluir</li>
+        </ol>
+    </nav>
+
+    <!-- Cabeçalho -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Confirmar Exclusão do Fornecedor
+                    </h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alerta de confirmação -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-danger" role="alert">
+                <h5 class="alert-heading">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Atenção! Esta ação não pode ser desfeita.
+                </h5>
+                <p class="mb-0">
+                    Você está prestes a excluir permanentemente o fornecedor <strong>@Model.Nome</strong>.
+                    Esta ação irá remover todas as informações associadas a este fornecedor do sistema.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Informações do Fornecedor -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Informações do Fornecedor</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Dados Básicos -->
+                        <div class="col-md-6">
+                            <h6 class="mb-3 text-muted">Dados Básicos</h6>
+
+                            <div class="row mb-2">
+                                <div class="col-sm-4"><strong>Nome/Razão Social:</strong></div>
+                                <div class="col-sm-8">@Model.Nome</div>
+                            </div>
+
+                            @if (!string.IsNullOrEmpty(Model.NomeFantasia))
+                            {
+                                <div class="row mb-2">
+                                    <div class="col-sm-4"><strong>Nome Fantasia:</strong></div>
+                                    <div class="col-sm-8">@Model.NomeFantasia</div>
+                                </div>
+                            }
+
+                            <div class="row mb-2">
+                                <div class="col-sm-4"><strong>CNPJ:</strong></div>
+                                <div class="col-sm-8">@Model.CNPJ</div>
+                            </div>
+
+                            <div class="row mb-2">
+                                <div class="col-sm-4"><strong>Status:</strong></div>
+                                <div class="col-sm-8">
+                                    <span class="badge @(Model.Status == MatMob.Models.Entities.StatusFornecedor.Ativo ? "bg-success" : Model.Status == MatMob.Models.Entities.StatusFornecedor.Inativo ? "bg-secondary" : "bg-danger")">
+                                        @Model.Status.ToString()
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Contato -->
+                        <div class="col-md-6">
+                            <h6 class="mb-3 text-muted">Contato</h6>
+
+                            <div class="row mb-2">
+                                <div class="col-sm-4"><strong>Email:</strong></div>
+                                <div class="col-sm-8">@Model.Email</div>
+                            </div>
+
+                            @if (!string.IsNullOrEmpty(Model.Telefone))
+                            {
+                                <div class="row mb-2">
+                                    <div class="col-sm-4"><strong>Telefone:</strong></div>
+                                    <div class="col-sm-8">@Model.Telefone</div>
+                                </div>
+                            }
+
+                            @if (!string.IsNullOrEmpty(Model.Celular))
+                            {
+                                <div class="row mb-2">
+                                    <div class="col-sm-4"><strong>Celular:</strong></div>
+                                    <div class="col-sm-8">@Model.Celular</div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Relacionamentos -->
+    @if ((Model.ProdutosFornecidos?.Count ?? 0) > 0 || (Model.PedidosCompra?.Count ?? 0) > 0)
+    {
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card border-warning">
+                    <div class="card-header bg-warning">
+                        <h5 class="mb-0">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Relacionamentos Encontrados
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-3">
+                            Este fornecedor possui os seguintes relacionamentos no sistema.
+                            A exclusão irá afetar estes registros:
+                        </p>
+
+                        <div class="row">
+                            @if ((Model.ProdutosFornecidos?.Count ?? 0) > 0)
+                            {
+                                <div class="col-md-6">
+                                    <div class="alert alert-info">
+                                        <h6>
+                                            <i class="fas fa-boxes me-2"></i>
+                                            Produtos (@Model.ProdutosFornecidos.Count)
+                                        </h6>
+                                        <p class="mb-0">
+                                            Este fornecedor está associado a @Model.ProdutosFornecidos.Count produto(s).
+                                            A exclusão irá remover estas associações.
+                                        </p>
+                                    </div>
+                                </div>
+                            }
+
+                            @if ((Model.PedidosCompra?.Count ?? 0) > 0)
+                            {
+                                <div class="col-md-6">
+                                    <div class="alert alert-info">
+                                        <h6>
+                                            <i class="fas fa-shopping-cart me-2"></i>
+                                            Pedidos de Compra (@Model.PedidosCompra.Count)
+                                        </h6>
+                                        <p class="mb-0">
+                                            Este fornecedor possui @Model.PedidosCompra.Count pedido(s) de compra.
+                                            Considere o impacto antes de prosseguir.
+                                        </p>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Formulário de confirmação -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form asp-action="Delete" method="post">
+                        <input type="hidden" asp-for="Id" />
+
+                        <div class="form-check mb-4">
+                            <input class="form-check-input" type="checkbox" id="confirmDelete" required>
+                            <label class="form-check-label" for="confirmDelete">
+                                <strong>Confirmo que desejo excluir permanentemente este fornecedor e entendo que esta ação não pode ser desfeita.</strong>
+                            </label>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-danger" id="deleteBtn" disabled>
+                                <i class="fas fa-trash me-2"></i>Excluir Fornecedor
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Habilitar/desabilitar botão de exclusão baseado na confirmação
+        document.getElementById('confirmDelete').addEventListener('change', function() {
+            document.getElementById('deleteBtn').disabled = !this.checked;
+        });
+    </script>
+}

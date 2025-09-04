@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MatMob.Data;
 using MatMob.Models.Entities;
+using MatMob.Services;
 
 namespace MatMob.Controllers
 {
@@ -10,10 +11,12 @@ namespace MatMob.Controllers
     public class TecnicosController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly IAuditService _auditService;
 
-        public TecnicosController(ApplicationDbContext context)
+        public TecnicosController(ApplicationDbContext context, IAuditService auditService)
         {
             _context = context;
+            _auditService = auditService;
         }
 
         // GET: Tecnicos
@@ -28,7 +31,7 @@ namespace MatMob.Controllers
             {
                 tecnicos = tecnicos.Where(t => t.Nome.Contains(searchString) ||
                                               t.Email.Contains(searchString) ||
-                                              t.Especialidade.Contains(searchString));
+                                              (t.Especialidade != null && t.Especialidade.Contains(searchString)));
             }
 
             if (statusFilter.HasValue)
@@ -59,6 +62,12 @@ namespace MatMob.Controllers
                 return NotFound();
             }
 
+            // Registrar auditoria de visualização
+            await _auditService.LogViewAsync(
+                entity: tecnico,
+                description: $"Visualização do técnico: {tecnico.Nome} (Status: {tecnico.Status})"
+            );
+
             return View(tecnico);
         }
 
@@ -86,6 +95,12 @@ namespace MatMob.Controllers
                 tecnico.DataCadastro = DateTime.Now;
                 _context.Add(tecnico);
                 await _context.SaveChangesAsync();
+                
+                // Registrar auditoria de criação
+                await _auditService.LogCreateAsync(
+                    entity: tecnico,
+                    description: $"Criação do técnico: {tecnico.Nome} (Especialidade: {tecnico.Especialidade ?? "N/A"})"
+                );
                 
                 TempData["Success"] = "Técnico cadastrado com sucesso!";
                 return RedirectToAction(nameof(Index));
@@ -123,6 +138,9 @@ namespace MatMob.Controllers
             {
                 try
                 {
+                    // Capturar o estado antigo para auditoria
+                    var tecnicoAntigo = await _context.Tecnicos.AsNoTracking().FirstOrDefaultAsync(t => t.Id == id);
+                    
                     // Verificar se o email já existe para outro técnico
                     var emailExiste = await _context.Tecnicos
                         .AnyAsync(t => t.Email == tecnico.Email && t.Id != tecnico.Id);
@@ -134,6 +152,16 @@ namespace MatMob.Controllers
 
                     _context.Update(tecnico);
                     await _context.SaveChangesAsync();
+                    
+                    // Registrar auditoria de atualização
+                    if (tecnicoAntigo != null)
+                    {
+                        await _auditService.LogUpdateAsync(
+                            oldEntity: tecnicoAntigo,
+                            newEntity: tecnico,
+                            description: $"Atualização do técnico: {tecnico.Nome}"
+                        );
+                    }
                     
                     TempData["Success"] = "Técnico atualizado com sucesso!";
                 }
@@ -188,6 +216,12 @@ namespace MatMob.Controllers
                     TempData["Error"] = "Não é possível excluir este técnico pois ele possui ordens de serviço associadas.";
                     return RedirectToAction(nameof(Index));
                 }
+
+                // Registrar auditoria de exclusão antes de remover
+                await _auditService.LogDeleteAsync(
+                    entity: tecnico,
+                    description: $"Exclusão do técnico: {tecnico.Nome} (Especialidade: {tecnico.Especialidade ?? "N/A"})"
+                );
 
                 // Remover associações com equipes
                 var equipeTecnicos = await _context.EquipesTecnico

@@ -1,0 +1,316 @@
+@{
+    ViewData["Title"] = "Dashboard de Auditoria";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-chart-bar"></i> Dashboard de Auditoria
+                    </h3>
+                    <div class="card-tools">
+                        <a href="@Url.Action("Index", "Audit")" class="btn btn-primary btn-sm">
+                            <i class="fas fa-list"></i> Ver Logs
+                        </a>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <!-- Cards de Estatísticas -->
+                    <div class="row mb-4">
+                        <div class="col-lg-3 col-6">
+                            <div class="small-box bg-info">
+                                <div class="inner">
+                                    <h3>@ViewBag.TotalLogs</h3>
+                                    <p>Total de Logs</p>
+                                </div>
+                                <div class="icon">
+                                    <i class="fas fa-history"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-3 col-6">
+                            <div class="small-box bg-success">
+                                <div class="inner">
+                                    <h3>@ViewBag.LogsLast24h</h3>
+                                    <p>Últimas 24h</p>
+                                </div>
+                                <div class="icon">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-3 col-6">
+                            <div class="small-box bg-warning">
+                                <div class="inner">
+                                    <h3>@ViewBag.LogsLast7d</h3>
+                                    <p>Últimos 7 dias</p>
+                                </div>
+                                <div class="icon">
+                                    <i class="fas fa-calendar-week"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-3 col-6">
+                            <div class="small-box bg-danger">
+                                <div class="inner">
+                                    <h3>@ViewBag.LogsLast30d</h3>
+                                    <p>Últimos 30 dias</p>
+                                </div>
+                                <div class="icon">
+                                    <i class="fas fa-calendar-alt"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Estatísticas por Ação -->
+                        <div class="col-lg-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3 class="card-title">Ações Mais Realizadas</h3>
+                                </div>
+                                <div class="card-body">
+                                    @if (ViewBag.ActionsStats != null && ViewBag.ActionsStats.Count > 0)
+                                    {
+                                        <div class="table-responsive">
+                                            <table class="table table-striped">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Ação</th>
+                                                        <th>Quantidade</th>
+                                                        <th>%</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach (var stat in ViewBag.ActionsStats)
+                                                    {
+                                                        var percentage = ViewBag.TotalLogs > 0 ? (stat.Count * 100.0 / ViewBag.TotalLogs).ToString("F1") : "0.0";
+                                                        <tr>
+                                                            <td>@stat.Action</td>
+                                                            <td>@stat.Count</td>
+                                                            <td>@percentage%</td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <p class="text-muted">Nenhum dado disponível</p>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Estatísticas por Usuário -->
+                        <div class="col-lg-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3 class="card-title">Usuários Mais Ativos</h3>
+                                </div>
+                                <div class="card-body">
+                                    @if (ViewBag.UsersStats != null && ViewBag.UsersStats.Count > 0)
+                                    {
+                                        <div class="table-responsive">
+                                            <table class="table table-striped">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Usuário</th>
+                                                        <th>Quantidade</th>
+                                                        <th>%</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach (var stat in ViewBag.UsersStats)
+                                                    {
+                                                        var percentage = ViewBag.TotalLogs > 0 ? (stat.Count * 100.0 / ViewBag.TotalLogs).ToString("F1") : "0.0";
+                                                        <tr>
+                                                            <td>@stat.UserName</td>
+                                                            <td>@stat.Count</td>
+                                                            <td>@percentage%</td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <p class="text-muted">Nenhum dado disponível</p>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Estatísticas por Categoria -->
+                        <div class="col-lg-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3 class="card-title">Distribuição por Categoria</h3>
+                                </div>
+                                <div class="card-body">
+                                    @if (ViewBag.CategoriesStats != null && ViewBag.CategoriesStats.Count > 0)
+                                    {
+                                        <div class="table-responsive">
+                                            <table class="table table-striped">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Categoria</th>
+                                                        <th>Quantidade</th>
+                                                        <th>%</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach (var stat in ViewBag.CategoriesStats)
+                                                    {
+                                                        var percentage = ViewBag.TotalLogs > 0 ? (stat.Count * 100.0 / ViewBag.TotalLogs).ToString("F1") : "0.0";
+                                                        <tr>
+                                                            <td>@stat.Category</td>
+                                                            <td>@stat.Count</td>
+                                                            <td>@percentage%</td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <p class="text-muted">Nenhum dado disponível</p>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Estatísticas por Severidade -->
+                        <div class="col-lg-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3 class="card-title">Distribuição por Severidade</h3>
+                                </div>
+                                <div class="card-body">
+                                    @if (ViewBag.SeverityStats != null && ViewBag.SeverityStats.Count > 0)
+                                    {
+                                        <div class="table-responsive">
+                                            <table class="table table-striped">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Severidade</th>
+                                                        <th>Quantidade</th>
+                                                        <th>%</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach (var stat in ViewBag.SeverityStats)
+                                                    {
+                                                        var percentage = ViewBag.TotalLogs > 0 ? (stat.Count * 100.0 / ViewBag.TotalLogs).ToString("F1") : "0.0";
+                                                        <tr>
+                                                            <td>
+                                                                @switch (stat.Severity)
+                                                                {
+                                                                    case "CRITICAL":
+                                                                        <span class="badge badge-danger">CRÍTICO</span>
+                                                                        break;
+                                                                    case "ERROR":
+                                                                        <span class="badge badge-danger">ERRO</span>
+                                                                        break;
+                                                                    case "WARNING":
+                                                                        <span class="badge badge-warning">AVISO</span>
+                                                                        break;
+                                                                    case "INFO":
+                                                                        <span class="badge badge-info">INFO</span>
+                                                                        break;
+                                                                    case "DEBUG":
+                                                                        <span class="badge badge-secondary">DEBUG</span>
+                                                                        break;
+                                                                    default:
+                                                                        <span class="text-muted">@stat.Severity</span>
+                                                                        break;
+                                                                }
+                                                            </td>
+                                                            <td>@stat.Count</td>
+                                                            <td>@percentage%</td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <p class="text-muted">Nenhum dado disponível</p>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Logs Mais Recentes -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3 class="card-title">Logs Mais Recentes</h3>
+                                </div>
+                                <div class="card-body">
+                                    @if (ViewBag.RecentLogs != null && ViewBag.RecentLogs.Count > 0)
+                                    {
+                                        <div class="table-responsive">
+                                            <table class="table table-striped">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Data/Hora</th>
+                                                        <th>Usuário</th>
+                                                        <th>Ação</th>
+                                                        <th>Entidade</th>
+                                                        <th>Descrição</th>
+                                                        <th>Categoria</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach (var log in ViewBag.RecentLogs)
+                                                    {
+                                                        <tr>
+                                                            <td>@log.Timestamp.ToString("dd/MM/yyyy HH:mm:ss")</td>
+                                                            <td>@log.UserName</td>
+                                                            <td>
+                                                                <span class="badge badge-primary">@log.Action</span>
+                                                            </td>
+                                                            <td>@log.EntityName</td>
+                                                            <td>
+                                                                <span title="@log.Description">
+                                                                    @(log.Description?.Length > 60 ? log.Description.Substring(0, 60) + "..." : log.Description)
+                                                                </span>
+                                                            </td>
+                                                            <td>
+                                                                <span class="badge badge-info">@log.Category</span>
+                                                            </td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <p class="text-muted text-center">Nenhum log encontrado</p>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

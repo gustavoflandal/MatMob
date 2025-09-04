@@ -4,6 +4,7 @@ namespace MatMob.Models.ViewModels
 {
     public class CalendarioManutencaoViewModel
     {
+        public int Id { get; set; }
         public DateTime DataSelecionada { get; set; } = DateTime.Today;
         public int MesAtual { get; set; } = DateTime.Today.Month;
         public int AnoAtual { get; set; } = DateTime.Today.Year;

@@ -6,6 +6,7 @@ using MatMob.Data;
 using MatMob.Models.Entities;
 using MatMob.Models.ViewModels;
 using MatMob.Extensions;
+using MatMob.Services;
 
 namespace MatMob.Controllers
 {
@@ -13,10 +14,12 @@ namespace MatMob.Controllers
     public class OrdensServicoController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly IAuditService _auditService;
 
-        public OrdensServicoController(ApplicationDbContext context)
+        public OrdensServicoController(ApplicationDbContext context, IAuditService auditService)
         {
             _context = context;
+            _auditService = auditService;
         }
 
         // GET: OrdensServico
@@ -36,7 +39,7 @@ namespace MatMob.Controllers
             {
                 ordensServico = ordensServico.Where(os => os.NumeroOS.Contains(searchString) ||
                                                          os.DescricaoProblema.Contains(searchString) ||
-                                                         os.Ativo.Nome.Contains(searchString));
+                                                         (os.Ativo != null && os.Ativo.Nome.Contains(searchString)));
             }
 
             if (statusFilter.HasValue)
@@ -81,6 +84,12 @@ namespace MatMob.Controllers
             ViewBag.Tecnicos = new SelectList(
                 await _context.Tecnicos.ToListAsync(),
                 "Id", "Nome", ordemServico.TecnicoResponsavelId);
+
+            // Registrar auditoria de visualização
+            await _auditService.LogViewAsync(
+                entity: ordemServico,
+                description: $"Visualização da OS: {ordemServico.NumeroOS} (Status: {ordemServico.Status})"
+            );
 
             return View(ordemServico);
         }
@@ -146,8 +155,8 @@ namespace MatMob.Controllers
             if (!ModelState.IsValid)
             {
                 var errors = ModelState
-                    .Where(x => x.Value.Errors.Count > 0) 
-                    .Select(x => new { Field = x.Key, Errors = x.Value.Errors.Select(e => e.ErrorMessage) });
+                    .Where(x => x.Value?.Errors?.Count > 0)
+                    .Select(x => new { Field = x.Key, Errors = x.Value?.Errors?.Select(e => e.ErrorMessage) ?? new List<string>() });
                     
                 Console.WriteLine($"Total de campos com erro: {errors.Count()}");
                 foreach (var error in errors)
@@ -158,16 +167,18 @@ namespace MatMob.Controllers
                 // Verificar especificamente o AtivoId
                 if (ModelState.ContainsKey("AtivoId"))
                 {
-                    Console.WriteLine($"Estado do AtivoId no ModelState: {ModelState["AtivoId"].ValidationState}");
-                    var ativoErrors = ModelState["AtivoId"].Errors.Select(e => e.ErrorMessage);
+                    var ativoState = ModelState["AtivoId"];
+                    Console.WriteLine($"Estado do AtivoId no ModelState: {ativoState?.ValidationState}");
+                    var ativoErrors = ativoState?.Errors?.Select(e => e.ErrorMessage) ?? new List<string>();
                     Console.WriteLine($"Erros do AtivoId: {string.Join(", ", ativoErrors)}");
                 }
                 
                 // Verificar se há erro relacionado ao relacionamento Ativo
                 if (ModelState.ContainsKey("Ativo"))
                 {
-                    Console.WriteLine($"Estado do Ativo no ModelState: {ModelState["Ativo"].ValidationState}");
-                    var ativoNavErrors = ModelState["Ativo"].Errors.Select(e => e.ErrorMessage);
+                    var ativoNavState = ModelState["Ativo"];
+                    Console.WriteLine($"Estado do Ativo no ModelState: {ativoNavState?.ValidationState}");
+                    var ativoNavErrors = ativoNavState?.Errors?.Select(e => e.ErrorMessage) ?? new List<string>();
                     Console.WriteLine($"Erros do Ativo (navigation): {string.Join(", ", ativoNavErrors)}");
                 }
                 
@@ -177,7 +188,7 @@ namespace MatMob.Controllers
                 foreach (var key in ModelState.Keys)
                 {
                     var state = ModelState[key];
-                    Console.WriteLine($"  {key}: {state.ValidationState} (Errors: {state.Errors.Count})");
+                    Console.WriteLine($"  {key}: {state?.ValidationState} (Errors: {state?.Errors?.Count ?? 0})");
                 }
                 
                 // Mensagem mais específica
@@ -199,6 +210,12 @@ namespace MatMob.Controllers
             
             _context.Add(ordemServico);
             await _context.SaveChangesAsync();
+            
+            // Registrar auditoria de criação
+            await _auditService.LogCreateAsync(
+                entity: ordemServico,
+                description: $"Criação da OS: {ordemServico.NumeroOS} (Tipo: {ordemServico.TipoServico})"
+            );
             
             TempData["Success"] = "Ordem de Serviço criada com sucesso!";
             return RedirectToAction(nameof(Index));
@@ -238,6 +255,9 @@ namespace MatMob.Controllers
             {
                 try
                 {
+                    // Capturar o estado antigo para auditoria
+                    var ordemAntiga = await _context.OrdensServico.AsNoTracking().FirstOrDefaultAsync(os => os.Id == id);
+                    
                     // Lógica para atualizar datas baseado no status
                     switch (ordemServico.Status)
                     {
@@ -253,6 +273,16 @@ namespace MatMob.Controllers
 
                     _context.Update(ordemServico);
                     await _context.SaveChangesAsync();
+                    
+                    // Registrar auditoria de atualização
+                    if (ordemAntiga != null)
+                    {
+                        await _auditService.LogUpdateAsync(
+                            oldEntity: ordemAntiga,
+                            newEntity: ordemServico,
+                            description: $"Atualização da OS: {ordemServico.NumeroOS}"
+                        );
+                    }
                     
                     TempData["Success"] = "Ordem de Serviço atualizada com sucesso!";
                 }
@@ -305,6 +335,15 @@ namespace MatMob.Controllers
             _context.Update(ordemServico);
             await _context.SaveChangesAsync();
 
+            // Registrar auditoria de mudança de status
+            await _auditService.LogAsync(
+                action: Services.AuditActions.UPDATE,
+                entityName: $"OS {ordemServico.NumeroOS}",
+                entityId: ordemServico.Id,
+                description: $"Mudança de status: {statusAnterior} → {novoStatus}",
+                category: Services.AuditCategory.BUSINESS_PROCESS
+            );
+
             TempData["Success"] = $"Status da OS #{ordemServico.NumeroOS} alterado de {statusAnterior} para {novoStatus}";
             
             return RedirectToAction(nameof(Details), new { id });
@@ -342,6 +381,12 @@ namespace MatMob.Controllers
             var ordemServico = await _context.OrdensServico.FindAsync(id);
             if (ordemServico != null)
             {
+                // Registrar auditoria de exclusão antes de remover
+                await _auditService.LogDeleteAsync(
+                    entity: ordemServico,
+                    description: $"Exclusão da OS: {ordemServico.NumeroOS}"
+                );
+
                 _context.OrdensServico.Remove(ordemServico);
                 await _context.SaveChangesAsync();
                 TempData["Success"] = "Ordem de Serviço excluída com sucesso!";
@@ -395,6 +440,15 @@ namespace MatMob.Controllers
 
             _context.Update(ordemServico);
             await _context.SaveChangesAsync();
+
+            // Registrar auditoria de agendamento
+            await _auditService.LogAsync(
+                action: Services.AuditActions.SCHEDULE,
+                entityName: $"OS {ordemServico.NumeroOS}",
+                entityId: ordemServico.Id,
+                description: $"Agendamento da OS para {DataProgramada?.ToString("dd/MM/yyyy")} - Equipe: {ordemServico.Equipe?.Nome ?? "N/A"}",
+                category: Services.AuditCategory.BUSINESS_PROCESS
+            );
 
             TempData["Success"] = $"Ordem de Serviço {ordemServico.NumeroOS} agendada com sucesso!";
             return RedirectToAction(nameof(Details), new { id = Id });
@@ -707,8 +761,8 @@ namespace MatMob.Controllers
             {
                 Id = os.Id,
                 NumeroOS = os.NumeroOS,
-                Titulo = $"{os.NumeroOS} - {os.Ativo.Nome}",
-                Ativo = os.Ativo.Nome,
+                Titulo = $"{os.NumeroOS} - {(os.Ativo?.Nome ?? "Desconhecido")}",
+                Ativo = os.Ativo != null ? os.Ativo.Nome : "Desconhecido",
                 Status = os.Status.GetDisplayName(),
                 Prioridade = os.Prioridade.GetDisplayName(),
                 Responsavel = os.TecnicoResponsavel?.Nome,
@@ -772,8 +826,8 @@ namespace MatMob.Controllers
                     DataProgramada = o.DataProgramada!.Value,
                     HoraInicioProgramada = o.HoraInicioProgramada,
                     HoraFimProgramada = o.HoraFimProgramada,
-                    NomeAtivo = o.Ativo.Nome,
-                    LocalizacaoAtivo = o.Ativo.Localizacao,
+                    NomeAtivo = o.Ativo != null ? o.Ativo.Nome : "Desconhecido",
+                    LocalizacaoAtivo = o.Ativo != null ? o.Ativo.Localizacao : "N/A",
                     NomeEquipe = o.Equipe != null ? o.Equipe.Nome : null,
                     NomeTecnico = o.TecnicoResponsavel != null ? o.TecnicoResponsavel.Nome : null,
                     DataAbertura = o.DataAbertura,
@@ -824,8 +878,8 @@ namespace MatMob.Controllers
                     DataProgramada = o.DataProgramada!.Value,
                     HoraInicioProgramada = o.HoraInicioProgramada,
                     HoraFimProgramada = o.HoraFimProgramada,
-                    NomeAtivo = o.Ativo.Nome,
-                    LocalizacaoAtivo = o.Ativo.Localizacao,
+                    NomeAtivo = o.Ativo != null ? o.Ativo.Nome : "Desconhecido",
+                    LocalizacaoAtivo = o.Ativo != null ? o.Ativo.Localizacao : "N/A",
                     NomeEquipe = o.Equipe != null ? o.Equipe.Nome : null,
                     NomeTecnico = o.TecnicoResponsavel != null ? o.TecnicoResponsavel.Nome : null,
                     DataAbertura = o.DataAbertura,
@@ -928,6 +982,148 @@ namespace MatMob.Controllers
                 PrioridadeOS.Critica => "#dc3545",
                 _ => "#6c757d"
             };
+        }
+
+        // GET: OrdensServico/EditarEvento/5
+        [Authorize(Roles = "Administrador,Gestor")]
+        public async Task<IActionResult> EditarEvento(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var evento = await _context.AgendaManutencao.FindAsync(id);
+            if (evento == null)
+            {
+                return NotFound();
+            }
+
+            // Verificar se é uma O.S. (não permitir edição)
+            if (evento.Tipo == TipoAgenda.OrdemServico)
+            {
+                TempData["Error"] = "Não é possível editar eventos do tipo Ordem de Serviço diretamente pelo calendário.";
+                return RedirectToAction(nameof(Calendario));
+            }
+
+            var viewModel = new CalendarioManutencaoViewModel
+            {
+                Id = evento.Id,
+                Titulo = evento.Titulo,
+                Descricao = evento.Descricao,
+                DataPrevista = evento.DataPrevista,
+                Tipo = evento.Tipo,
+                AtivoId = evento.AtivoId,
+                EquipeId = evento.EquipeId,
+                ResponsavelId = evento.ResponsavelId,
+                Observacoes = evento.Observacoes,
+                AtivosDisponiveis = await _context.Ativos.Where(a => a.Status == StatusAtivo.Ativo).ToListAsync(),
+                EquipesDisponiveis = await _context.Equipes.ToListAsync(),
+                TecnicosDisponiveis = await _context.Tecnicos.ToListAsync()
+            };
+
+            return View(viewModel);
+        }
+
+        // POST: OrdensServico/EditarEvento/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Administrador,Gestor")]
+        public async Task<IActionResult> EditarEvento(int id, CalendarioManutencaoViewModel model)
+        {
+            if (id != model.Id)
+            {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    var evento = await _context.AgendaManutencao.FindAsync(id);
+                    if (evento == null)
+                    {
+                        return NotFound();
+                    }
+
+                    // Verificar se é uma O.S. (não permitir edição)
+                    if (evento.Tipo == TipoAgenda.OrdemServico)
+                    {
+                        TempData["Error"] = "Não é possível editar eventos do tipo Ordem de Serviço diretamente pelo calendário.";
+                        return RedirectToAction(nameof(Calendario));
+                    }
+
+                    // Atualizar os dados do evento
+                    evento.Titulo = model.Titulo;
+                    evento.Descricao = model.Descricao;
+                    evento.DataPrevista = model.DataPrevista;
+                    evento.Tipo = model.Tipo;
+                    evento.AtivoId = model.AtivoId;
+                    evento.EquipeId = model.EquipeId;
+                    evento.ResponsavelId = model.ResponsavelId;
+                    evento.Observacoes = model.Observacoes;
+
+                    _context.Update(evento);
+                    await _context.SaveChangesAsync();
+
+                    TempData["Success"] = "Evento atualizado com sucesso!";
+                    return RedirectToAction(nameof(Calendario), new { mes = evento.DataPrevista.Month, ano = evento.DataPrevista.Year });
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!EventoExists(model.Id))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+            }
+
+            // Se houver erros de validação, recarregar as listas e retornar para a view
+            model.AtivosDisponiveis = await _context.Ativos.Where(a => a.Status == StatusAtivo.Ativo).ToListAsync();
+            model.EquipesDisponiveis = await _context.Equipes.ToListAsync();
+            model.TecnicosDisponiveis = await _context.Tecnicos.ToListAsync();
+            
+            return View(model);
+        }
+
+        // GET: OrdensServico/ExcluirEvento/5
+        [Authorize(Roles = "Administrador,Gestor")]
+        public async Task<IActionResult> ExcluirEvento(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var evento = await _context.AgendaManutencao
+                .FirstOrDefaultAsync(m => m.Id == id);
+                
+            if (evento == null)
+            {
+                return NotFound();
+            }
+
+            // Verificar se é uma O.S. (não permitir exclusão)
+            if (evento.Tipo == TipoAgenda.OrdemServico)
+            {
+                TempData["Error"] = "Não é possível excluir eventos do tipo Ordem de Serviço diretamente pelo calendário.";
+                return RedirectToAction(nameof(Calendario));
+            }
+
+            _context.AgendaManutencao.Remove(evento);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Evento excluído com sucesso!";
+            return RedirectToAction(nameof(Calendario));
+        }
+
+        private bool EventoExists(int id)
+        {
+            return _context.AgendaManutencao.Any(e => e.Id == id);
         }
     }
 }

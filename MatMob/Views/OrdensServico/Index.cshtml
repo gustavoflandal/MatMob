@@ -82,7 +82,7 @@
                         {
                             <tr>
                                 <td><strong>@os.NumeroOS</strong></td>
-                                <td>@os.Ativo.Nome</td>
+                                <td>@os.Ativo?.Nome</td>
                                 <td>@os.TipoServico.GetDisplayName()</td>
                                 <td>
                                     @switch (os.Status)

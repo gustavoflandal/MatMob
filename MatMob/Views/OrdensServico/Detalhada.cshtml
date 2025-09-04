@@ -22,7 +22,7 @@
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h4 class="mb-0">
                         <i class="fas fa-clipboard-list me-2"></i>
-                        OS #@Model.OrdemServico.NumeroOS - @Model.OrdemServico.Ativo.Nome
+                        OS #@Model.OrdemServico.NumeroOS - @(Model.OrdemServico.Ativo?.Nome ?? "Sem ativo associado")
                     </h4>
                     <div>
                         <span class="badge bg-@(Model.OrdemServico.Status == StatusOS.Concluida ? "success" : 
@@ -42,7 +42,8 @@
                         <div class="col-md-4">
                             <p><strong>Tipo:</strong> @Model.OrdemServico.TipoServico.GetDisplayName()</p>
                             <p><strong>Data Abertura:</strong> @Model.OrdemServico.DataAbertura.ToString("dd/MM/yyyy HH:mm")</p>
-                            <p><strong>Ativo:</strong> @Model.OrdemServico.Ativo.Nome (@Model.OrdemServico.Ativo.Localizacao)</p>
+                            <p><strong>Ativo:</strong> @(Model.OrdemServico.Ativo?.Nome ?? "Desconhecido") (@(Model.OrdemServico.Ativo?.Localizacao ?? "N/A"))</p>
+                        <p><strong>Ativo:</strong> @(Model.OrdemServico.Ativo?.Nome ?? "Desconhecido") (@(Model.OrdemServico.Ativo?.Localizacao ?? "N/A"))</p>
                         </div>
                         <div class="col-md-4">
                             <p><strong>Responsável:</strong> @(Model.OrdemServico.TecnicoResponsavel?.Nome ?? "Não atribuído")</p>

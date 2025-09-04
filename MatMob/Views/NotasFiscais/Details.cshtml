@@ -1,0 +1,277 @@
+@model MatMob.ViewModels.NotaFiscalViewModel
+
+@{
+    ViewData["Title"] = "Detalhes da Nota Fiscal";
+}
+
+<div class="container-fluid py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
+            <li class="breadcrumb-item"><a asp-controller="NotasFiscais" asp-action="Index">Notas Fiscais</a></li>
+            <li class="breadcrumb-item active">Detalhes</li>
+        </ol>
+    </nav>
+
+    <!-- Cabeçalho -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-info">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-file-invoice me-2"></i>
+                        Detalhes da Nota Fiscal - @Model.NumeroNF
+                    </h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Informações Principais -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Informações Principais
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">Número da NF:</dt>
+                                <dd class="col-sm-8">@Model.NumeroNF</dd>
+
+                                <dt class="col-sm-4">Série:</dt>
+                                <dd class="col-sm-8">@Model.Serie</dd>
+
+                                <dt class="col-sm-4">Data de Emissão:</dt>
+                                <dd class="col-sm-8">@Model.DataEmissao.ToString("dd/MM/yyyy")</dd>
+
+                                <dt class="col-sm-4">Chave de Acesso:</dt>
+                                <dd class="col-sm-8">
+                                    @if (!string.IsNullOrEmpty(Model.ChaveAcesso))
+                                    {
+                                        <code>@Model.ChaveAcesso</code>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Não informada</span>
+                                    }
+                                </dd>
+                            </dl>
+                        </div>
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">Fornecedor:</dt>
+                                <dd class="col-sm-8">
+                                    @if (Model.Fornecedor != null)
+                                    {
+                                        <strong>@Model.Fornecedor.Nome</strong>
+                                        @if (!string.IsNullOrEmpty(Model.Fornecedor.CNPJ))
+                                        {
+                                            <br /><small class="text-muted">CNPJ: @Model.Fornecedor.CNPJ</small>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Não informado</span>
+                                    }
+                                </dd>
+
+                                <dt class="col-sm-4">Pedido de Compra:</dt>
+                                <dd class="col-sm-8">
+                                    @if (Model.PedidoCompra != null)
+                                    {
+                                        <a asp-controller="PedidosCompra" asp-action="Details" asp-route-id="@Model.PedidoCompra.Id" class="text-decoration-none">
+                                            @Model.PedidoCompra.NumeroPedido
+                                        </a>
+                                        <br /><small class="text-muted">Status: @Model.PedidoCompra.Status.ToString()</small>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Não vinculado</span>
+                                    }
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Valores Fiscais -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calculator me-2"></i>Valores Fiscais
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-2">
+                            <div class="text-center">
+                                <h6 class="text-primary">Produtos</h6>
+                                <h4 class="text-primary">R$ @Model.ValorProdutos.ToString("F2")</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="text-center">
+                                <h6 class="text-info">ICMS</h6>
+                                <h4 class="text-info">R$ @Model.ValorICMS.ToString("F2")</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="text-center">
+                                <h6 class="text-warning">IPI</h6>
+                                <h4 class="text-warning">R$ @Model.ValorIPI.ToString("F2")</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="text-center">
+                                <h6 class="text-success">PIS</h6>
+                                <h4 class="text-success">R$ @Model.ValorPIS.ToString("F2")</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="text-center">
+                                <h6 class="text-secondary">COFINS</h6>
+                                <h4 class="text-secondary">R$ @Model.ValorCOFINS.ToString("F2")</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="text-center border-start">
+                                <h6 class="text-danger">Total</h6>
+                                <h4 class="text-danger">R$ @Model.ValorTotal.ToString("F2")</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Itens da Nota Fiscal -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>Itens da Nota Fiscal
+                    </h5>
+                    <span class="badge bg-primary">@Model.QuantidadeItens itens</span>
+                </div>
+                <div class="card-body">
+                    @if (Model.Itens != null && Model.Itens.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Produto</th>
+                                        <th class="text-center">Quantidade</th>
+                                        <th class="text-end">Valor Unitário</th>
+                                        <th class="text-end">Valor Total</th>
+                                        <th>Observações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model.Itens)
+                                    {
+                                        <tr>
+                                            <td>
+                                                @if (item.Produto != null)
+                                                {
+                                                    <strong>@item.Produto.Nome</strong>
+                                                    @if (!string.IsNullOrEmpty(item.Produto.Codigo))
+                                                    {
+                                                        <br /><small class="text-muted">Código: @item.Produto.Codigo</small>
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">Produto não encontrado</span>
+                                                }
+                                            </td>
+                                            <td class="text-center">@item.Quantidade.ToString("F2")</td>
+                                            <td class="text-end">R$ @item.ValorUnitario.ToString("F2")</td>
+                                            <td class="text-end">R$ @item.ValorTotal.ToString("F2")</td>
+                                            <td>
+                                                @if (!string.IsNullOrEmpty(item.Observacoes))
+                                                {
+                                                    @item.Observacoes
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">-</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                <tfoot class="table-dark">
+                                    <tr>
+                                        <th colspan="3" class="text-end">Total dos Itens:</th>
+                                        <th class="text-end">R$ @Model.ValorProdutos.ToString("F2")</th>
+                                        <th></th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">Nenhum item encontrado</h5>
+                            <p class="text-muted">Esta nota fiscal não possui itens cadastrados.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Observações -->
+    @if (!string.IsNullOrEmpty(Model.Observacoes))
+    {
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-sticky-note me-2"></i>Observações
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-0">@Model.Observacoes</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Botões de Ação -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between">
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Voltar para Lista
+                </a>
+                <div>
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning me-2">
+                        <i class="fas fa-edit me-2"></i>Editar
+                    </a>
+                    <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Excluir
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

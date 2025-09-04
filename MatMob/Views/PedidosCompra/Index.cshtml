@@ -1,0 +1,224 @@
+@model IEnumerable<MatMob.Models.Entities.PedidoCompra>
+
+@{
+    ViewData["Title"] = "Pedidos de Compra";
+}
+
+<div class="container-fluid py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item active">Pedidos de Compra</li>
+        </ol>
+    </nav>
+
+    <!-- Cabeçalho -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="fas fa-shopping-cart me-2"></i>
+                        Pedidos de Compra (@Model.Count())
+                    </h4>
+                    <a asp-action="Create" class="btn btn-light btn-sm">
+                        <i class="fas fa-plus me-2"></i>Novo Pedido
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-filter me-2"></i>Filtros
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-2">
+                            <label for="searchNumero" class="form-label">Número</label>
+                            <input type="text" class="form-control" id="searchNumero" name="searchNumero"
+                                   value="@Context.Request.Query["searchNumero"]" placeholder="Buscar por número...">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="searchFornecedor" class="form-label">Fornecedor</label>
+                            <input type="text" class="form-control" id="searchFornecedor" name="searchFornecedor"
+                                   value="@Context.Request.Query["searchFornecedor"]" placeholder="Buscar por fornecedor...">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="statusFilter" class="form-label">Status</label>
+                            <select class="form-select" id="statusFilter" name="statusFilter">
+                                <option value="">Todos os Status</option>
+                                <option value="1" selected="@(Context.Request.Query["statusFilter"] == "1")">Aberto</option>
+                                <option value="2" selected="@(Context.Request.Query["statusFilter"] == "2")">Aprovado</option>
+                                <option value="3" selected="@(Context.Request.Query["statusFilter"] == "3")">Rejeitado</option>
+                                <option value="4" selected="@(Context.Request.Query["statusFilter"] == "4")">Parcialmente Recebido</option>
+                                <option value="5" selected="@(Context.Request.Query["statusFilter"] == "5")">Totalmente Recebido</option>
+                                <option value="6" selected="@(Context.Request.Query["statusFilter"] == "6")">Cancelado</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="prioridadeFilter" class="form-label">Prioridade</label>
+                            <select class="form-select" id="prioridadeFilter" name="prioridadeFilter">
+                                <option value="">Todas as Prioridades</option>
+                                <option value="1" selected="@(Context.Request.Query["prioridadeFilter"] == "1")">Baixa</option>
+                                <option value="2" selected="@(Context.Request.Query["prioridadeFilter"] == "2")">Média</option>
+                                <option value="3" selected="@(Context.Request.Query["prioridadeFilter"] == "3")">Alta</option>
+                                <option value="4" selected="@(Context.Request.Query["prioridadeFilter"] == "4")">Urgente</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary me-2">
+                                <i class="fas fa-search me-2"></i>Filtrar
+                            </button>
+                            <a href="@Url.Action("Index")" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>Limpar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabela de Pedidos -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    @if (Model.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Número</th>
+                                        <th>Fornecedor</th>
+                                        <th>Data</th>
+                                        <th>Status</th>
+                                        <th>Prioridade</th>
+                                        <th>Valor Total</th>
+                                        <th>Qtd. Itens</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var pedido in Model.OrderByDescending(p => p.DataPedido))
+                                    {
+                                        <tr>
+                                            <td>
+                                                <span class="badge bg-secondary">@pedido.NumeroPedido</span>
+                                            </td>
+                                            <td>
+                                                <strong>@pedido.Fornecedor?.Nome</strong>
+                                                @if (!string.IsNullOrEmpty(pedido.Fornecedor?.NomeFantasia))
+                                                {
+                                                    <br><small class="text-muted">@pedido.Fornecedor?.NomeFantasia</small>
+                                                }
+                                            </td>
+                                            <td>@pedido.DataPedido.ToString("dd/MM/yyyy")</td>
+                                            <td>
+                                                <span class="badge @GetStatusBadgeClass(pedido.Status)">
+                                                    @pedido.Status.ToString()
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="badge @GetPrioridadeBadgeClass(pedido.Prioridade)">
+                                                    @pedido.Prioridade.ToString()
+                                                </span>
+                                            </td>
+                                            <td>R$ @(pedido.ValorTotal?.ToString("N2") ?? "0,00")</td>
+                                            <td>
+                                                <span class="badge bg-info">@(pedido.Itens?.Count ?? 0)</span>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    <a asp-action="Details" asp-route-id="@pedido.Id"
+                                                       class="btn btn-sm btn-outline-primary" title="Ver Detalhes">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    @if (pedido.Itens?.Count > 0)
+                                                    {
+                                                        <button type="button" class="btn btn-sm btn-outline-warning" 
+                                                                title="Editar (desabilitado - pedido possui itens)" disabled>
+                                                            <i class="fas fa-edit"></i>
+                                                        </button>
+                                                        <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                                title="Excluir (desabilitado - pedido possui itens)" disabled>
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    }
+                                                    else
+                                                    {
+                                                        <a asp-action="Edit" asp-route-id="@pedido.Id"
+                                                           class="btn btn-sm btn-outline-warning" title="Editar">
+                                                            <i class="fas fa-edit"></i>
+                                                        </a>
+                                                        <a asp-action="Delete" asp-route-id="@pedido.Id"
+                                                           class="btn btn-sm btn-outline-danger" title="Excluir">
+                                                            <i class="fas fa-trash"></i>
+                                                        </a>
+                                                    }
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">Nenhum pedido encontrado</h5>
+                            <p class="text-muted">Não foram encontrados pedidos de compra com os critérios de busca informados.</p>
+                            <a asp-action="Create" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>Criar Primeiro Pedido
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@{
+    string GetStatusBadgeClass(MatMob.Models.Entities.StatusPedidoCompra status)
+    {
+        return status switch
+        {
+            MatMob.Models.Entities.StatusPedidoCompra.Aberto => "bg-primary",
+            MatMob.Models.Entities.StatusPedidoCompra.Aprovado => "bg-success",
+            MatMob.Models.Entities.StatusPedidoCompra.Rejeitado => "bg-danger",
+            MatMob.Models.Entities.StatusPedidoCompra.ParcialmenteRecebido => "bg-warning",
+            MatMob.Models.Entities.StatusPedidoCompra.TotalmenteRecebido => "bg-info",
+            MatMob.Models.Entities.StatusPedidoCompra.Cancelado => "bg-secondary",
+            _ => "bg-light"
+        };
+    }
+
+    string GetPrioridadeBadgeClass(MatMob.Models.Entities.PrioridadePedidoCompra prioridade)
+    {
+        return prioridade switch
+        {
+            MatMob.Models.Entities.PrioridadePedidoCompra.Baixa => "bg-secondary",
+            MatMob.Models.Entities.PrioridadePedidoCompra.Media => "bg-info",
+            MatMob.Models.Entities.PrioridadePedidoCompra.Alta => "bg-warning",
+            MatMob.Models.Entities.PrioridadePedidoCompra.Urgente => "bg-danger",
+            _ => "bg-light"
+        };
+    }
+}
+
+@section Scripts {
+    <script>
+        // Scripts removidos - funcionalidade de adicionar item movida para tela de detalhes
+    </script>
+}

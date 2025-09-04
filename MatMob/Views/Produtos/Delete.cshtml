@@ -1,0 +1,188 @@
+@model MatMob.Models.Entities.Produto
+
+@{
+    ViewData["Title"] = "Excluir Produto";
+}
+
+<div class="container-fluid py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Produtos" asp-action="Index">Produtos</a></li>
+            <li class="breadcrumb-item active">Excluir</li>
+        </ol>
+    </nav>
+
+    <!-- Alerta de confirmação -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Confirmar Exclusão do Produto
+                    </h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Informações do Produto -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Informações do Produto</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Dados Básicos -->
+                        <div class="col-md-6">
+                            <h6 class="mb-3 text-muted">Dados Básicos</h6>
+
+                            <div class="row mb-2">
+                                <div class="col-sm-4"><strong>Código:</strong></div>
+                                <div class="col-sm-8">
+                                    <span class="badge bg-secondary">@Model.Codigo</span>
+                                </div>
+                            </div>
+
+                            <div class="row mb-2">
+                                <div class="col-sm-4"><strong>Nome:</strong></div>
+                                <div class="col-sm-8">@Model.Nome</div>
+                            </div>
+
+                            <div class="row mb-2">
+                                <div class="col-sm-4"><strong>Unidade:</strong></div>
+                                <div class="col-sm-8">@Model.UnidadeMedida</div>
+                            </div>
+
+                            <div class="row mb-2">
+                                <div class="col-sm-4"><strong>Status:</strong></div>
+                                <div class="col-sm-8">
+                                    <span class="badge @(Model.Status == MatMob.Models.Entities.StatusProduto.Ativo ? "bg-success" : Model.Status == MatMob.Models.Entities.StatusProduto.Inativo ? "bg-secondary" : "bg-danger")">
+                                        @Model.Status.ToString()
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Configurações -->
+                        <div class="col-md-6">
+                            <h6 class="mb-3 text-muted">Configurações</h6>
+
+                            <div class="row mb-2">
+                                <div class="col-sm-4"><strong>Estoque Mínimo:</strong></div>
+                                <div class="col-sm-8">@Model.EstoqueMinimo.ToString("N2")</div>
+                            </div>
+
+                            @if (!string.IsNullOrEmpty(Model.Descricao))
+                            {
+                                <div class="row mb-2">
+                                    <div class="col-sm-4"><strong>Descrição:</strong></div>
+                                    <div class="col-sm-8">@Model.Descricao</div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Relacionamentos -->
+    @if ((Model.Fornecedores?.Count ?? 0) > 0 || (Model.ItensPedidoCompra?.Count ?? 0) > 0)
+    {
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card border-warning">
+                    <div class="card-header bg-warning">
+                        <h5 class="mb-0">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Relacionamentos Encontrados
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-3">
+                            Este produto possui os seguintes relacionamentos no sistema.
+                            A exclusão irá afetar estes registros:
+                        </p>
+
+                        <div class="row">
+                            @if ((Model.Fornecedores?.Count ?? 0) > 0)
+                            {
+                                <div class="col-md-6">
+                                    <div class="alert alert-info">
+                                        <h6>
+                                            <i class="fas fa-building me-2"></i>
+                                            Fornecedores (@Model.Fornecedores.Count)
+                                        </h6>
+                                        <p class="mb-0">
+                                            Este produto está associado a @Model.Fornecedores.Count fornecedor(es).
+                                            A exclusão irá remover estas associações.
+                                        </p>
+                                    </div>
+                                </div>
+                            }
+
+                            @if ((Model.ItensPedidoCompra?.Count ?? 0) > 0)
+                            {
+                                <div class="col-md-6">
+                                    <div class="alert alert-info">
+                                        <h6>
+                                            <i class="fas fa-shopping-cart me-2"></i>
+                                            Pedidos de Compra (@Model.ItensPedidoCompra.Count)
+                                        </h6>
+                                        <p class="mb-0">
+                                            Este produto possui @Model.ItensPedidoCompra.Count item(ns) em pedido(s) de compra.
+                                            Considere o impacto antes de prosseguir.
+                                        </p>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Formulário de confirmação -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form asp-action="Delete" method="post">
+                        <input type="hidden" asp-for="Id" />
+
+                        <div class="form-check mb-4">
+                            <input class="form-check-input" type="checkbox" id="confirmDelete" required>
+                            <label class="form-check-label" for="confirmDelete">
+                                <strong>Confirmo que desejo excluir permanentemente este produto e entendo que esta ação não pode ser desfeita.</strong>
+                            </label>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-danger" id="deleteBtn" disabled>
+                                <i class="fas fa-trash me-2"></i>Excluir Produto
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Habilitar/desabilitar botão de exclusão baseado na confirmação
+        document.getElementById('confirmDelete').addEventListener('change', function() {
+            document.getElementById('deleteBtn').disabled = !this.checked;
+        });
+    </script>
+}

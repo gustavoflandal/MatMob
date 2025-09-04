@@ -1,0 +1,234 @@
+@model MatMob.Models.Entities.PedidoCompra
+
+@{
+    ViewData["Title"] = "Excluir Pedido de Compra";
+}
+
+<div class="container-fluid py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
+            <li class="breadcrumb-item"><a asp-controller="PedidosCompra" asp-action="Index">Pedidos de Compra</a></li>
+            <li class="breadcrumb-item active">Excluir</li>
+        </ol>
+    </nav>
+
+    <!-- Alerta de confirmação -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Confirmar Exclusão do Pedido de Compra
+                    </h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Informações do Pedido -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Informações do Pedido</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Dados Básicos -->
+                        <div class="col-md-6">
+                            <h6 class="mb-3 text-muted">Dados Básicos</h6>
+
+                            <div class="row mb-2">
+                                <div class="col-sm-4"><strong>Número:</strong></div>
+                                <div class="col-sm-8">
+                                    <span class="badge bg-secondary">@Model.NumeroPedido</span>
+                                </div>
+                            </div>
+
+                            <div class="row mb-2">
+                                <div class="col-sm-4"><strong>Fornecedor:</strong></div>
+                                <div class="col-sm-8">@Model.Fornecedor?.Nome</div>
+                            </div>
+
+                            <div class="row mb-2">
+                                <div class="col-sm-4"><strong>Status:</strong></div>
+                                <div class="col-sm-8">
+                                    <span class="badge @GetStatusBadgeClass(Model.Status)">
+                                        @Model.Status.ToString()
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="row mb-2">
+                                <div class="col-sm-4"><strong>Prioridade:</strong></div>
+                                <div class="col-sm-8">
+                                    <span class="badge @GetPrioridadeBadgeClass(Model.Prioridade)">
+                                        @Model.Prioridade.ToString()
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="row mb-2">
+                                <div class="col-sm-4"><strong>Valor Total:</strong></div>
+                                <div class="col-sm-8">
+                                    <strong>R$ @(Model.ValorTotal?.ToString("N2") ?? "0,00")</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Datas -->
+                        <div class="col-md-6">
+                            <h6 class="mb-3 text-muted">Datas</h6>
+
+                            <div class="row mb-2">
+                                <div class="col-sm-4"><strong>Data do Pedido:</strong></div>
+                                <div class="col-sm-8">@Model.DataPedido.ToString("dd/MM/yyyy HH:mm")</div>
+                            </div>
+
+                            @if (Model.DataAprovacao.HasValue)
+                            {
+                                <div class="row mb-2">
+                                    <div class="col-sm-4"><strong>Data Aprovação:</strong></div>
+                                    <div class="col-sm-8">@Model.DataAprovacao.Value.ToString("dd/MM/yyyy HH:mm")</div>
+                                </div>
+                            }
+
+                            @if (Model.DataPrevistaEntrega.HasValue)
+                            {
+                                <div class="row mb-2">
+                                    <div class="col-sm-4"><strong>Entrega Prevista:</strong></div>
+                                    <div class="col-sm-8">@Model.DataPrevistaEntrega.Value.ToString("dd/MM/yyyy")</div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Relacionamentos -->
+    @if ((Model.Itens?.Count ?? 0) > 0 || (Model.NotasFiscais?.Count ?? 0) > 0)
+    {
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card border-warning">
+                    <div class="card-header bg-warning">
+                        <h5 class="mb-0">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Relacionamentos Encontrados
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-3">
+                            Este pedido possui os seguintes relacionamentos no sistema.
+                            A exclusão irá afetar estes registros:
+                        </p>
+
+                        <div class="row">
+                            @if ((Model.Itens?.Count ?? 0) > 0)
+                            {
+                                <div class="col-md-6">
+                                    <div class="alert alert-info">
+                                        <h6>
+                                            <i class="fas fa-list me-2"></i>
+                                            Itens do Pedido (@Model.Itens.Count)
+                                        </h6>
+                                        <p class="mb-0">
+                                            Este pedido possui @Model.Itens.Count item(ns) que serão excluídos.
+                                        </p>
+                                    </div>
+                                </div>
+                            }
+
+                            @if ((Model.NotasFiscais?.Count ?? 0) > 0)
+                            {
+                                <div class="col-md-6">
+                                    <div class="alert alert-danger">
+                                        <h6>
+                                            <i class="fas fa-file-invoice me-2"></i>
+                                            Notas Fiscais (@Model.NotasFiscais.Count)
+                                        </h6>
+                                        <p class="mb-0">
+                                            <strong>Atenção:</strong> Este pedido possui @Model.NotasFiscais.Count nota(s) fiscal(is) associada(s).
+                                            A exclusão pode afetar o controle de estoque.
+                                        </p>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Formulário de confirmação -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form asp-action="Delete" method="post">
+                        <input type="hidden" asp-for="Id" />
+
+                        <div class="form-check mb-4">
+                            <input class="form-check-input" type="checkbox" id="confirmDelete" required>
+                            <label class="form-check-label" for="confirmDelete">
+                                <strong>Confirmo que desejo excluir permanentemente este pedido de compra e entendo que esta ação não pode ser desfeita.</strong>
+                            </label>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-danger" id="deleteBtn" disabled>
+                                <i class="fas fa-trash me-2"></i>Excluir Pedido
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Habilitar/desabilitar botão de exclusão baseado na confirmação
+        document.getElementById('confirmDelete').addEventListener('change', function() {
+            document.getElementById('deleteBtn').disabled = !this.checked;
+        });
+    </script>
+}
+
+@{
+    string GetStatusBadgeClass(MatMob.Models.Entities.StatusPedidoCompra status)
+    {
+        return status switch
+        {
+            MatMob.Models.Entities.StatusPedidoCompra.Aberto => "bg-primary",
+            MatMob.Models.Entities.StatusPedidoCompra.Aprovado => "bg-success",
+            MatMob.Models.Entities.StatusPedidoCompra.Rejeitado => "bg-danger",
+            MatMob.Models.Entities.StatusPedidoCompra.ParcialmenteRecebido => "bg-warning",
+            MatMob.Models.Entities.StatusPedidoCompra.TotalmenteRecebido => "bg-info",
+            MatMob.Models.Entities.StatusPedidoCompra.Cancelado => "bg-secondary",
+            _ => "bg-light"
+        };
+    }
+
+    string GetPrioridadeBadgeClass(MatMob.Models.Entities.PrioridadePedidoCompra prioridade)
+    {
+        return prioridade switch
+        {
+            MatMob.Models.Entities.PrioridadePedidoCompra.Baixa => "bg-secondary",
+            MatMob.Models.Entities.PrioridadePedidoCompra.Media => "bg-info",
+            MatMob.Models.Entities.PrioridadePedidoCompra.Alta => "bg-warning",
+            MatMob.Models.Entities.PrioridadePedidoCompra.Urgente => "bg-danger",
+            _ => "bg-light"
+        };
+    }
+}

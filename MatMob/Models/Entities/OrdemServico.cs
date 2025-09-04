@@ -94,6 +94,11 @@ namespace MatMob.Models.Entities
         public virtual ICollection<ApontamentoHoras> ApontamentosHoras { get; set; } = new List<ApontamentoHoras>();
         [BindNever]
         public virtual ICollection<AgendaManutencao> AgendaItens { get; set; } = new List<AgendaManutencao>();
+        
+        [Display(Name = "Solicitante")]
+        public int? SolicitanteId { get; set; }
+        // Se houver entidade de usuário/solicitante, relacione aqui
+        // public virtual Usuario? Solicitante { get; set; }
     }
 
     public enum TipoServico
@@ -124,6 +129,9 @@ namespace MatMob.Models.Entities
         
         [Display(Name = "Aguardando Peças")]
         AguardandoPecas = 3,
+        
+        [Display(Name = "Aguardando Aprovação")]
+        AguardandoAprovacao = 6,
         
         [Display(Name = "Concluída")]
         Concluida = 4,

@@ -1,0 +1,218 @@
+@model IEnumerable<MatMob.Models.Entities.Produto>
+
+@{
+    ViewData["Title"] = "Produtos";
+}
+
+<div class="container-fluid py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item active">Produtos</li>
+        </ol>
+    </nav>
+
+    <!-- Cabeçalho -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="fas fa-box me-2"></i>
+                        Produtos (@Model.Count())
+                    </h4>
+                    <a asp-action="Create" class="btn btn-light btn-sm">
+                        <i class="fas fa-plus me-2"></i>Novo Produto
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-filter me-2"></i>Filtros
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="searchNome" class="form-label">Nome</label>
+                            <input type="text" class="form-control" id="searchNome" name="searchNome"
+                                   value="@Context.Request.Query["searchNome"]" placeholder="Buscar por nome...">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="searchCodigo" class="form-label">Código</label>
+                            <input type="text" class="form-control" id="searchCodigo" name="searchCodigo"
+                                   value="@Context.Request.Query["searchCodigo"]" placeholder="Buscar por código...">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="statusFilter" class="form-label">Status</label>
+                            <select class="form-select" id="statusFilter" name="statusFilter">
+                                <option value="">Todos os Status</option>
+                                <option value="1" selected="@(Context.Request.Query["statusFilter"] == "1")">Ativo</option>
+                                <option value="2" selected="@(Context.Request.Query["statusFilter"] == "2")">Inativo</option>
+                                <option value="3" selected="@(Context.Request.Query["statusFilter"] == "3")">Descontinuado</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary me-2">
+                                <i class="fas fa-search me-2"></i>Filtrar
+                            </button>
+                            <a href="@Url.Action("Index")" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>Limpar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabela de Produtos -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    @if (Model.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Código</th>
+                                        <th>Nome</th>
+                                        <th>Unidade</th>
+                                        <th>Estoque Mínimo</th>
+                                        <th>Fornecedores</th>
+                                        <th>Status</th>
+                                        <th>Data Cadastro</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var produto in Model)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <span class="badge bg-secondary">@produto.Codigo</span>
+                                            </td>
+                                            <td>
+                                                <strong>@produto.Nome</strong>
+                                                @if (!string.IsNullOrEmpty(produto.Descricao))
+                                                {
+                                                    <br><small class="text-muted">@produto.Descricao</small>
+                                                }
+                                            </td>
+                                            <td>@produto.UnidadeMedida</td>
+                                            <td>@produto.EstoqueMinimo.ToString("N2")</td>
+                                            <td>
+                                                @if (produto.Fornecedores != null && produto.Fornecedores.Any())
+                                                {
+                                                    <span class="badge bg-success">@produto.Fornecedores.Count fornecedor(es)</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-warning">Sem fornecedores</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                <span class="badge @(produto.Status == MatMob.Models.Entities.StatusProduto.Ativo ? "bg-success" : produto.Status == MatMob.Models.Entities.StatusProduto.Inativo ? "bg-secondary" : "bg-danger")">
+                                                    @produto.Status.ToString()
+                                                </span>
+                                            </td>
+                                            <td>@produto.DataCadastro.ToString("dd/MM/yyyy")</td>
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    <a asp-action="Details" asp-route-id="@produto.Id"
+                                                       class="btn btn-sm btn-outline-primary" title="Ver Detalhes">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    <button type="button" class="btn btn-sm btn-outline-success"
+                                                            onclick="abrirModalVincularFornecedor(@produto.Id)"
+                                                            title="Vincular Fornecedor">
+                                                        <i class="fas fa-link"></i>
+                                                    </button>
+                                                    <a asp-action="Edit" asp-route-id="@produto.Id"
+                                                       class="btn btn-sm btn-outline-warning" title="Editar">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    <a asp-action="Delete" asp-route-id="@produto.Id"
+                                                       class="btn btn-sm btn-outline-danger" title="Excluir">
+                                                        <i class="fas fa-trash"></i>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">Nenhum produto encontrado</h5>
+                            <p class="text-muted">Não foram encontrados produtos com os critérios de busca informados.</p>
+                            <a asp-action="Create" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>Cadastrar Primeiro Produto
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estatísticas -->
+    @if (Model.Any())
+    {
+        <div class="row mt-4">
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title text-primary">@Model.Count()</h5>
+                        <p class="card-text">Total de Produtos</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title text-success">@Model.Count(p => p.Status == MatMob.Models.Entities.StatusProduto.Ativo)</h5>
+                        <p class="card-text">Produtos Ativos</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title text-info">@Model.Count(p => p.Fornecedores != null && p.Fornecedores.Any())</h5>
+                        <p class="card-text">Com Fornecedores</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title text-warning">@Model.Count(p => p.Fornecedores == null || !p.Fornecedores.Any())</h5>
+                        <p class="card-text">Sem Fornecedores</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        function abrirModalVincularFornecedor(produtoId) {
+            window.location.href = '@Url.Action("GerenciarFornecedores", "Produtos")?id=' + produtoId;
+        }
+    </script>
+}

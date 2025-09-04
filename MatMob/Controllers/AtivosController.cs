@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MatMob.Data;
 using MatMob.Models.Entities;
+using MatMob.Services;
 
 namespace MatMob.Controllers
 {
@@ -10,10 +11,12 @@ namespace MatMob.Controllers
     public class AtivosController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly IAuditService _auditService;
 
-        public AtivosController(ApplicationDbContext context)
+        public AtivosController(ApplicationDbContext context, IAuditService auditService)
         {
             _context = context;
+            _auditService = auditService;
         }
 
         // GET: Ativos
@@ -70,6 +73,12 @@ namespace MatMob.Controllers
                 return NotFound();
             }
 
+            // Registrar auditoria de visualização
+            await _auditService.LogViewAsync(
+                entity: ativo,
+                description: $"Visualização do ativo: {ativo.Nome} (Tipo: {ativo.Tipo}, Status: {ativo.Status})"
+            );
+
             return View(ativo);
         }
 
@@ -91,6 +100,12 @@ namespace MatMob.Controllers
                 ativo.DataCadastro = DateTime.Now;
                 _context.Add(ativo);
                 await _context.SaveChangesAsync();
+                
+                // Registrar auditoria de criação
+                await _auditService.LogCreateAsync(
+                    entity: ativo,
+                    description: $"Criação do ativo: {ativo.Nome} (Tipo: {ativo.Tipo})"
+                );
                 
                 TempData["Success"] = "Ativo cadastrado com sucesso!";
                 return RedirectToAction(nameof(Index));
@@ -130,9 +145,22 @@ namespace MatMob.Controllers
             {
                 try
                 {
+                    // Capturar o estado antigo para auditoria
+                    var ativoAntigo = await _context.Ativos.AsNoTracking().FirstOrDefaultAsync(a => a.Id == id);
+                    
                     ativo.UltimaAtualizacao = DateTime.Now;
                     _context.Update(ativo);
                     await _context.SaveChangesAsync();
+                    
+                    // Registrar auditoria de atualização
+                    if (ativoAntigo != null)
+                    {
+                        await _auditService.LogUpdateAsync(
+                            oldEntity: ativoAntigo,
+                            newEntity: ativo,
+                            description: $"Atualização do ativo: {ativo.Nome}"
+                        );
+                    }
                     
                     TempData["Success"] = "Ativo atualizado com sucesso!";
                 }
@@ -187,6 +215,12 @@ namespace MatMob.Controllers
                     TempData["Error"] = "Não é possível excluir este ativo pois ele possui ordens de serviço associadas.";
                     return RedirectToAction(nameof(Index));
                 }
+
+                // Registrar auditoria de exclusão antes de remover
+                await _auditService.LogDeleteAsync(
+                    entity: ativo,
+                    description: $"Exclusão do ativo: {ativo.Nome} (Tipo: {ativo.Tipo})"
+                );
 
                 _context.Ativos.Remove(ativo);
                 await _context.SaveChangesAsync();

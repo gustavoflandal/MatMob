@@ -10,7 +10,9 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 
 // Configure Entity Framework with MySQL
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString))
+           .EnableDetailedErrors()
+           .EnableSensitiveDataLogging());
 
 // Configure ASP.NET Core Identity
 builder.Services.AddDefaultIdentity<IdentityUser>(options => 
@@ -29,6 +31,11 @@ builder.Services.AddControllersWithViews();
 
 // Add custom services
 builder.Services.AddScoped<MatMob.Services.IDashboardService, MatMob.Services.DashboardService>();
+builder.Services.AddScoped<MatMob.Services.EstoqueService>();
+
+// Add audit services
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<MatMob.Services.IAuditService, MatMob.Services.AuditService>();
 
 var app = builder.Build();
 
@@ -83,8 +90,8 @@ static async Task InitializeDatabase(ApplicationDbContext context, UserManager<I
 {
     try
     {
-        // Apply pending migrations
-        await context.Database.MigrateAsync();
+        // Criar tabela AuditLogs manualmente ANTES de qualquer migração
+        await CreateAuditLogsTableManually(context);
         
         // Create roles if they don't exist
         string[] roles = { "Administrador", "Gestor", "Tecnico" };
@@ -120,5 +127,69 @@ static async Task InitializeDatabase(ApplicationDbContext context, UserManager<I
     {
         // Log the error but don't crash the application
         Console.WriteLine($"Erro na inicialização do banco de dados: {ex.Message}");
+    }
+}
+
+// Método para criar a tabela AuditLogs manualmente
+static async Task CreateAuditLogsTableManually(ApplicationDbContext context)
+{
+    try
+    {
+        // Verificar se a tabela já existe
+        var tableExists = await context.Database.ExecuteSqlRawAsync(
+            "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'AuditLogs'");
+
+        if (tableExists == 0)
+        {
+            // Criar a tabela AuditLogs
+            await context.Database.ExecuteSqlRawAsync(@"
+                CREATE TABLE AuditLogs (
+                    Id int NOT NULL AUTO_INCREMENT,
+                    UserId varchar(255) CHARACTER SET utf8mb4 NULL,
+                    UserName varchar(255) CHARACTER SET utf8mb4 NULL,
+                    IpAddress varchar(45) CHARACTER SET utf8mb4 NULL,
+                    UserAgent varchar(500) CHARACTER SET utf8mb4 NULL,
+                    Action varchar(50) CHARACTER SET utf8mb4 NOT NULL,
+                    EntityName varchar(100) CHARACTER SET utf8mb4 NULL,
+                    EntityId int NULL,
+                    PropertyName varchar(100) CHARACTER SET utf8mb4 NULL,
+                    OldValue TEXT CHARACTER SET utf8mb4 NULL,
+                    NewValue TEXT CHARACTER SET utf8mb4 NULL,
+                    OldData TEXT CHARACTER SET utf8mb4 NULL,
+                    NewData TEXT CHARACTER SET utf8mb4 NULL,
+                    Description varchar(1000) CHARACTER SET utf8mb4 NULL,
+                    Context varchar(200) CHARACTER SET utf8mb4 NULL,
+                    Severity varchar(20) CHARACTER SET utf8mb4 NOT NULL,
+                    Category varchar(50) CHARACTER SET utf8mb4 NULL,
+                    AdditionalData TEXT CHARACTER SET utf8mb4 NULL,
+                    CreatedAt timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+                    Duration bigint NULL,
+                    Success tinyint(1) NOT NULL,
+                    ErrorMessage varchar(2000) CHARACTER SET utf8mb4 NULL,
+                    StackTrace TEXT CHARACTER SET utf8mb4 NULL,
+                    SessionId varchar(255) CHARACTER SET utf8mb4 NULL,
+                    CorrelationId varchar(255) CHARACTER SET utf8mb4 NULL,
+                    HttpMethod varchar(10) CHARACTER SET utf8mb4 NULL,
+                    RequestUrl varchar(500) CHARACTER SET utf8mb4 NULL,
+                    HttpStatusCode int NULL,
+                    PermanentRetention tinyint(1) NOT NULL,
+                    ExpirationDate datetime(6) NULL,
+                    CONSTRAINT PK_AuditLogs PRIMARY KEY (Id)
+                ) CHARACTER SET=utf8mb4;
+            ");
+
+            // Criar os índices
+            await context.Database.ExecuteSqlRawAsync("CREATE INDEX IX_AuditLogs_Action ON AuditLogs (Action);");
+            await context.Database.ExecuteSqlRawAsync("CREATE INDEX IX_AuditLogs_CorrelationId ON AuditLogs (CorrelationId);");
+            await context.Database.ExecuteSqlRawAsync("CREATE INDEX IX_AuditLogs_EntityName ON AuditLogs (EntityName);");
+            await context.Database.ExecuteSqlRawAsync("CREATE INDEX IX_AuditLogs_Timestamp ON AuditLogs (Timestamp);");
+            await context.Database.ExecuteSqlRawAsync("CREATE INDEX IX_AuditLogs_UserId ON AuditLogs (UserId);");
+
+            Console.WriteLine("Tabela AuditLogs criada com sucesso!");
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Erro ao criar tabela AuditLogs: {ex.Message}");
     }
 }
