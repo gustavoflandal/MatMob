@@ -36,6 +36,7 @@ namespace MatMob.Data
         
         // Entidade para auditoria
         public DbSet<AuditLog> AuditLogs { get; set; }
+        public DbSet<AuditModuleConfig> AuditModuleConfigs { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -220,15 +221,24 @@ namespace MatMob.Data
             // AuditLog
             builder.Entity<AuditLog>(entity =>
             {
-                entity.HasIndex(e => e.Timestamp);
+                entity.HasIndex(e => e.CreatedAt);
                 entity.HasIndex(e => e.UserId);
                 entity.HasIndex(e => e.Action);
                 entity.HasIndex(e => e.EntityName);
                 entity.HasIndex(e => e.CorrelationId);
-                entity.Property(e => e.Timestamp)
-                    .HasColumnName("CreatedAt")
+                entity.Property(e => e.CreatedAt)
                     .HasColumnType("timestamp(6)")
                     .HasDefaultValueSql("CURRENT_TIMESTAMP(6)");
+            });
+
+            // AuditModuleConfig
+            builder.Entity<AuditModuleConfig>(entity =>
+            {
+                entity.HasIndex(e => new { e.Module, e.Process }).IsUnique();
+                entity.Property(e => e.Module).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Process).HasMaxLength(100);
+                entity.Property(e => e.Enabled).HasDefaultValue(true);
+                entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP(6)");
             });
 
             // Fornecedor

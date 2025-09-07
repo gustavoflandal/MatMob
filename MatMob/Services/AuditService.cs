@@ -1,92 +1,129 @@
 using MatMob.Data;
 using MatMob.Models.Entities;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
-using System.Text.Json;
-using System.Text;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
+using System.Text;
+using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MatMob.Services
 {
-    /// <summary>
-    /// Implementação do serviço de auditoria
-    /// </summary>
     public class AuditService : IAuditService
     {
         private readonly ApplicationDbContext _context;
-        private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<AuditService> _logger;
+        private readonly AuditImmutabilityService _immutabilityService;
+        private readonly IMemoryCache _cache;
         private readonly JsonSerializerOptions _jsonOptions;
+        private readonly AuditBackgroundService _backgroundService;
 
-        public AuditService(
-            ApplicationDbContext context,
-            IHttpContextAccessor httpContextAccessor,
-            UserManager<IdentityUser> userManager,
-            ILogger<AuditService> logger)
+        public AuditService(ApplicationDbContext context, IServiceProvider serviceProvider, ILogger<AuditService> logger, AuditImmutabilityService immutabilityService, IMemoryCache cache, AuditBackgroundService backgroundService)
         {
             _context = context;
-            _httpContextAccessor = httpContextAccessor;
-            _userManager = userManager;
+            _serviceProvider = serviceProvider;
             _logger = logger;
-
+            _immutabilityService = immutabilityService;
+            _cache = cache;
+            _backgroundService = backgroundService;
+            
             _jsonOptions = new JsonSerializerOptions
             {
-                WriteIndented = false,
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+                WriteIndented = false,
+                ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles
             };
         }
 
-        public async Task LogAsync(string action, string? entityName = null, int? entityId = null, 
-                                  string? description = null, string? category = null, string? severity = AuditSeverity.INFO)
+        private async Task<bool> IsAuditEnabledAsync(string? category, string? action)
         {
-            var auditLog = await CreateBaseAuditLogAsync();
-            auditLog.Action = action;
-            auditLog.EntityName = entityName;
-            auditLog.EntityId = entityId;
-            auditLog.Description = description;
-            auditLog.Category = category ?? AuditCategory.DATA_ACCESS;
-            auditLog.Severity = severity ?? AuditSeverity.INFO;
+            try
+            {
+                var cacheKey = ($"audit_cfg:{category}:{action}").ToUpperInvariant();
+                if (_cache.TryGetValue(cacheKey, out bool enabled))
+                {
+                    return enabled;
+                }
 
-            await SaveAuditLogAsync(auditLog);
+                // Carrega do banco regra específica e regras mais genéricas (por categoria e global)
+                var query = _context.AuditModuleConfigs.AsQueryable();
+
+                // Se não houver nenhuma regra cadastrada, habilita tudo (fail-open)
+                var hasAnyRule = await query.AnyAsync();
+                if (!hasAnyRule)
+                {
+                    enabled = true;
+                }
+                else
+                {
+                    // Habilita apenas se existir pelo menos uma regra Enabled que case com categoria/ação (suporta genéricos por módulo/processo vazio)
+                    var rules = await query
+                        .Where(r => r.Enabled)
+                        .Where(r =>
+                            (string.IsNullOrEmpty(r.Module) || r.Module == category) &&
+                            (string.IsNullOrEmpty(r.Process) || r.Process == action))
+                        .ToListAsync();
+
+                    enabled = rules.Any();
+                }
+
+                _cache.Set(cacheKey, enabled, new MemoryCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(60)
+                });
+
+                return enabled;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Falha ao consultar configurações de auditoria, assumindo habilitado");
+                return true; // fail-open
+            }
         }
 
-        public async Task LogAsync(AuditLog auditLog)
-        {
-            // Completar dados básicos se não fornecidos
-            await PopulateBaseAuditDataAsync(auditLog);
-            await SaveAuditLogAsync(auditLog);
-        }
+        // ===== Implementações restantes de IAuditService =====
 
         public async Task LogCreateAsync<T>(T entity, string? description = null) where T : class
         {
-            var auditLog = await CreateBaseAuditLogAsync();
-            auditLog.Action = AuditActions.CREATE;
-            auditLog.EntityName = typeof(T).Name;
-            auditLog.EntityId = GetEntityId(entity);
-            auditLog.NewData = JsonSerializer.Serialize(entity, _jsonOptions);
-            auditLog.Description = description ?? $"Criação de {typeof(T).Name}";
-            auditLog.Category = AuditCategory.DATA_MODIFICATION;
-            auditLog.Severity = AuditSeverity.INFO;
+            var auditLog = new AuditLog
+            {
+                Action = AuditActions.CREATE,
+                EntityName = typeof(T).Name,
+                EntityId = GetEntityId(entity),
+                NewData = JsonSerializer.Serialize(entity, _jsonOptions),
+                Description = description ?? $"Criação de {typeof(T).Name}",
+                Category = AuditCategory.DATA_MODIFICATION,
+                Severity = AuditSeverity.INFO,
+                CreatedAt = DateTime.UtcNow
+            };
 
             await SaveAuditLogAsync(auditLog);
         }
 
         public async Task LogUpdateAsync<T>(T oldEntity, T newEntity, string? description = null) where T : class
         {
-            var auditLog = await CreateBaseAuditLogAsync();
-            auditLog.Action = AuditActions.UPDATE;
-            auditLog.EntityName = typeof(T).Name;
-            auditLog.EntityId = GetEntityId(newEntity);
-            auditLog.OldData = JsonSerializer.Serialize(oldEntity, _jsonOptions);
-            auditLog.NewData = JsonSerializer.Serialize(newEntity, _jsonOptions);
-            auditLog.Description = description ?? $"Atualização de {typeof(T).Name}";
-            auditLog.Category = AuditCategory.DATA_MODIFICATION;
-            auditLog.Severity = AuditSeverity.INFO;
+            var auditLog = new AuditLog
+            {
+                Action = AuditActions.UPDATE,
+                EntityName = typeof(T).Name,
+                EntityId = GetEntityId(newEntity),
+                OldData = JsonSerializer.Serialize(oldEntity, _jsonOptions),
+                NewData = JsonSerializer.Serialize(newEntity, _jsonOptions),
+                Description = description ?? $"Atualização de {typeof(T).Name}",
+                Category = AuditCategory.DATA_MODIFICATION,
+                Severity = AuditSeverity.INFO,
+                CreatedAt = DateTime.UtcNow
+            };
 
-            // Detectar propriedades alteradas
             var changes = DetectChanges(oldEntity, newEntity);
             if (changes.Any())
             {
@@ -98,40 +135,49 @@ namespace MatMob.Services
 
         public async Task LogDeleteAsync<T>(T entity, string? description = null) where T : class
         {
-            var auditLog = await CreateBaseAuditLogAsync();
-            auditLog.Action = AuditActions.DELETE;
-            auditLog.EntityName = typeof(T).Name;
-            auditLog.EntityId = GetEntityId(entity);
-            auditLog.OldData = JsonSerializer.Serialize(entity, _jsonOptions);
-            auditLog.Description = description ?? $"Exclusão de {typeof(T).Name}";
-            auditLog.Category = AuditCategory.DATA_MODIFICATION;
-            auditLog.Severity = AuditSeverity.WARNING;
+            var auditLog = new AuditLog
+            {
+                Action = AuditActions.DELETE,
+                EntityName = typeof(T).Name,
+                EntityId = GetEntityId(entity),
+                OldData = JsonSerializer.Serialize(entity, _jsonOptions),
+                Description = description ?? $"Exclusão de {typeof(T).Name}",
+                Category = AuditCategory.DATA_MODIFICATION,
+                Severity = AuditSeverity.WARNING,
+                CreatedAt = DateTime.UtcNow
+            };
 
             await SaveAuditLogAsync(auditLog);
         }
 
         public async Task LogViewAsync<T>(T entity, string? description = null) where T : class
         {
-            var auditLog = await CreateBaseAuditLogAsync();
-            auditLog.Action = AuditActions.VIEW;
-            auditLog.EntityName = typeof(T).Name;
-            auditLog.EntityId = GetEntityId(entity);
-            auditLog.Description = description ?? $"Visualização de {typeof(T).Name}";
-            auditLog.Category = AuditCategory.DATA_ACCESS;
-            auditLog.Severity = AuditSeverity.INFO;
+            var auditLog = new AuditLog
+            {
+                Action = AuditActions.VIEW,
+                EntityName = typeof(T).Name,
+                EntityId = GetEntityId(entity),
+                Description = description ?? $"Visualização de {typeof(T).Name}",
+                Category = AuditCategory.DATA_ACCESS,
+                Severity = AuditSeverity.INFO,
+                CreatedAt = DateTime.UtcNow
+            };
 
             await SaveAuditLogAsync(auditLog);
         }
 
         public async Task LogLoginAttemptAsync(string username, bool success, string? errorMessage = null)
         {
-            var auditLog = await CreateBaseAuditLogAsync();
-            auditLog.Action = success ? AuditActions.LOGIN : AuditActions.LOGIN_FAILED;
-            auditLog.Description = success ? $"Login bem-sucedido: {username}" : $"Falha no login: {username}";
-            auditLog.Category = AuditCategory.AUTHENTICATION;
-            auditLog.Severity = success ? AuditSeverity.INFO : AuditSeverity.WARNING;
-            auditLog.Success = success;
-            auditLog.ErrorMessage = errorMessage;
+            var auditLog = new AuditLog
+            {
+                Action = success ? AuditActions.LOGIN : AuditActions.LOGIN_FAILED,
+                Description = success ? $"Login bem-sucedido: {username}" : $"Falha no login: {username}",
+                Category = AuditCategory.AUTHENTICATION,
+                Severity = success ? AuditSeverity.INFO : AuditSeverity.WARNING,
+                Success = success,
+                ErrorMessage = errorMessage,
+                CreatedAt = DateTime.UtcNow
+            };
 
             if (!success)
             {
@@ -143,117 +189,143 @@ namespace MatMob.Services
 
         public async Task LogLogoutAsync(string username)
         {
-            var auditLog = await CreateBaseAuditLogAsync();
-            auditLog.Action = AuditActions.LOGOUT;
-            auditLog.Description = $"Logout: {username}";
-            auditLog.Category = AuditCategory.AUTHENTICATION;
-            auditLog.Severity = AuditSeverity.INFO;
+            var auditLog = new AuditLog
+            {
+                Action = AuditActions.LOGOUT,
+                Description = $"Logout: {username}",
+                Category = AuditCategory.AUTHENTICATION,
+                Severity = AuditSeverity.INFO,
+                CreatedAt = DateTime.UtcNow
+            };
 
             await SaveAuditLogAsync(auditLog);
         }
 
         public async Task LogExportAsync(string exportType, string? entityName = null, int recordCount = 0)
         {
-            var auditLog = await CreateBaseAuditLogAsync();
-            auditLog.Action = AuditActions.EXPORT;
-            auditLog.EntityName = entityName;
-            auditLog.Description = $"Exportação de dados: {exportType}";
-            auditLog.Category = AuditCategory.REPORTING;
-            auditLog.Severity = AuditSeverity.INFO;
-            auditLog.AdditionalData = JsonSerializer.Serialize(new { ExportType = exportType, RecordCount = recordCount }, _jsonOptions);
+            var auditLog = new AuditLog
+            {
+                Action = AuditActions.EXPORT,
+                EntityName = entityName,
+                Description = $"Exportação de dados: {exportType}",
+                Category = AuditCategory.REPORTING,
+                Severity = AuditSeverity.INFO,
+                CreatedAt = DateTime.UtcNow,
+                AdditionalData = JsonSerializer.Serialize(new { ExportType = exportType, RecordCount = recordCount }, _jsonOptions)
+            };
 
             await SaveAuditLogAsync(auditLog);
         }
 
         public async Task LogImportAsync(string importType, string? entityName = null, int recordCount = 0)
         {
-            var auditLog = await CreateBaseAuditLogAsync();
-            auditLog.Action = AuditActions.IMPORT;
-            auditLog.EntityName = entityName;
-            auditLog.Description = $"Importação de dados: {importType}";
-            auditLog.Category = AuditCategory.DATA_MODIFICATION;
-            auditLog.Severity = AuditSeverity.INFO;
-            auditLog.AdditionalData = JsonSerializer.Serialize(new { ImportType = importType, RecordCount = recordCount }, _jsonOptions);
+            var auditLog = new AuditLog
+            {
+                Action = AuditActions.IMPORT,
+                EntityName = entityName,
+                Description = $"Importação de dados: {importType}",
+                Category = AuditCategory.DATA_MODIFICATION,
+                Severity = AuditSeverity.INFO,
+                CreatedAt = DateTime.UtcNow,
+                AdditionalData = JsonSerializer.Serialize(new { ImportType = importType, RecordCount = recordCount }, _jsonOptions)
+            };
 
             await SaveAuditLogAsync(auditLog);
         }
 
         public async Task LogErrorAsync(Exception exception, string? context = null, string? additionalData = null)
         {
-            var auditLog = await CreateBaseAuditLogAsync();
-            auditLog.Action = AuditActions.SYSTEM_ERROR;
-            auditLog.Description = $"Erro do sistema: {exception.Message}";
-            auditLog.Category = AuditCategory.SYSTEM_ADMINISTRATION;
-            auditLog.Severity = AuditSeverity.ERROR;
-            auditLog.Success = false;
-            auditLog.ErrorMessage = exception.Message;
-            auditLog.StackTrace = exception.StackTrace;
-            auditLog.Context = context;
-            auditLog.AdditionalData = additionalData;
+            var auditLog = new AuditLog
+            {
+                Action = AuditActions.SYSTEM_ERROR,
+                Description = $"Erro do sistema: {exception.Message}",
+                Category = AuditCategory.SYSTEM_ADMINISTRATION,
+                Severity = AuditSeverity.ERROR,
+                Success = false,
+                ErrorMessage = exception.Message,
+                StackTrace = exception.StackTrace,
+                Context = context,
+                AdditionalData = additionalData,
+                CreatedAt = DateTime.UtcNow
+            };
 
-            await SaveAuditLogAsync(auditLog);
+            await SaveAuditLogAsync(auditLog, saveImmediately: true);
         }
 
         public async Task LogConfigurationChangeAsync(string setting, string? oldValue, string? newValue, string? description = null)
         {
-            var auditLog = await CreateBaseAuditLogAsync();
-            auditLog.Action = AuditActions.CONFIGURATION_CHANGE;
-            auditLog.PropertyName = setting;
-            auditLog.OldValue = oldValue;
-            auditLog.NewValue = newValue;
-            auditLog.Description = description ?? $"Alteração de configuração: {setting}";
-            auditLog.Category = AuditCategory.SYSTEM_ADMINISTRATION;
-            auditLog.Severity = AuditSeverity.INFO;
+            var auditLog = new AuditLog
+            {
+                Action = AuditActions.CONFIGURATION_CHANGE,
+                PropertyName = setting,
+                OldValue = oldValue,
+                NewValue = newValue,
+                Description = description ?? $"Alteração de configuração: {setting}",
+                Category = AuditCategory.SYSTEM_ADMINISTRATION,
+                Severity = AuditSeverity.INFO,
+                CreatedAt = DateTime.UtcNow
+            };
 
             await SaveAuditLogAsync(auditLog);
         }
 
         public async Task LogApprovalAsync(string entityName, int entityId, bool approved, string? comments = null)
         {
-            var auditLog = await CreateBaseAuditLogAsync();
-            auditLog.Action = approved ? AuditActions.APPROVE : AuditActions.REJECT;
-            auditLog.EntityName = entityName;
-            auditLog.EntityId = entityId;
-            auditLog.Description = $"{(approved ? "Aprovação" : "Rejeição")} de {entityName} ID {entityId}";
-            auditLog.Category = AuditCategory.BUSINESS_PROCESS;
-            auditLog.Severity = AuditSeverity.INFO;
-            auditLog.AdditionalData = JsonSerializer.Serialize(new { Approved = approved, Comments = comments }, _jsonOptions);
+            var auditLog = new AuditLog
+            {
+                Action = approved ? AuditActions.APPROVE : AuditActions.REJECT,
+                EntityName = entityName,
+                EntityId = entityId,
+                Description = $"{(approved ? "Aprovação" : "Rejeição")} de {entityName} ID {entityId}",
+                Category = AuditCategory.BUSINESS_PROCESS,
+                Severity = AuditSeverity.INFO,
+                CreatedAt = DateTime.UtcNow,
+                AdditionalData = JsonSerializer.Serialize(new { Approved = approved, Comments = comments }, _jsonOptions)
+            };
 
             await SaveAuditLogAsync(auditLog);
         }
 
         public string StartAuditContext(string operation)
         {
-            var correlationId = Guid.NewGuid().ToString();
-            // Aqui você pode armazenar o contexto se necessário
-            return correlationId;
+            return Guid.NewGuid().ToString();
         }
 
         public async Task EndAuditContextAsync(string correlationId, bool success = true, string? errorMessage = null)
         {
-            var auditLog = await CreateBaseAuditLogAsync();
-            auditLog.CorrelationId = correlationId;
-            auditLog.Action = success ? "OPERATION_COMPLETED" : "OPERATION_FAILED";
-            auditLog.Description = success ? "Operação concluída com sucesso" : "Operação falhou";
-            auditLog.Success = success;
-            auditLog.ErrorMessage = errorMessage;
-            auditLog.Severity = success ? AuditSeverity.INFO : AuditSeverity.ERROR;
+            var auditLog = new AuditLog
+            {
+                CorrelationId = correlationId,
+                Action = success ? "OPERATION_COMPLETED" : "OPERATION_FAILED",
+                Description = success ? "Operação concluída com sucesso" : "Operação falhou",
+                Success = success,
+                ErrorMessage = errorMessage,
+                Severity = success ? AuditSeverity.INFO : AuditSeverity.ERROR,
+                CreatedAt = DateTime.UtcNow
+            };
 
-            await SaveAuditLogAsync(auditLog);
+            await SaveAuditLogAsync(auditLog, saveImmediately: true);
         }
 
         public async Task<IEnumerable<AuditLog>> SearchLogsAsync(
-            DateTime? startDate = null, DateTime? endDate = null, string? userId = null,
-            string? action = null, string? entityName = null, int? entityId = null,
-            string? severity = null, string? category = null, int skip = 0, int take = 100)
+            DateTime? startDate = null,
+            DateTime? endDate = null,
+            string? userId = null,
+            string? action = null,
+            string? entityName = null,
+            int? entityId = null,
+            string? severity = null,
+            string? category = null,
+            int skip = 0,
+            int take = 100)
         {
             var query = _context.AuditLogs.AsQueryable();
 
             if (startDate.HasValue)
-                query = query.Where(l => l.Timestamp >= startDate.Value);
+                query = query.Where(l => l.CreatedAt >= startDate.Value);
 
             if (endDate.HasValue)
-                query = query.Where(l => l.Timestamp <= endDate.Value);
+                query = query.Where(l => l.CreatedAt <= endDate.Value);
 
             if (!string.IsNullOrEmpty(userId))
                 query = query.Where(l => l.UserId == userId);
@@ -274,24 +346,29 @@ namespace MatMob.Services
                 query = query.Where(l => l.Category == category);
 
             return await query
-                .OrderByDescending(l => l.Timestamp)
+                .OrderByDescending(l => l.CreatedAt)
                 .Skip(skip)
                 .Take(take)
                 .ToListAsync();
         }
 
         public async Task<int> CountLogsAsync(
-            DateTime? startDate = null, DateTime? endDate = null, string? userId = null,
-            string? action = null, string? entityName = null, int? entityId = null,
-            string? severity = null, string? category = null)
+            DateTime? startDate = null,
+            DateTime? endDate = null,
+            string? userId = null,
+            string? action = null,
+            string? entityName = null,
+            int? entityId = null,
+            string? severity = null,
+            string? category = null)
         {
             var query = _context.AuditLogs.AsQueryable();
 
             if (startDate.HasValue)
-                query = query.Where(l => l.Timestamp >= startDate.Value);
+                query = query.Where(l => l.CreatedAt >= startDate.Value);
 
             if (endDate.HasValue)
-                query = query.Where(l => l.Timestamp <= endDate.Value);
+                query = query.Where(l => l.CreatedAt <= endDate.Value);
 
             if (!string.IsNullOrEmpty(userId))
                 query = query.Where(l => l.UserId == userId);
@@ -317,9 +394,9 @@ namespace MatMob.Services
         public async Task CleanupOldLogsAsync(int retentionDays = 365)
         {
             var cutoffDate = DateTime.UtcNow.AddDays(-retentionDays);
-            
+
             var logsToDelete = await _context.AuditLogs
-                .Where(l => l.Timestamp < cutoffDate && !l.PermanentRetention)
+                .Where(l => l.CreatedAt < cutoffDate && !l.PermanentRetention)
                 .ToListAsync();
 
             if (logsToDelete.Any())
@@ -332,12 +409,16 @@ namespace MatMob.Services
         }
 
         public async Task<byte[]> ExportLogsAsync(
-            DateTime? startDate = null, DateTime? endDate = null, string? userId = null,
-            string? action = null, string? entityName = null, string format = "csv")
+            DateTime? startDate = null,
+            DateTime? endDate = null,
+            string? userId = null,
+            string? action = null,
+            string? entityName = null,
+            string format = "csv")
         {
             var logs = await SearchLogsAsync(startDate, endDate, userId, action, entityName, null, null, null, 0, int.MaxValue);
 
-            if (format.ToLower() == "csv")
+            if (string.Equals(format, "csv", StringComparison.OrdinalIgnoreCase))
             {
                 return ExportToCsv(logs);
             }
@@ -347,158 +428,179 @@ namespace MatMob.Services
             }
         }
 
-        #region Private Methods
-
-        private async Task<AuditLog> CreateBaseAuditLogAsync()
-        {
-            var auditLog = new AuditLog
-            {
-                Timestamp = DateTime.UtcNow
-            };
-
-            await PopulateBaseAuditDataAsync(auditLog);
-            return auditLog;
-        }
-
-        private async Task PopulateBaseAuditDataAsync(AuditLog auditLog)
-        {
-            var httpContext = _httpContextAccessor.HttpContext;
-            
-            if (httpContext != null)
-            {
-                // Informações do usuário
-                if (httpContext.User.Identity?.IsAuthenticated == true)
-                {
-                    auditLog.UserId = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-                    auditLog.UserName = httpContext.User.FindFirstValue(ClaimTypes.Name) ?? 
-                                       httpContext.User.FindFirstValue(ClaimTypes.Email);
-                }
-
-                // Informações da requisição
-                auditLog.IpAddress = GetClientIpAddress(httpContext);
-                auditLog.UserAgent = httpContext.Request.Headers["User-Agent"].ToString();
-                auditLog.HttpMethod = httpContext.Request.Method;
-                auditLog.RequestUrl = $"{httpContext.Request.Scheme}://{httpContext.Request.Host}{httpContext.Request.Path}{httpContext.Request.QueryString}";
-                auditLog.SessionId = httpContext.Session?.Id;
-
-                // Informações do contexto
-                var routeData = httpContext.GetRouteData();
-                if (routeData != null)
-                {
-                    var controller = routeData.Values["controller"]?.ToString();
-                    var action = routeData.Values["action"]?.ToString();
-                    if (!string.IsNullOrEmpty(controller) && !string.IsNullOrEmpty(action))
-                    {
-                        auditLog.Context = $"{controller}.{action}";
-                    }
-                }
-            }
-
-            // Definir data de expiração padrão (1 ano)
-            auditLog.ExpirationDate = DateTime.UtcNow.AddYears(1);
-        }
-
-        private async Task SaveAuditLogAsync(AuditLog auditLog)
-        {
-            try
-            {
-                _context.AuditLogs.Add(auditLog);
-                await _context.SaveChangesAsync();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Erro ao salvar log de auditoria");
-                // Não propagar a exceção para não afetar a operação principal
-            }
-        }
-
-        private string GetClientIpAddress(HttpContext httpContext)
-        {
-            var ipAddress = httpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
-            
-            if (string.IsNullOrEmpty(ipAddress) || ipAddress.ToLower() == "unknown")
-            {
-                ipAddress = httpContext.Request.Headers["X-Real-IP"].FirstOrDefault();
-            }
-            
-            if (string.IsNullOrEmpty(ipAddress))
-            {
-                ipAddress = httpContext.Connection.RemoteIpAddress?.ToString();
-            }
-
-            return ipAddress ?? "Unknown";
-        }
+        // ===== Helpers =====
 
         private int? GetEntityId<T>(T entity) where T : class
         {
-            try
+            if (entity == null) return null;
+
+            var idProperty = typeof(T).GetProperty("Id") ?? typeof(T).GetProperty($"{typeof(T).Name}Id");
+            if (idProperty != null && idProperty.CanRead)
             {
-                var idProperty = typeof(T).GetProperty("Id");
-                if (idProperty != null && idProperty.PropertyType == typeof(int))
-                {
-                    return (int?)idProperty.GetValue(entity);
-                }
-                return null;
+                var value = idProperty.GetValue(entity);
+                if (value is int i) return i;
             }
-            catch
-            {
-                return null;
-            }
+            return null;
         }
 
         private List<PropertyChange> DetectChanges<T>(T oldEntity, T newEntity) where T : class
         {
             var changes = new List<PropertyChange>();
-            var properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            if (oldEntity == null || newEntity == null) return changes;
 
-            foreach (var property in properties)
+            var properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Where(p => p.CanRead && p.CanWrite && p.GetIndexParameters().Length == 0);
+
+            foreach (var p in properties)
             {
-                if (property.CanRead)
+                try
                 {
-                    var oldValue = property.GetValue(oldEntity);
-                    var newValue = property.GetValue(newEntity);
-
-                    if (!Equals(oldValue, newValue))
+                    var oldVal = p.GetValue(oldEntity)?.ToString();
+                    var newVal = p.GetValue(newEntity)?.ToString();
+                    if (!Equals(oldVal, newVal))
                     {
-                        changes.Add(new PropertyChange
-                        {
-                            PropertyName = property.Name,
-                            OldValue = oldValue?.ToString(),
-                            NewValue = newValue?.ToString()
-                        });
+                        changes.Add(new PropertyChange { PropertyName = p.Name, OldValue = oldVal, NewValue = newVal, ChangeType = "Modified" });
                     }
                 }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Erro ao detectar alterações na propriedade {Prop}", p.Name);
+                }
             }
-
             return changes;
         }
-
-        private byte[] ExportToCsv(IEnumerable<AuditLog> logs)
-        {
-            var csv = new StringBuilder();
-            csv.AppendLine("Timestamp,UserId,UserName,Action,EntityName,EntityId,Description,IpAddress,Success");
-
-            foreach (var log in logs)
-            {
-                csv.AppendLine($"{log.Timestamp:yyyy-MM-dd HH:mm:ss},{log.UserId},{log.UserName},{log.Action},{log.EntityName},{log.EntityId},{log.Description},{log.IpAddress},{log.Success}");
-            }
-
-            return Encoding.UTF8.GetBytes(csv.ToString());
-        }
-
-        private byte[] ExportToJson(IEnumerable<AuditLog> logs)
-        {
-            var json = JsonSerializer.Serialize(logs, _jsonOptions);
-            return Encoding.UTF8.GetBytes(json);
-        }
-
-        #endregion
 
         private class PropertyChange
         {
             public string PropertyName { get; set; } = string.Empty;
             public string? OldValue { get; set; }
             public string? NewValue { get; set; }
+            public string? ChangeType { get; set; }
+        }
+
+        private byte[] ExportToCsv(IEnumerable<AuditLog> logs)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine("CreatedAt,UserId,UserName,Action,EntityName,EntityId,Description,Category,Severity,IpAddress,Success");
+            foreach (var l in logs)
+            {
+                sb.AppendLine($"{l.CreatedAt:yyyy-MM-dd HH:mm:ss},{l.UserId},{l.UserName},{l.Action},{l.EntityName},{l.EntityId},\"{(l.Description ?? string.Empty).Replace("\"","\"\"")}\",{l.Category},{l.Severity},{l.IpAddress},{l.Success}");
+            }
+            return Encoding.UTF8.GetBytes(sb.ToString());
+        }
+
+        private byte[] ExportToJson(IEnumerable<AuditLog> logs)
+        {
+            return Encoding.UTF8.GetBytes(JsonSerializer.Serialize(logs, _jsonOptions));
+        }
+
+        // Implementação dos métodos da interface IAuditService
+        public async Task LogAsync(string action, string? entityName = null, int? entityId = null,
+                                 string? description = null, string? category = null, string? severity = AuditSeverity.INFO)
+        {
+            var auditLog = new AuditLog
+            {
+                Action = action,
+                EntityName = entityName,
+                EntityId = entityId,
+                Description = description,
+                Category = category ?? AuditCategory.DATA_ACCESS,
+                Severity = severity ?? AuditSeverity.INFO,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await SaveAuditLogAsync(auditLog);
+        }
+
+        public async Task LogAsync(AuditLog auditLog)
+        {
+            if (auditLog == null) throw new ArgumentNullException(nameof(auditLog));
+            
+            if (auditLog.CreatedAt == default)
+                auditLog.CreatedAt = DateTime.UtcNow;
+            
+            await SaveAuditLogAsync(auditLog);
+        }
+
+        private async Task SaveAuditLogAsync(AuditLog auditLog, bool saveImmediately = false)
+        {
+            if (auditLog == null) throw new ArgumentNullException(nameof(auditLog));
+
+            // Verifica se auditoria está habilitada para este módulo/processo
+            if (!await IsAuditEnabledAsync(auditLog.Category, auditLog.Action))
+            {
+                _logger.LogDebug("Auditoria desabilitada para Category={Category}, Action={Action}", auditLog.Category, auditLog.Action);
+                return;
+            }
+
+            // Preenche dados contextuais
+            FillContextualData(auditLog);
+
+            // Prepara o log com hash e dados de imutabilidade
+            auditLog = await _immutabilityService.PrepareAuditLogAsync(auditLog);
+
+            _backgroundService.EnqueueLog(auditLog);
+        }
+
+        private void FillContextualData(AuditLog auditLog)
+        {
+            try
+            {
+                var httpContextAccessor = _serviceProvider.GetService<IHttpContextAccessor>();
+                var httpContext = httpContextAccessor?.HttpContext;
+                
+                if (httpContext != null)
+                {
+                    // IP Address
+                    if (string.IsNullOrEmpty(auditLog.IpAddress))
+                    {
+                        auditLog.IpAddress = httpContext.Connection.RemoteIpAddress?.ToString();
+                    }
+
+                    // User information
+                    if (httpContext.User?.Identity?.IsAuthenticated == true)
+                    {
+                        if (string.IsNullOrEmpty(auditLog.UserId))
+                        {
+                            auditLog.UserId = httpContext.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                        }
+
+                        if (string.IsNullOrEmpty(auditLog.UserName))
+                        {
+                            auditLog.UserName = httpContext.User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ??
+                                               httpContext.User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ??
+                                               httpContext.User.Identity.Name;
+                        }
+                    }
+
+                    // HTTP Method and URL
+                    if (string.IsNullOrEmpty(auditLog.HttpMethod))
+                    {
+                        auditLog.HttpMethod = httpContext.Request.Method;
+                    }
+
+                    if (string.IsNullOrEmpty(auditLog.RequestUrl))
+                    {
+                        auditLog.RequestUrl = $"{httpContext.Request.Path}{httpContext.Request.QueryString}";
+                    }
+
+                    // Session ID
+                    if (string.IsNullOrEmpty(auditLog.SessionId))
+                    {
+                        auditLog.SessionId = httpContext.Session?.Id;
+                    }
+                }
+
+                // Generate correlation ID if not provided
+                if (string.IsNullOrEmpty(auditLog.CorrelationId))
+                {
+                    auditLog.CorrelationId = Guid.NewGuid().ToString();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Erro ao preencher dados contextuais do log de auditoria");
+            }
         }
     }
 }

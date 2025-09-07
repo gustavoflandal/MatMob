@@ -108,6 +108,30 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQXRpdm9zXEluZGV4LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/MatMob/MatMob/Views/AuditConfig/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQXVkaXRDb25maWdcQ3JlYXRlLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/MatMob/MatMob/Views/AuditConfig/Delete.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQXVkaXRDb25maWdcRGVsZXRlLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/MatMob/MatMob/Views/AuditConfig/Edit.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQXVkaXRDb25maWdcRWRpdC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/MatMob/MatMob/Views/AuditConfig/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQXVkaXRDb25maWdcSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/MatMob/MatMob/Views/AuditConfig/Manage.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQXVkaXRDb25maWdcTWFuYWdlLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/MatMob/MatMob/Views/AuditIntegrity/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQXVkaXRJbnRlZ3JpdHlcSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/MatMob/MatMob/Views/Audit/Dashboard.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQXVkaXRcRGFzaGJvYXJkLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 

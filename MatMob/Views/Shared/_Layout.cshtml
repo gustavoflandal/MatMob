@@ -70,6 +70,18 @@
                             <li><a class="dropdown-item" asp-controller="NotasFiscais" asp-action="Index"><i class="fas fa-file-invoice me-1"></i>Notas Fiscais</a></li>
                         </ul>
                     </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-shield-alt me-1"></i>Auditoria
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" asp-controller="Audit" asp-action="Index"><i class="fas fa-history me-1"></i>Logs de Auditoria</a></li>
+                            <li><a class="dropdown-item" asp-controller="Audit" asp-action="Dashboard"><i class="fas fa-chart-bar me-1"></i>Dashboard</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" asp-controller="AuditConfig" asp-action="Manage"><i class="fas fa-cog me-1"></i>Configurar Captura</a></li>
+                            <li><a class="dropdown-item" asp-controller="AuditIntegrity" asp-action="Index"><i class="fas fa-shield-check me-1"></i>Verificar Integridade</a></li>
+                        </ul>
+                    </li>
                 </ul>
                 <partial name="_LoginPartial" />
             </div>

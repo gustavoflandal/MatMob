@@ -1,0 +1,28 @@
+@model MatMob.Models.Entities.AuditModuleConfig
+@{
+    ViewData["Title"] = "Excluir Regra de Auditoria";
+}
+<div class="container">
+    <h3 class="mb-3 text-danger"><i class="fas fa-trash me-2"></i>Excluir Regra de Auditoria</h3>
+
+    <div class="alert alert-warning">
+        Tem certeza que deseja excluir esta regra? Esta ação não poderá ser desfeita.
+    </div>
+
+    <div class="card p-3 mb-3">
+        <dl class="row mb-0">
+            <dt class="col-sm-2">Módulo</dt>
+            <dd class="col-sm-10">@Model.Module</dd>
+            <dt class="col-sm-2">Processo</dt>
+            <dd class="col-sm-10">@(string.IsNullOrEmpty(Model.Process) ? "(Todos)" : Model.Process)</dd>
+            <dt class="col-sm-2">Ativo</dt>
+            <dd class="col-sm-10">@(Model.Enabled ? "Habilitado" : "Desabilitado")</dd>
+        </dl>
+    </div>
+
+    <form asp-action="Delete" method="post" class="d-flex gap-2">
+        <input type="hidden" asp-for="Id" />
+        <button type="submit" class="btn btn-danger"><i class="fas fa-trash me-1"></i>Excluir</button>
+        <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>

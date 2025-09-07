@@ -7,16 +7,19 @@ using Microsoft.EntityFrameworkCore;
 using MatMob.Data;
 using MatMob.Models.Entities;
 using MatMob.Extensions;
+using MatMob.Services;
 
 namespace MatMob.Controllers
 {
     public class ProdutosController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly IAuditService _auditService;
 
-        public ProdutosController(ApplicationDbContext context)
+        public ProdutosController(ApplicationDbContext context, IAuditService auditService)
         {
             _context = context;
+            _auditService = auditService;
         }
 
         // GET: Produtos
@@ -42,7 +45,12 @@ namespace MatMob.Controllers
                 produtos = produtos.Where(p => p.Status == statusFilter.Value);
             }
 
-            return View(await produtos.OrderBy(p => p.Nome).ToListAsync());
+            var result = await produtos.OrderBy(p => p.Nome).ToListAsync();
+
+            // Registrar auditoria
+            await _auditService.LogViewAsync(result, $"Visualizou lista de produtos - Filtros: {(searchString ?? "Nenhum")}, Status: {(statusFilter?.ToString() ?? "Todos")}");
+
+            return View(result);
         }
 
         // GET: Produtos/Details/5
@@ -65,6 +73,9 @@ namespace MatMob.Controllers
                 return NotFound();
             }
 
+            // Registrar auditoria
+            await _auditService.LogViewAsync(produto, $"Visualizou detalhes do produto {produto.Nome}");
+
             return View(produto);
         }
 
@@ -84,6 +95,10 @@ namespace MatMob.Controllers
                 produto.DataCadastro = DateTime.Now;
                 _context.Add(produto);
                 await _context.SaveChangesAsync();
+
+                // Registrar auditoria
+                await _auditService.LogCreateAsync(produto, $"Criado produto {produto.Nome}");
+
                 TempData["Success"] = "Produto cadastrado com sucesso!";
                 return RedirectToAction(nameof(Index));
             }
@@ -120,9 +135,19 @@ namespace MatMob.Controllers
             {
                 try
                 {
+                    // Capturar estado antigo para auditoria
+                    var oldProduto = await _context.Produtos.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id);
+
                     produto.UltimaAtualizacao = DateTime.Now;
                     _context.Update(produto);
                     await _context.SaveChangesAsync();
+
+                    // Registrar auditoria
+                    if (oldProduto != null)
+                    {
+                        await _auditService.LogUpdateAsync(oldProduto, produto, $"Atualizado produto {produto.Nome}");
+                    }
+
                     TempData["Success"] = "Produto atualizado com sucesso!";
                 }
                 catch (DbUpdateConcurrencyException)
@@ -167,6 +192,9 @@ namespace MatMob.Controllers
             var produto = await _context.Produtos.FindAsync(id);
             if (produto != null)
             {
+                // Registrar auditoria antes da exclusão
+                await _auditService.LogDeleteAsync(produto, $"Excluído produto {produto.Nome}");
+
                 _context.Produtos.Remove(produto);
                 await _context.SaveChangesAsync();
                 TempData["Success"] = "Produto excluído com sucesso!";
@@ -224,6 +252,9 @@ namespace MatMob.Controllers
             _context.ProdutosFornecedores.Add(produtoFornecedor);
             await _context.SaveChangesAsync();
 
+            // Registrar auditoria
+            await _auditService.LogCreateAsync(produtoFornecedor, $"Adicionado fornecedor ao produto ID {produtoId}");
+
             TempData["Success"] = "Fornecedor adicionado ao produto com sucesso!";
             return RedirectToAction("GerenciarFornecedores", new { id = produtoId });
         }
@@ -236,6 +267,9 @@ namespace MatMob.Controllers
             var produtoFornecedor = await _context.ProdutosFornecedores.FindAsync(produtoFornecedorId);
             if (produtoFornecedor != null)
             {
+                // Registrar auditoria antes da exclusão
+                await _auditService.LogDeleteAsync(produtoFornecedor, $"Removido fornecedor do produto ID {produtoId}");
+
                 _context.ProdutosFornecedores.Remove(produtoFornecedor);
                 await _context.SaveChangesAsync();
                 TempData["Success"] = "Fornecedor removido do produto com sucesso!";

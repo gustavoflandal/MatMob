@@ -16,11 +16,13 @@ namespace MatMob.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly EstoqueService _estoqueService;
+        private readonly IAuditService _auditService;
 
-        public NotasFiscaisController(ApplicationDbContext context, EstoqueService estoqueService)
+        public NotasFiscaisController(ApplicationDbContext context, EstoqueService estoqueService, IAuditService auditService)
         {
             _context = context;
             _estoqueService = estoqueService;
+            _auditService = auditService;
         }
 
         // GET: NotasFiscais
@@ -62,6 +64,9 @@ namespace MatMob.Controllers
             ViewBag.TotalNotas = notasList.Count;
             ViewBag.ValorTotal = notasList.Sum(n => n.ValorTotal);
             ViewBag.TotalItens = notasList.Sum(n => n.Itens?.Count ?? 0);
+
+            // Registrar auditoria
+            await _auditService.LogViewAsync(notasList, $"Visualizou lista de notas fiscais - Filtros: {(searchString ?? "Nenhum")}, Período: {(dataInicio?.ToString("dd/MM/yyyy") ?? "N/A")} a {(dataFim?.ToString("dd/MM/yyyy") ?? "N/A")}");
 
             return View(notasList);
         }
@@ -114,6 +119,9 @@ namespace MatMob.Controllers
                     Produto = i.Produto ?? new Produto()
                 }).ToList() ?? new List<ItemNotaFiscalViewModel>()
             };
+
+            // Registrar auditoria
+            await _auditService.LogViewAsync(notaFiscal, $"Visualizou detalhes da nota fiscal {notaFiscal.NumeroNF}");
 
             return View(viewModel);
         }
@@ -242,6 +250,10 @@ namespace MatMob.Controllers
                     }
 
                     await transaction.CommitAsync();
+
+                    // Registrar auditoria
+                    await _auditService.LogCreateAsync(notaFiscal, $"Criada nota fiscal {notaFiscal.NumeroNF}");
+
                     TempData["Success"] = "Nota fiscal cadastrada com sucesso!";
                     return RedirectToAction(nameof(Index));
                 }
@@ -334,6 +346,24 @@ namespace MatMob.Controllers
                         return NotFound();
                     }
 
+                    // Capturar estado antigo para auditoria
+                    var oldNotaFiscal = new NotaFiscal
+                    {
+                        Id = notaFiscal.Id,
+                        NumeroNF = notaFiscal.NumeroNF,
+                        Serie = notaFiscal.Serie,
+                        DataEmissao = notaFiscal.DataEmissao,
+                        ChaveAcesso = notaFiscal.ChaveAcesso,
+                        FornecedorId = notaFiscal.FornecedorId,
+                        PedidoCompraId = notaFiscal.PedidoCompraId,
+                        ValorProdutos = notaFiscal.ValorProdutos,
+                        ValorICMS = notaFiscal.ValorICMS,
+                        ValorIPI = notaFiscal.ValorIPI,
+                        ValorPIS = notaFiscal.ValorPIS,
+                        ValorCOFINS = notaFiscal.ValorCOFINS,
+                        Observacoes = notaFiscal.Observacoes
+                    };
+
                     // Reverter o estoque para os itens antigos
                     foreach (var item in notaFiscal.Itens)
                     {
@@ -418,6 +448,9 @@ namespace MatMob.Controllers
 
                     await _context.SaveChangesAsync();
                     await transaction.CommitAsync();
+
+                    // Registrar auditoria
+                    await _auditService.LogUpdateAsync(oldNotaFiscal, notaFiscal, $"Atualizada nota fiscal {notaFiscal.NumeroNF}");
                     
                     TempData["Success"] = "Nota fiscal atualizada com sucesso!";
                     return RedirectToAction(nameof(Index));
@@ -522,6 +555,10 @@ namespace MatMob.Controllers
                 await _context.SaveChangesAsync();
                 
                 await transaction.CommitAsync();
+
+                // Registrar auditoria
+                await _auditService.LogDeleteAsync(notaFiscal, $"Excluída nota fiscal {notaFiscal.NumeroNF}");
+
                 TempData["Success"] = "Nota fiscal excluída com sucesso!";
                 return RedirectToAction(nameof(Index));
             }

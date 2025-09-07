@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using MatMob.Data;
 using MatMob.Models.Entities;
+using MatMob.Services;
 
 namespace MatMob.Controllers
 {
@@ -11,10 +12,12 @@ namespace MatMob.Controllers
     public class EquipesController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly IAuditService _auditService;
 
-        public EquipesController(ApplicationDbContext context)
+        public EquipesController(ApplicationDbContext context, IAuditService auditService)
         {
             _context = context;
+            _auditService = auditService;
         }
 
         // GET: Equipes
@@ -39,7 +42,12 @@ namespace MatMob.Controllers
                 equipes = equipes.Where(e => e.Status == statusFilter.Value);
             }
 
-            return View(await equipes.OrderBy(e => e.Nome).ToListAsync());
+            var result = await equipes.OrderBy(e => e.Nome).ToListAsync();
+
+            // Registrar auditoria
+            await _auditService.LogViewAsync(result, $"Visualizou lista de equipes - Filtros: {(searchString ?? "Nenhum")}, Status: {(statusFilter?.ToString() ?? "Todos")}");
+
+            return View(result);
         }
 
         // GET: Equipes/Details/5
@@ -61,6 +69,9 @@ namespace MatMob.Controllers
             {
                 return NotFound();
             }
+
+            // Registrar auditoria
+            await _auditService.LogViewAsync(equipe, $"Visualizou detalhes da equipe {equipe.Nome}");
 
             return View(equipe);
         }
@@ -99,6 +110,9 @@ namespace MatMob.Controllers
                     }
                     await _context.SaveChangesAsync();
                 }
+
+                // Registrar auditoria
+                await _auditService.LogCreateAsync(equipe, $"Criada equipe {equipe.Nome}");
 
                 TempData["Success"] = "Equipe criada com sucesso!";
                 return RedirectToAction(nameof(Index));
@@ -146,6 +160,9 @@ namespace MatMob.Controllers
             {
                 try
                 {
+                    // Capturar estado antigo para auditoria
+                    var oldEquipe = await _context.Equipes.AsNoTracking().FirstOrDefaultAsync(e => e.Id == id);
+
                     _context.Update(equipe);
 
                     // Remover técnicos atuais da equipe
@@ -189,6 +206,13 @@ namespace MatMob.Controllers
                     }
 
                     await _context.SaveChangesAsync();
+
+                    // Registrar auditoria
+                    if (oldEquipe != null)
+                    {
+                        await _auditService.LogUpdateAsync(oldEquipe, equipe, $"Atualizada equipe {equipe.Nome}");
+                    }
+
                     TempData["Success"] = "Equipe atualizada com sucesso!";
                 }
                 catch (DbUpdateConcurrencyException)
@@ -256,6 +280,10 @@ namespace MatMob.Controllers
 
                 _context.Equipes.Remove(equipe);
                 await _context.SaveChangesAsync();
+
+                // Registrar auditoria
+                await _auditService.LogDeleteAsync(equipe, $"Excluída equipe {equipe.Nome}");
+
                 TempData["Success"] = "Equipe excluída com sucesso!";
             }
 
@@ -288,6 +316,9 @@ namespace MatMob.Controllers
             _context.EquipesTecnico.Add(equipeTecnico);
             await _context.SaveChangesAsync();
 
+            // Registrar auditoria
+            await _auditService.LogCreateAsync(equipeTecnico, $"Adicionado técnico à equipe ID {equipeId}");
+
             TempData["Success"] = "Técnico adicionado à equipe com sucesso!";
             return RedirectToAction(nameof(Details), new { id = equipeId });
         }
@@ -311,6 +342,9 @@ namespace MatMob.Controllers
             
             _context.Update(equipeTecnico);
             await _context.SaveChangesAsync();
+
+            // Registrar auditoria
+            await _auditService.LogUpdateAsync(equipeTecnico, equipeTecnico, $"Removido técnico da equipe ID {equipeId}");
 
             TempData["Success"] = "Técnico removido da equipe com sucesso!";
             return RedirectToAction(nameof(Details), new { id = equipeId });

@@ -7,7 +7,25 @@ using MatMob.Services;
 
 namespace MatMob.Controllers
 {
-    [Authorize]
+                    if (temMovimentacoes)
+                {
+                    // Inativar ao invés de excluir
+                    peca.Ativa = false;
+                    _context.Update(peca);
+
+                    // Registrar auditoria
+                    await _auditService.LogUpdateAsync(peca, peca, $"Inativada peça {peca.Nome}");
+
+                    TempData["Success"] = "Peça inativada com sucesso!";
+                }
+                else
+                {
+                    // Registrar auditoria antes da exclusão
+                    await _auditService.LogDeleteAsync(peca, $"Excluída peça {peca.Nome}");
+
+                    _context.Pecas.Remove(peca);
+                    TempData["Success"] = "Peça excluída com sucesso!";
+                }
     public class PecasController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -177,7 +195,7 @@ namespace MatMob.Controllers
                     {
                         await _auditService.LogUpdateAsync(oldPeca, peca, $"Atualizada peça {peca.Nome}");
                     }
-
+                    
                     TempData["Success"] = "Peça atualizada com sucesso!";
                 }
                 catch (DbUpdateConcurrencyException)

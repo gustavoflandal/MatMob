@@ -9,6 +9,7 @@ using MatMob.Models.Entities;
 using MatMob.Extensions;
 using MatMob.Models.ViewModels;
 using Microsoft.Extensions.Logging;
+using MatMob.Services;
 
 namespace MatMob.Controllers
 {
@@ -16,16 +17,24 @@ namespace MatMob.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<PedidosCompraController> _logger;
+        private readonly IAuditService _auditService;
 
-        public PedidosCompraController(ApplicationDbContext context, ILogger<PedidosCompraController> logger)
+        public PedidosCompraController(ApplicationDbContext context, ILogger<PedidosCompraController> logger, IAuditService auditService)
         {
             _context = context;
             _logger = logger;
+            _auditService = auditService;
         }
 
         // GET: PedidosCompra
         public async Task<IActionResult> Index(string? searchString, StatusPedidoCompra? statusFilter, PrioridadePedidoCompra? prioridadeFilter)
         {
+            await _auditService.LogAsync(
+                action: AuditActions.VIEW,
+                entityName: "PedidoCompra",
+                description: "Visualização da lista de pedidos de compra"
+            );
+
             ViewData["CurrentFilter"] = searchString;
             ViewData["StatusFilter"] = statusFilter;
             ViewData["PrioridadeFilter"] = prioridadeFilter;
@@ -182,6 +191,9 @@ namespace MatMob.Controllers
                     await AtualizarValorTotalPedido(pedidoCompra.Id);
                 }
 
+                // Registrar auditoria
+                await _auditService.LogCreateAsync(pedidoCompra, $"Criado pedido de compra {pedidoCompra.NumeroPedido}");
+
                 TempData["Success"] = "Pedido de compra criado com sucesso!";
                 return RedirectToAction(nameof(Index));
             }
@@ -311,7 +323,7 @@ namespace MatMob.Controllers
                 }
 
                 // Verificar se o pedido permite exclusão
-                if (item.PedidoCompra.Status != StatusPedidoCompra.Aberto)
+                if (item.PedidoCompra?.Status != StatusPedidoCompra.Aberto)
                 {
                     return Json(new { 
                         success = false, 
@@ -368,12 +380,32 @@ namespace MatMob.Controllers
             var pedidoCompra = await _context.PedidosCompra.FindAsync(id);
             if (pedidoCompra != null)
             {
+                // Capturar estado antigo para auditoria
+                var oldPedidoCompra = new PedidoCompra
+                {
+                    Id = pedidoCompra.Id,
+                    FornecedorId = pedidoCompra.FornecedorId,
+                    NumeroPedido = pedidoCompra.NumeroPedido,
+                    Prioridade = pedidoCompra.Prioridade,
+                    DataPrevistaEntrega = pedidoCompra.DataPrevistaEntrega,
+                    CondicaoPagamento = pedidoCompra.CondicaoPagamento,
+                    Observacoes = pedidoCompra.Observacoes,
+                    ValorTotal = pedidoCompra.ValorTotal,
+                    DataPedido = pedidoCompra.DataPedido,
+                    Status = pedidoCompra.Status,
+                    DataCadastro = pedidoCompra.DataCadastro,
+                    UltimaAtualizacao = pedidoCompra.UltimaAtualizacao
+                };
+
                 pedidoCompra.Status = StatusPedidoCompra.Aprovado;
                 pedidoCompra.DataAprovacao = DateTime.Now;
                 pedidoCompra.UltimaAtualizacao = DateTime.Now;
 
                 _context.Update(pedidoCompra);
                 await _context.SaveChangesAsync();
+
+                // Registrar auditoria
+                await _auditService.LogUpdateAsync(oldPedidoCompra, pedidoCompra, $"Aprovado pedido de compra {pedidoCompra.NumeroPedido}");
 
                 TempData["Success"] = "Pedido de compra aprovado com sucesso!";
             }
@@ -448,6 +480,23 @@ namespace MatMob.Controllers
                         return NotFound();
                     }
 
+                    // Capturar estado antigo para auditoria
+                    var oldPedidoCompra = new PedidoCompra
+                    {
+                        Id = pedidoCompra.Id,
+                        FornecedorId = pedidoCompra.FornecedorId,
+                        NumeroPedido = pedidoCompra.NumeroPedido,
+                        Prioridade = pedidoCompra.Prioridade,
+                        DataPrevistaEntrega = pedidoCompra.DataPrevistaEntrega,
+                        CondicaoPagamento = pedidoCompra.CondicaoPagamento,
+                        Observacoes = pedidoCompra.Observacoes,
+                        ValorTotal = pedidoCompra.ValorTotal,
+                        DataPedido = pedidoCompra.DataPedido,
+                        Status = pedidoCompra.Status,
+                        DataCadastro = pedidoCompra.DataCadastro,
+                        UltimaAtualizacao = pedidoCompra.UltimaAtualizacao
+                    };
+
                     pedidoCompra.FornecedorId = viewModel.FornecedorId;
                     pedidoCompra.Prioridade = viewModel.Prioridade;
                     pedidoCompra.DataPrevistaEntrega = viewModel.DataPrevistaEntrega;
@@ -457,6 +506,9 @@ namespace MatMob.Controllers
 
                     _context.Update(pedidoCompra);
                     await _context.SaveChangesAsync();
+
+                    // Registrar auditoria
+                    await _auditService.LogUpdateAsync(oldPedidoCompra, pedidoCompra, $"Atualizado pedido de compra {pedidoCompra.NumeroPedido}");
 
                     TempData["Success"] = "Pedido de compra atualizado com sucesso!";
                 }
@@ -495,6 +547,9 @@ namespace MatMob.Controllers
             var pedidoCompra = await _context.PedidosCompra.FindAsync(id);
             if (pedidoCompra != null)
             {
+                // Registrar auditoria antes da exclusão
+                await _auditService.LogDeleteAsync(pedidoCompra, $"Excluído pedido de compra {pedidoCompra.NumeroPedido}");
+
                 _context.PedidosCompra.Remove(pedidoCompra);
                 await _context.SaveChangesAsync();
                 TempData["Success"] = "Pedido de compra excluído com sucesso!";
@@ -622,9 +677,9 @@ namespace MatMob.Controllers
                 }
 
                 // Verificar se o pedido permite edição
-                if (item.PedidoCompra.Status != StatusPedidoCompra.Aberto)
+                if (item.PedidoCompra?.Status != StatusPedidoCompra.Aberto)
                 {
-                    _logger?.LogWarning("Tentativa de editar item {ItemId} de pedido não aberto. Status: {Status}", itemId, item.PedidoCompra.Status);
+                    _logger?.LogWarning("Tentativa de editar item {ItemId} de pedido não aberto. Status: {Status}", itemId, item.PedidoCompra?.Status);
                     return Json(new {
                         success = false,
                         message = "Não é possível editar itens de um pedido que não está em aberto."
@@ -662,6 +717,9 @@ namespace MatMob.Controllers
 
                     // Atualizar valor total do pedido
                     await AtualizarValorTotalPedido(pedidoCompraId);
+
+                    // Registrar auditoria
+                    await _auditService.LogUpdateAsync(item, item, $"Atualizado item do pedido de compra {item.PedidoCompra?.NumeroPedido}");
 
                     _logger?.LogInformation("Edição do item {ItemId} concluída com sucesso", itemId);
 

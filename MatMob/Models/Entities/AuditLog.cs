@@ -117,8 +117,7 @@ namespace MatMob.Models.Entities
         /// Data e hora da execução da ação
         /// </summary>
         [Required]
-        [Column("CreatedAt")]
-        public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         /// <summary>
         /// Duração da operação em milissegundos
@@ -180,61 +179,27 @@ namespace MatMob.Models.Entities
         /// Data de expiração para limpeza automática (se não for retenção permanente)
         /// </summary>
         public DateTime? ExpirationDate { get; set; }
-    }
 
-    /// <summary>
-    /// Enum para tipos de ação de auditoria
-    /// </summary>
-    public static class AuditActions
-    {
-        public const string CREATE = "CREATE";
-        public const string UPDATE = "UPDATE";
-        public const string DELETE = "DELETE";
-        public const string VIEW = "VIEW";
-        public const string LOGIN = "LOGIN";
-        public const string LOGOUT = "LOGOUT";
-        public const string LOGIN_FAILED = "LOGIN_FAILED";
-        public const string PASSWORD_CHANGE = "PASSWORD_CHANGE";
-        public const string EXPORT = "EXPORT";
-        public const string IMPORT = "IMPORT";
-        public const string APPROVE = "APPROVE";
-        public const string REJECT = "REJECT";
-        public const string CANCEL = "CANCEL";
-        public const string ACTIVATE = "ACTIVATE";
-        public const string DEACTIVATE = "DEACTIVATE";
-        public const string SEND_EMAIL = "SEND_EMAIL";
-        public const string GENERATE_REPORT = "GENERATE_REPORT";
-        public const string BACKUP = "BACKUP";
-        public const string RESTORE = "RESTORE";
-        public const string CONFIGURATION_CHANGE = "CONFIGURATION_CHANGE";
-        public const string SYSTEM_ERROR = "SYSTEM_ERROR";
-    }
+        /// <summary>
+        /// Hash SHA-256 do conteúdo do log para verificação de integridade
+        /// </summary>
+        [MaxLength(64)]
+        public string? ContentHash { get; set; }
 
-    /// <summary>
-    /// Enum para níveis de severidade
-    /// </summary>
-    public static class AuditSeverity
-    {
-        public const string INFO = "INFO";
-        public const string WARNING = "WARNING";
-        public const string ERROR = "ERROR";
-        public const string CRITICAL = "CRITICAL";
-    }
+        /// <summary>
+        /// Hash SHA-256 do log anterior para criar uma cadeia imutável
+        /// </summary>
+        [MaxLength(64)]
+        public string? PreviousHash { get; set; }
 
-    /// <summary>
-    /// Enum para categorias de auditoria
-    /// </summary>
-    public static class AuditCategory
-    {
-        public const string AUTHENTICATION = "AUTHENTICATION";
-        public const string AUTHORIZATION = "AUTHORIZATION";
-        public const string DATA_ACCESS = "DATA_ACCESS";
-        public const string DATA_MODIFICATION = "DATA_MODIFICATION";
-        public const string SYSTEM_ADMINISTRATION = "SYSTEM_ADMINISTRATION";
-        public const string BUSINESS_PROCESS = "BUSINESS_PROCESS";
-        public const string SECURITY = "SECURITY";
-        public const string PERFORMANCE = "PERFORMANCE";
-        public const string INTEGRATION = "INTEGRATION";
-        public const string REPORTING = "REPORTING";
+        /// <summary>
+        /// Número sequencial do log para garantir ordem e detecção de alterações
+        /// </summary>
+        public long SequenceNumber { get; set; }
+
+        /// <summary>
+        /// Indica se este log foi verificado quanto à integridade
+        /// </summary>
+        public bool IntegrityVerified { get; set; } = false;
     }
 }

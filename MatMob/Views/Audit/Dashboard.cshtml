@@ -281,7 +281,7 @@
                                                     @foreach (var log in ViewBag.RecentLogs)
                                                     {
                                                         <tr>
-                                                            <td>@log.Timestamp.ToString("dd/MM/yyyy HH:mm:ss")</td>
+                                                            <td>@log.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss")</td>
                                                             <td>@log.UserName</td>
                                                             <td>
                                                                 <span class="badge badge-primary">@log.Action</span>

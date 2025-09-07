@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using MatMob.Data;
+using MatMob.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,15 +28,34 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options =>
 .AddRoles<IdentityRole>()
 .AddEntityFrameworkStores<ApplicationDbContext>();
 
-builder.Services.AddControllersWithViews();
+// Register custom SignInManager for audit
+builder.Services.AddScoped<SignInManager<IdentityUser>, MatMob.Services.AuditableSignInManager<IdentityUser>>();
+
+builder.Services.AddControllersWithViews(options =>
+{
+    options.Filters.Add<AuditActionFilter>();
+});
 
 // Add custom services
 builder.Services.AddScoped<MatMob.Services.IDashboardService, MatMob.Services.DashboardService>();
 builder.Services.AddScoped<MatMob.Services.EstoqueService>();
 
-// Add audit services
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<MatMob.Services.IAuditService, MatMob.Services.AuditService>();
+// Registrar serviços de auditoria
+builder.Services.AddScoped<IAuditService, AuditService>();
+builder.Services.AddSingleton<AuditBackgroundService>();
+builder.Services.AddHostedService<AuditBackgroundService>(provider => provider.GetService<AuditBackgroundService>()!);
+builder.Services.AddScoped<AuthenticationAuditService>();
+builder.Services.AddScoped<AuditImmutabilityService>();
+builder.Services.AddMemoryCache();
+builder.Services.AddScoped<AuditableSignInManager<IdentityUser>>();
+
+// Add session services
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
 
 var app = builder.Build();
 
@@ -52,6 +72,9 @@ else
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+
+// Add session middleware
+app.UseSession();
 
 app.UseRouting();
 
@@ -90,9 +113,6 @@ static async Task InitializeDatabase(ApplicationDbContext context, UserManager<I
 {
     try
     {
-        // Criar tabela AuditLogs manualmente ANTES de qualquer migração
-        await CreateAuditLogsTableManually(context);
-        
         // Create roles if they don't exist
         string[] roles = { "Administrador", "Gestor", "Tecnico" };
         foreach (var role in roles)
@@ -102,11 +122,11 @@ static async Task InitializeDatabase(ApplicationDbContext context, UserManager<I
                 await roleManager.CreateAsync(new IdentityRole(role));
             }
         }
-        
+
         // Create default admin user
         var adminEmail = "admin@matmob.com";
         var adminUser = await userManager.FindByEmailAsync(adminEmail);
-        
+
         if (adminUser == null)
         {
             adminUser = new IdentityUser
@@ -115,7 +135,7 @@ static async Task InitializeDatabase(ApplicationDbContext context, UserManager<I
                 Email = adminEmail,
                 EmailConfirmed = true
             };
-            
+
             var result = await userManager.CreateAsync(adminUser, "Admin123!");
             if (result.Succeeded)
             {
@@ -130,66 +150,5 @@ static async Task InitializeDatabase(ApplicationDbContext context, UserManager<I
     }
 }
 
-// Método para criar a tabela AuditLogs manualmente
-static async Task CreateAuditLogsTableManually(ApplicationDbContext context)
-{
-    try
-    {
-        // Verificar se a tabela já existe
-        var tableExists = await context.Database.ExecuteSqlRawAsync(
-            "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'AuditLogs'");
-
-        if (tableExists == 0)
-        {
-            // Criar a tabela AuditLogs
-            await context.Database.ExecuteSqlRawAsync(@"
-                CREATE TABLE AuditLogs (
-                    Id int NOT NULL AUTO_INCREMENT,
-                    UserId varchar(255) CHARACTER SET utf8mb4 NULL,
-                    UserName varchar(255) CHARACTER SET utf8mb4 NULL,
-                    IpAddress varchar(45) CHARACTER SET utf8mb4 NULL,
-                    UserAgent varchar(500) CHARACTER SET utf8mb4 NULL,
-                    Action varchar(50) CHARACTER SET utf8mb4 NOT NULL,
-                    EntityName varchar(100) CHARACTER SET utf8mb4 NULL,
-                    EntityId int NULL,
-                    PropertyName varchar(100) CHARACTER SET utf8mb4 NULL,
-                    OldValue TEXT CHARACTER SET utf8mb4 NULL,
-                    NewValue TEXT CHARACTER SET utf8mb4 NULL,
-                    OldData TEXT CHARACTER SET utf8mb4 NULL,
-                    NewData TEXT CHARACTER SET utf8mb4 NULL,
-                    Description varchar(1000) CHARACTER SET utf8mb4 NULL,
-                    Context varchar(200) CHARACTER SET utf8mb4 NULL,
-                    Severity varchar(20) CHARACTER SET utf8mb4 NOT NULL,
-                    Category varchar(50) CHARACTER SET utf8mb4 NULL,
-                    AdditionalData TEXT CHARACTER SET utf8mb4 NULL,
-                    CreatedAt timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-                    Duration bigint NULL,
-                    Success tinyint(1) NOT NULL,
-                    ErrorMessage varchar(2000) CHARACTER SET utf8mb4 NULL,
-                    StackTrace TEXT CHARACTER SET utf8mb4 NULL,
-                    SessionId varchar(255) CHARACTER SET utf8mb4 NULL,
-                    CorrelationId varchar(255) CHARACTER SET utf8mb4 NULL,
-                    HttpMethod varchar(10) CHARACTER SET utf8mb4 NULL,
-                    RequestUrl varchar(500) CHARACTER SET utf8mb4 NULL,
-                    HttpStatusCode int NULL,
-                    PermanentRetention tinyint(1) NOT NULL,
-                    ExpirationDate datetime(6) NULL,
-                    CONSTRAINT PK_AuditLogs PRIMARY KEY (Id)
-                ) CHARACTER SET=utf8mb4;
-            ");
-
-            // Criar os índices
-            await context.Database.ExecuteSqlRawAsync("CREATE INDEX IX_AuditLogs_Action ON AuditLogs (Action);");
-            await context.Database.ExecuteSqlRawAsync("CREATE INDEX IX_AuditLogs_CorrelationId ON AuditLogs (CorrelationId);");
-            await context.Database.ExecuteSqlRawAsync("CREATE INDEX IX_AuditLogs_EntityName ON AuditLogs (EntityName);");
-            await context.Database.ExecuteSqlRawAsync("CREATE INDEX IX_AuditLogs_Timestamp ON AuditLogs (Timestamp);");
-            await context.Database.ExecuteSqlRawAsync("CREATE INDEX IX_AuditLogs_UserId ON AuditLogs (UserId);");
-
-            Console.WriteLine("Tabela AuditLogs criada com sucesso!");
-        }
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Erro ao criar tabela AuditLogs: {ex.Message}");
-    }
-}
+// Classe pública para acesso em testes
+public partial class Program { }

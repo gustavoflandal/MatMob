@@ -1,0 +1,355 @@
+@{
+    ViewData["Title"] = "Verificação de Integridade dos Logs";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-shield-alt"></i>
+                        Verificação de Integridade dos Logs de Auditoria
+                    </h3>
+                </div>
+                <div class="card-body">
+                    
+                    <!-- Estatísticas Rápidas -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="info-box bg-info">
+                                <span class="info-box-icon"><i class="fas fa-check-circle"></i></span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">Status do Sistema</span>
+                                    <span class="info-box-number" id="systemHealth">Carregando...</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="info-box bg-success">
+                                <span class="info-box-icon"><i class="fas fa-list"></i></span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">Logs Recentes</span>
+                                    <span class="info-box-number" id="recentLogsCount">0</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="info-box bg-warning">
+                                <span class="info-box-icon"><i class="fas fa-exclamation-triangle"></i></span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">Problemas Encontrados</span>
+                                    <span class="info-box-number" id="issuesCount">0</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="info-box bg-secondary">
+                                <span class="info-box-icon"><i class="fas fa-clock"></i></span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">Última Verificação</span>
+                                    <span class="info-box-number" id="lastVerification">-</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Verificação de Integridade -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4 class="card-title">Verificar Integridade da Cadeia</h4>
+                                </div>
+                                <div class="card-body">
+                                    <form id="verifyForm">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label>Data Inicial</label>
+                                                    <input type="date" class="form-control" id="startDate" name="startDate">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label>Data Final</label>
+                                                    <input type="date" class="form-control" id="endDate" name="endDate">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-search"></i>
+                                            Verificar Integridade
+                                        </button>
+                                    </form>
+
+                                    <div id="verificationResults" class="mt-3" style="display: none;">
+                                        <div class="alert" id="verificationAlert">
+                                            <div id="verificationContent"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4 class="card-title">Ferramentas de Teste</h4>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <button type="button" class="btn btn-info" id="testImmutability">
+                                            <i class="fas fa-vial"></i>
+                                            Criar Logs de Teste
+                                        </button>
+                                        <small class="form-text text-muted">
+                                            Cria logs de teste para verificar o funcionamento da imutabilidade
+                                        </small>
+                                    </div>
+
+                                    @if (User.IsInRole("Administrador"))
+                                    {
+                                        <div class="mb-3">
+                                            <hr>
+                                            <h6 class="text-danger">Área Administrativa</h6>
+                                            <button type="button" class="btn btn-warning" id="rebuildChain">
+                                                <i class="fas fa-tools"></i>
+                                                Reconstruir Cadeia de Hash
+                                            </button>
+                                            <small class="form-text text-danger">
+                                                ⚠️ Esta operação recalcula todos os hashes. Use apenas em caso de migração ou corrupção.
+                                            </small>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tabela de Problemas -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4 class="card-title">Problemas de Integridade Detectados</h4>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-striped" id="issuesTable">
+                                            <thead>
+                                                <tr>
+                                                    <th>ID do Log</th>
+                                                    <th>Número Sequencial</th>
+                                                    <th>Tipo do Problema</th>
+                                                    <th>Descrição</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="issuesTableBody">
+                                                <tr>
+                                                    <td colspan="4" class="text-center text-muted">
+                                                        Execute uma verificação para ver os resultados
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+$(document).ready(function() {
+    // Carregar estatísticas iniciais
+    loadIntegrityStats();
+
+    // Configurar data máxima como hoje
+    const today = new Date().toISOString().split('T')[0];
+    $('#endDate').val(today);
+    $('#startDate').val(new Date(Date.now() - 7*24*60*60*1000).toISOString().split('T')[0]);
+
+    // Verificação de integridade
+    $('#verifyForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const startDate = $('#startDate').val();
+        const endDate = $('#endDate').val();
+        
+        $.ajax({
+            url: '@Url.Action("VerifyChain")',
+            type: 'POST',
+            data: {
+                startDate: startDate,
+                endDate: endDate
+            },
+            beforeSend: function() {
+                $('#verifyForm button[type="submit"]').prop('disabled', true)
+                    .html('<i class="fas fa-spinner fa-spin"></i> Verificando...');
+            },
+            success: function(response) {
+                if (response.success) {
+                    showVerificationResults(response.data);
+                    loadIntegrityStats(); // Atualizar estatísticas
+                } else {
+                    showAlert('danger', response.message);
+                }
+            },
+            error: function() {
+                showAlert('danger', 'Erro ao verificar integridade');
+            },
+            complete: function() {
+                $('#verifyForm button[type="submit"]').prop('disabled', false)
+                    .html('<i class="fas fa-search"></i> Verificar Integridade');
+            }
+        });
+    });
+
+    // Teste de imutabilidade
+    $('#testImmutability').on('click', function() {
+        $.ajax({
+            url: '@Url.Action("TestImmutability")',
+            type: 'POST',
+            beforeSend: function() {
+                $('#testImmutability').prop('disabled', true)
+                    .html('<i class="fas fa-spinner fa-spin"></i> Criando...');
+            },
+            success: function(response) {
+                if (response.success) {
+                    showAlert('success', response.message);
+                    loadIntegrityStats();
+                } else {
+                    showAlert('danger', response.message);
+                }
+            },
+            error: function() {
+                showAlert('danger', 'Erro ao criar logs de teste');
+            },
+            complete: function() {
+                $('#testImmutability').prop('disabled', false)
+                    .html('<i class="fas fa-vial"></i> Criar Logs de Teste');
+            }
+        });
+    });
+
+    // Reconstruir cadeia de hash
+    $('#rebuildChain').on('click', function() {
+        if (!confirm('⚠️ Esta operação irá recalcular todos os hashes dos logs. Tem certeza?')) {
+            return;
+        }
+
+        $.ajax({
+            url: '@Url.Action("RebuildHashChain")',
+            type: 'POST',
+            beforeSend: function() {
+                $('#rebuildChain').prop('disabled', true)
+                    .html('<i class="fas fa-spinner fa-spin"></i> Reconstruindo...');
+            },
+            success: function(response) {
+                if (response.success) {
+                    showAlert('success', response.message);
+                    loadIntegrityStats();
+                } else {
+                    showAlert('danger', response.message);
+                }
+            },
+            error: function() {
+                showAlert('danger', 'Erro ao reconstruir cadeia de hash');
+            },
+            complete: function() {
+                $('#rebuildChain').prop('disabled', false)
+                    .html('<i class="fas fa-tools"></i> Reconstruir Cadeia de Hash');
+            }
+        });
+    });
+
+    function loadIntegrityStats() {
+        $.ajax({
+            url: '@Url.Action("GetIntegrityStats")',
+            type: 'GET',
+            success: function(response) {
+                if (response.success) {
+                    const data = response.data;
+                    $('#systemHealth').text(data.systemHealth);
+                    $('#recentLogsCount').text(data.recentLogsChecked);
+                    $('#issuesCount').text(data.recentIssuesFound);
+                    $('#lastVerification').text(data.lastVerification ? 
+                        new Date(data.lastVerification).toLocaleString() : '-');
+                    
+                    // Atualizar cores dos info-boxes
+                    const healthBox = $('#systemHealth').closest('.info-box');
+                    healthBox.removeClass('bg-info bg-success bg-danger')
+                        .addClass(data.systemHealth === 'Healthy' ? 'bg-success' : 'bg-danger');
+                }
+            }
+        });
+    }
+
+    function showVerificationResults(data) {
+        let alertClass = data.isValid ? 'alert-success' : 'alert-warning';
+        let content = `
+            <h5><i class="fas fa-${data.isValid ? 'check' : 'exclamation-triangle'}"></i> 
+                ${data.isValid ? 'Integridade Verificada' : 'Problemas Detectados'}</h5>
+            <p><strong>Total de logs verificados:</strong> ${data.totalLogsChecked}</p>
+            <p><strong>Problemas encontrados:</strong> ${data.corruptedLogsCount}</p>
+            <p><strong>Data da verificação:</strong> ${new Date(data.verificationDate).toLocaleString()}</p>
+        `;
+
+        $('#verificationAlert').removeClass().addClass('alert ' + alertClass);
+        $('#verificationContent').html(content);
+        $('#verificationResults').show();
+
+        // Atualizar tabela de problemas
+        updateIssuesTable(data.issues);
+    }
+
+    function updateIssuesTable(issues) {
+        const tbody = $('#issuesTableBody');
+        tbody.empty();
+
+        if (issues.length === 0) {
+            tbody.append(`
+                <tr>
+                    <td colspan="4" class="text-center text-success">
+                        <i class="fas fa-check-circle"></i> Nenhum problema detectado
+                    </td>
+                </tr>
+            `);
+        } else {
+            issues.forEach(issue => {
+                tbody.append(`
+                    <tr>
+                        <td>${issue.logId}</td>
+                        <td>${issue.sequenceNumber}</td>
+                        <td><span class="badge badge-warning">${issue.issueType}</span></td>
+                        <td>${issue.description}</td>
+                    </tr>
+                `);
+            });
+        }
+    }
+
+    function showAlert(type, message) {
+        const alert = `
+            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="close" data-dismiss="alert">
+                    <span>&times;</span>
+                </button>
+            </div>
+        `;
+        
+        // Remover alertas existentes e adicionar novo
+        $('.alert').remove();
+        $('.card-body').first().prepend(alert);
+    }
+});
+</script>
+}

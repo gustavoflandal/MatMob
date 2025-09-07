@@ -16,6 +16,10 @@ namespace MatMob.Services
         public const string LOGIN_FAILED = "LOGIN_FAILED";
         public const string LOGOUT = "LOGOUT";
         public const string UNAUTHORIZED_ACCESS = "UNAUTHORIZED_ACCESS";
+        public const string PASSWORD_CHANGE = "PASSWORD_CHANGE";
+        public const string PASSWORD_RESET = "PASSWORD_RESET";
+        public const string ACCOUNT_LOCKOUT = "ACCOUNT_LOCKOUT";
+        public const string ACCOUNT_UNLOCK = "ACCOUNT_UNLOCK";
 
         // Operações de importação/exportação
         public const string EXPORT = "EXPORT";

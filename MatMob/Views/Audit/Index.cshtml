@@ -16,6 +16,9 @@
                         <a href="@Url.Action("Dashboard", "Audit")" class="btn btn-info btn-sm">
                             <i class="fas fa-chart-bar"></i> Dashboard
                         </a>
+                        <a href="@Url.Action("Index", "AuditIntegrity")" class="btn btn-warning btn-sm">
+                            <i class="fas fa-shield-alt"></i> Verificar Integridade
+                        </a>
                         <a href="@Url.Action("Export", "Audit", new { format = "csv" })" class="btn btn-success btn-sm">
                             <i class="fas fa-download"></i> Exportar CSV
                         </a>
@@ -148,7 +151,7 @@
                                     @foreach (var log in Model)
                                     {
                                         <tr>
-                                            <td>@log.Timestamp.ToString("dd/MM/yyyy HH:mm:ss")</td>
+                                            <td>@log.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss")</td>
                                             <td>@log.UserName</td>
                                             <td>
                                                 <span class="badge badge-primary">@log.Action</span>

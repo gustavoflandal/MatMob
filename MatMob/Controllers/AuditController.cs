@@ -75,18 +75,18 @@ namespace MatMob.Controllers
 
             if (startDate.HasValue)
             {
-                auditLogs = auditLogs.Where(a => a.Timestamp >= startDate.Value);
+                auditLogs = auditLogs.Where(a => a.CreatedAt >= startDate.Value);
             }
 
             if (endDate.HasValue)
             {
                 // Incluir o final do dia
                 var endOfDay = endDate.Value.Date.AddDays(1).AddTicks(-1);
-                auditLogs = auditLogs.Where(a => a.Timestamp <= endOfDay);
+                auditLogs = auditLogs.Where(a => a.CreatedAt <= endOfDay);
             }
 
             // Ordenar por data decrescente (mais recentes primeiro)
-            auditLogs = auditLogs.OrderByDescending(a => a.Timestamp);
+            auditLogs = auditLogs.OrderByDescending(a => a.CreatedAt);
 
             // Paginação
             var totalRecords = await auditLogs.CountAsync();
@@ -199,17 +199,17 @@ namespace MatMob.Controllers
 
             if (startDate.HasValue)
             {
-                auditLogs = auditLogs.Where(a => a.Timestamp >= startDate.Value);
+                auditLogs = auditLogs.Where(a => a.CreatedAt >= startDate.Value);
             }
 
             if (endDate.HasValue)
             {
                 var endOfDay = endDate.Value.Date.AddDays(1).AddTicks(-1);
-                auditLogs = auditLogs.Where(a => a.Timestamp <= endOfDay);
+                auditLogs = auditLogs.Where(a => a.CreatedAt <= endOfDay);
             }
 
             var logsToExport = await auditLogs
-                .OrderByDescending(a => a.Timestamp)
+                .OrderByDescending(a => a.CreatedAt)
                 .ToListAsync();
 
             // Registrar auditoria de exportação
@@ -235,11 +235,11 @@ namespace MatMob.Controllers
         private IActionResult ExportToCsv(List<AuditLog> logs)
         {
             var csv = new System.Text.StringBuilder();
-            csv.AppendLine("ID,Timestamp,UserName,Action,EntityName,EntityId,Description,Category,Severity,IpAddress,UserAgent,OldValue,NewValue");
+            csv.AppendLine("ID,CreatedAt,UserName,Action,EntityName,EntityId,Description,Category,Severity,IpAddress,UserAgent,OldValue,NewValue");
 
             foreach (var log in logs)
             {
-                csv.AppendLine($"{log.Id},{log.Timestamp:yyyy-MM-dd HH:mm:ss},{log.UserName},{log.Action},{log.EntityName},{log.EntityId},{log.Description},{log.Category},{log.Severity},{log.IpAddress},{log.UserAgent},{log.OldValue},{log.NewValue}");
+                csv.AppendLine($"{log.Id},{log.CreatedAt:yyyy-MM-dd HH:mm:ss},{log.UserName},{log.Action},{log.EntityName},{log.EntityId},{log.Description},{log.Category},{log.Severity},{log.IpAddress},{log.UserAgent},{log.OldValue},{log.NewValue}");
             }
 
             var fileName = $"audit_logs_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
@@ -264,15 +264,15 @@ namespace MatMob.Controllers
             // Estatísticas gerais
             var totalLogs = await _context.AuditLogs.CountAsync();
             var logsLast24h = await _context.AuditLogs
-                .Where(a => a.Timestamp >= DateTime.Now.AddDays(-1))
+                .Where(a => a.CreatedAt >= DateTime.Now.AddDays(-1))
                 .CountAsync();
 
             var logsLast7d = await _context.AuditLogs
-                .Where(a => a.Timestamp >= DateTime.Now.AddDays(-7))
+                .Where(a => a.CreatedAt >= DateTime.Now.AddDays(-7))
                 .CountAsync();
 
             var logsLast30d = await _context.AuditLogs
-                .Where(a => a.Timestamp >= DateTime.Now.AddDays(-30))
+                .Where(a => a.CreatedAt >= DateTime.Now.AddDays(-30))
                 .CountAsync();
 
             // Estatísticas por ação
@@ -307,7 +307,7 @@ namespace MatMob.Controllers
 
             // Logs mais recentes
             var recentLogs = await _context.AuditLogs
-                .OrderByDescending(a => a.Timestamp)
+                .OrderByDescending(a => a.CreatedAt)
                 .Take(20)
                 .ToListAsync();
 
