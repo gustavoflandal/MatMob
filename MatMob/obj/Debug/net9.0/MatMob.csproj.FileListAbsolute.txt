@@ -47,7 +47,6 @@ C:\MatMob\MatMob\bin\Debug\net9.0\System.Composition.Convention.dll
 C:\MatMob\MatMob\bin\Debug\net9.0\System.Composition.Hosting.dll
 C:\MatMob\MatMob\bin\Debug\net9.0\System.Composition.Runtime.dll
 C:\MatMob\MatMob\bin\Debug\net9.0\System.Composition.TypedParts.dll
-C:\MatMob\MatMob\bin\Debug\net9.0\System.Text.Json.dll
 C:\MatMob\MatMob\bin\Debug\net9.0\cs\Microsoft.CodeAnalysis.resources.dll
 C:\MatMob\MatMob\bin\Debug\net9.0\de\Microsoft.CodeAnalysis.resources.dll
 C:\MatMob\MatMob\bin\Debug\net9.0\es\Microsoft.CodeAnalysis.resources.dll
@@ -188,7 +187,6 @@ C:\MatMob\MatMob\obj\Debug\net9.0\compressed\a3ygkwa5zy-2z0ns9nrw6.gz
 C:\MatMob\MatMob\obj\Debug\net9.0\compressed\nezrqnk58p-muycvpuwrr.gz
 C:\MatMob\MatMob\obj\Debug\net9.0\compressed\v0zgfp0y55-87fc7y1x7t.gz
 C:\MatMob\MatMob\obj\Debug\net9.0\compressed\yfc7ypekbg-mlv21k5csn.gz
-C:\MatMob\MatMob\obj\Debug\net9.0\compressed\tvb1i5y8me-a7g1sv326x.gz
 C:\MatMob\MatMob\obj\Debug\net9.0\compressed\3aj7m67oe6-b9sayid5wm.gz
 C:\MatMob\MatMob\obj\Debug\net9.0\compressed\bc0su0vyfl-61n19gt1b8.gz
 C:\MatMob\MatMob\obj\Debug\net9.0\compressed\edn1po6pvh-tn92vrd2h1.gz
@@ -251,6 +249,7 @@ C:\MatMob\MatMob\obj\Debug\net9.0\compressed\87mhbp1t5v-2z0ns9nrw6.gz
 C:\MatMob\MatMob\obj\Debug\net9.0\compressed\mslejmvyb6-muycvpuwrr.gz
 C:\MatMob\MatMob\obj\Debug\net9.0\compressed\tac1l0ggrv-87fc7y1x7t.gz
 C:\MatMob\MatMob\obj\Debug\net9.0\compressed\grds2ccqvd-mlv21k5csn.gz
+C:\MatMob\MatMob\obj\Debug\net9.0\compressed\tvb1i5y8me-a7g1sv326x.gz
 C:\MatMob\MatMob\obj\Debug\net9.0\compressed\8obkoz0z18-fpvshb40m0.gz
 C:\MatMob\MatMob\obj\Debug\net9.0\compressed\k83n29wu4a-fpvshb40m0.gz
 C:\MatMob\MatMob\obj\Debug\net9.0\staticwebassets.build.json
@@ -263,3 +262,7 @@ C:\MatMob\MatMob\obj\Debug\net9.0\refint\MatMob.dll
 C:\MatMob\MatMob\obj\Debug\net9.0\MatMob.pdb
 C:\MatMob\MatMob\obj\Debug\net9.0\MatMob.genruntimeconfig.cache
 C:\MatMob\MatMob\obj\Debug\net9.0\ref\MatMob.dll
+C:\MatMob\MatMob\obj\Debug\net9.0\rpswa.dswa.cache.json
+C:\MatMob\MatMob\obj\Debug\net9.0\rjimswa.dswa.cache.json
+C:\MatMob\MatMob\obj\Debug\net9.0\rjsmrazor.dswa.cache.json
+C:\MatMob\MatMob\obj\Debug\net9.0\rjsmcshtml.dswa.cache.json

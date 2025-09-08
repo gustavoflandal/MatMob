@@ -3,8 +3,7 @@
   "WorkspaceRootPath": "C:\\MatMob\\MatMob\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{076F11C4-FA51-0798-351A-03AF41FE3B15}|MatMob.csproj|c:\\matmob\\matmob\\documentacao_completa.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}",
-      "RelativeMoniker": "D:0:0:{076F11C4-FA51-0798-351A-03AF41FE3B15}|MatMob.csproj|solutionrelative:documentacao_completa.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}"
+      "AbsoluteMoniker": "D:0:0:{E0FF373A-42A0-E600-3D43-5B539E81A3A3}|..\\MatMob.Tests\\MatMob.Tests.csproj|c:\\matmob\\matmob.tests\\controllers\\auditcontrollerstests.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -51,14 +50,14 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "DOCUMENTACAO_COMPLETA.md",
-              "DocumentMoniker": "C:\\MatMob\\MatMob\\DOCUMENTACAO_COMPLETA.md",
-              "RelativeDocumentMoniker": "DOCUMENTACAO_COMPLETA.md",
-              "ToolTip": "C:\\MatMob\\MatMob\\DOCUMENTACAO_COMPLETA.md",
-              "RelativeToolTip": "DOCUMENTACAO_COMPLETA.md",
-              "ViewState": "AgIAACEAAAAAAAAAAAAIwDcAAAAeAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001818|",
-              "WhenOpened": "2025-09-02T01:56:13.321Z",
+              "Title": "AuditControllersTests.cs",
+              "DocumentMoniker": "C:\\MatMob\\MatMob.Tests\\Controllers\\AuditControllersTests.cs",
+              "RelativeDocumentMoniker": "..\\MatMob.Tests\\Controllers\\AuditControllersTests.cs",
+              "ToolTip": "C:\\MatMob\\MatMob.Tests\\Controllers\\AuditControllersTests.cs",
+              "RelativeToolTip": "..\\MatMob.Tests\\Controllers\\AuditControllersTests.cs",
+              "ViewState": "AgIAAPkBAAAAAAAAAAAAAAQCAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-07T23:33:39.884Z",
               "EditorCaption": ""
             }
           ]

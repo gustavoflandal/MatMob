@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using MatMob.Data;
 using MatMob.Services;
+using MatMob.Models.Entities;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,38 +17,39 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
            .EnableSensitiveDataLogging());
 
 // Configure ASP.NET Core Identity
-builder.Services.AddDefaultIdentity<IdentityUser>(options => 
+builder.Services.AddDefaultIdentity<MatMob.Models.Entities.ApplicationUser>(options => 
 {
-    options.SignIn.RequireConfirmedAccount = false;
     options.Password.RequireDigit = true;
     options.Password.RequireLowercase = true;
     options.Password.RequireUppercase = true;
     options.Password.RequireNonAlphanumeric = false;
     options.Password.RequiredLength = 6;
+    options.User.RequireUniqueEmail = true;
+    options.SignIn.RequireConfirmedEmail = false;
+    options.SignIn.RequireConfirmedPhoneNumber = false;
 })
-.AddRoles<IdentityRole>()
+.AddRoles<MatMob.Models.Entities.ApplicationRole>()
 .AddEntityFrameworkStores<ApplicationDbContext>();
 
-// Register custom SignInManager for audit
-builder.Services.AddScoped<SignInManager<IdentityUser>, MatMob.Services.AuditableSignInManager<IdentityUser>>();
+// Registrar o SignInManager auditável
+//builder.Services.AddScoped<SignInManager<ApplicationUser>, MatMob.Services.AuditableSignInManager<ApplicationUser>>();
 
-builder.Services.AddControllersWithViews(options =>
-{
-    options.Filters.Add<AuditActionFilter>();
-});
+builder.Services.AddControllersWithViews();
 
 // Add custom services
-builder.Services.AddScoped<MatMob.Services.IDashboardService, MatMob.Services.DashboardService>();
-builder.Services.AddScoped<MatMob.Services.EstoqueService>();
-
-// Registrar serviços de auditoria
+builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IAuditService, AuditService>();
+// builder.Services.AddScoped<MatMob.Services.IPermissionService, MatMob.Services.PermissionService>(); // Temporariamente comentado
+builder.Services.AddScoped<IAuditImmutabilityService, AuditImmutabilityService>();
+builder.Services.AddScoped<EstoqueService>();
+
+// Add background services
 builder.Services.AddSingleton<AuditBackgroundService>();
-builder.Services.AddHostedService<AuditBackgroundService>(provider => provider.GetService<AuditBackgroundService>()!);
-builder.Services.AddScoped<AuthenticationAuditService>();
-builder.Services.AddScoped<AuditImmutabilityService>();
+builder.Services.AddSingleton<IAuditBackgroundService>(provider => provider.GetRequiredService<AuditBackgroundService>());
+builder.Services.AddHostedService<AuditBackgroundService>(provider => provider.GetRequiredService<AuditBackgroundService>());
+
+// Add memory cache
 builder.Services.AddMemoryCache();
-builder.Services.AddScoped<AuditableSignInManager<IdentityUser>>();
 
 // Add session services
 builder.Services.AddSession(options =>
@@ -82,6 +84,9 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Add audit middleware
+// app.UseAuditMiddleware(); // Temporariamente comentado até resolver dependências
+
 app.MapStaticAssets();
 
 // Configure routing
@@ -100,16 +105,16 @@ app.MapRazorPages();
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
-    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-    
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<ApplicationRole>>();
+
     await InitializeDatabase(context, userManager, roleManager);
 }
 
 app.Run();
 
 // Database initialization method
-static async Task InitializeDatabase(ApplicationDbContext context, UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager)
+static async Task InitializeDatabase(ApplicationDbContext context, UserManager<ApplicationUser> userManager, RoleManager<ApplicationRole> roleManager)
 {
     try
     {
@@ -119,7 +124,7 @@ static async Task InitializeDatabase(ApplicationDbContext context, UserManager<I
         {
             if (!await roleManager.RoleExistsAsync(role))
             {
-                await roleManager.CreateAsync(new IdentityRole(role));
+                await roleManager.CreateAsync(new ApplicationRole(role));
             }
         }
 
@@ -129,11 +134,13 @@ static async Task InitializeDatabase(ApplicationDbContext context, UserManager<I
 
         if (adminUser == null)
         {
-            adminUser = new IdentityUser
+            adminUser = new ApplicationUser
             {
                 UserName = adminEmail,
                 Email = adminEmail,
-                EmailConfirmed = true
+                EmailConfirmed = true,
+                FirstName = "Administrador",
+                LastName = "Sistema"
             };
 
             var result = await userManager.CreateAsync(adminUser, "Admin123!");
@@ -142,6 +149,9 @@ static async Task InitializeDatabase(ApplicationDbContext context, UserManager<I
                 await userManager.AddToRoleAsync(adminUser, "Administrador");
             }
         }
+
+        // Seed default permissions
+        //await permissionService.SeedDefaultPermissionsAsync();
     }
     catch (Exception ex)
     {

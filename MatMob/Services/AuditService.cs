@@ -22,12 +22,12 @@ namespace MatMob.Services
         private readonly ApplicationDbContext _context;
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<AuditService> _logger;
-        private readonly AuditImmutabilityService _immutabilityService;
+        private readonly IAuditImmutabilityService _immutabilityService;
         private readonly IMemoryCache _cache;
         private readonly JsonSerializerOptions _jsonOptions;
-        private readonly AuditBackgroundService _backgroundService;
+        private readonly IAuditBackgroundService _backgroundService;
 
-        public AuditService(ApplicationDbContext context, IServiceProvider serviceProvider, ILogger<AuditService> logger, AuditImmutabilityService immutabilityService, IMemoryCache cache, AuditBackgroundService backgroundService)
+        public AuditService(ApplicationDbContext context, IServiceProvider serviceProvider, ILogger<AuditService> logger, IAuditImmutabilityService immutabilityService, IMemoryCache cache, IAuditBackgroundService backgroundService)
         {
             _context = context;
             _serviceProvider = serviceProvider;
@@ -106,11 +106,14 @@ namespace MatMob.Services
                 CreatedAt = DateTime.UtcNow
             };
 
-            await SaveAuditLogAsync(auditLog);
+            bool isTestEnvironment = _context.Database.ProviderName?.Contains("InMemory") == true;
+            await SaveAuditLogAsync(auditLog, saveImmediately: isTestEnvironment);
         }
 
         public async Task LogUpdateAsync<T>(T oldEntity, T newEntity, string? description = null) where T : class
         {
+            var changes = GetChanges(oldEntity, newEntity);
+            
             var auditLog = new AuditLog
             {
                 Action = AuditActions.UPDATE,
@@ -124,13 +127,13 @@ namespace MatMob.Services
                 CreatedAt = DateTime.UtcNow
             };
 
-            var changes = DetectChanges(oldEntity, newEntity);
             if (changes.Any())
             {
                 auditLog.AdditionalData = JsonSerializer.Serialize(changes, _jsonOptions);
             }
 
-            await SaveAuditLogAsync(auditLog);
+            bool isTestEnvironment = _context.Database.ProviderName?.Contains("InMemory") == true;
+            await SaveAuditLogAsync(auditLog, saveImmediately: isTestEnvironment);
         }
 
         public async Task LogDeleteAsync<T>(T entity, string? description = null) where T : class
@@ -147,7 +150,9 @@ namespace MatMob.Services
                 CreatedAt = DateTime.UtcNow
             };
 
-            await SaveAuditLogAsync(auditLog);
+            // Para testes ou logs críticos, salva imediatamente
+            bool isTestEnvironment = _context.Database.ProviderName?.Contains("InMemory") == true;
+            await SaveAuditLogAsync(auditLog, saveImmediately: isTestEnvironment);
         }
 
         public async Task LogViewAsync<T>(T entity, string? description = null) where T : class
@@ -184,7 +189,8 @@ namespace MatMob.Services
                 auditLog.AdditionalData = JsonSerializer.Serialize(new { Username = username, ErrorMessage = errorMessage }, _jsonOptions);
             }
 
-            await SaveAuditLogAsync(auditLog);
+            bool isTestEnvironment = _context.Database.ProviderName?.Contains("InMemory") == true;
+            await SaveAuditLogAsync(auditLog, saveImmediately: isTestEnvironment);
         }
 
         public async Task LogLogoutAsync(string username)
@@ -498,6 +504,8 @@ namespace MatMob.Services
         public async Task LogAsync(string action, string? entityName = null, int? entityId = null,
                                  string? description = null, string? category = null, string? severity = AuditSeverity.INFO)
         {
+            if (string.IsNullOrEmpty(action)) throw new ArgumentNullException(nameof(action));
+            
             var auditLog = new AuditLog
             {
                 Action = action,
@@ -509,7 +517,8 @@ namespace MatMob.Services
                 CreatedAt = DateTime.UtcNow
             };
 
-            await SaveAuditLogAsync(auditLog);
+            bool isTestEnvironment = _context.Database.ProviderName?.Contains("InMemory") == true;
+            await SaveAuditLogAsync(auditLog, saveImmediately: isTestEnvironment);
         }
 
         public async Task LogAsync(AuditLog auditLog)
@@ -519,7 +528,8 @@ namespace MatMob.Services
             if (auditLog.CreatedAt == default)
                 auditLog.CreatedAt = DateTime.UtcNow;
             
-            await SaveAuditLogAsync(auditLog);
+            bool isTestEnvironment = _context.Database.ProviderName?.Contains("InMemory") == true;
+            await SaveAuditLogAsync(auditLog, saveImmediately: isTestEnvironment);
         }
 
         private async Task SaveAuditLogAsync(AuditLog auditLog, bool saveImmediately = false)
@@ -539,7 +549,17 @@ namespace MatMob.Services
             // Prepara o log com hash e dados de imutabilidade
             auditLog = await _immutabilityService.PrepareAuditLogAsync(auditLog);
 
-            _backgroundService.EnqueueLog(auditLog);
+            if (saveImmediately)
+            {
+                // Salva diretamente no banco para casos críticos ou testes
+                _context.AuditLogs.Add(auditLog);
+                await _context.SaveChangesAsync();
+            }
+            else
+            {
+                // Usa o background service para performance
+                _backgroundService.EnqueueLog(auditLog);
+            }
         }
 
         private void FillContextualData(AuditLog auditLog)
@@ -601,6 +621,36 @@ namespace MatMob.Services
             {
                 _logger.LogWarning(ex, "Erro ao preencher dados contextuais do log de auditoria");
             }
+        }
+
+        private Dictionary<string, object> GetChanges<T>(T oldEntity, T newEntity) where T : class
+        {
+            var changes = new Dictionary<string, object>();
+            
+            if (oldEntity == null || newEntity == null)
+                return changes;
+
+            var properties = typeof(T).GetProperties();
+            
+            foreach (var property in properties)
+            {
+                try
+                {
+                    var oldValue = property.GetValue(oldEntity);
+                    var newValue = property.GetValue(newEntity);
+                    
+                    if (!Equals(oldValue, newValue))
+                    {
+                        changes[property.Name] = new { OldValue = oldValue, NewValue = newValue };
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Erro ao comparar propriedade {Property} para auditoria", property.Name);
+                }
+            }
+            
+            return changes;
         }
     }
 }

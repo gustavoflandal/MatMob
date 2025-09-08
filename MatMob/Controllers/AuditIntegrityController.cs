@@ -8,12 +8,12 @@ namespace MatMob.Controllers
     [Authorize]
     public class AuditIntegrityController : Controller
     {
-        private readonly AuditImmutabilityService _immutabilityService;
+        private readonly IAuditImmutabilityService _immutabilityService;
         private readonly IAuditService _auditService;
         private readonly ILogger<AuditIntegrityController> _logger;
 
         public AuditIntegrityController(
-            AuditImmutabilityService immutabilityService, 
+            IAuditImmutabilityService immutabilityService, 
             IAuditService auditService, 
             ILogger<AuditIntegrityController> logger)
         {
@@ -25,7 +25,7 @@ namespace MatMob.Controllers
         /// <summary>
         /// Página principal de verificação de integridade
         /// </summary>
-        public async Task<IActionResult> Index()
+        public IActionResult Index()
         {
             ViewBag.Title = "Verificação de Integridade dos Logs";
             return View();

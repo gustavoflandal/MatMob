@@ -1,8 +1,8 @@
-# MatMob - Sistema de Gestão de Ativos de Mobilidade Urbana
+# Sistema Gestor para Manutenção de Ativos - Sistema de Gestão de Ativos de Mobilidade Urbana
 
 ## 📋 Sobre o Projeto
 
-O **MatMob** é um sistema completo de gestão de ativos de mobilidade urbana desenvolvido em ASP.NET Core 9. O sistema permite gerenciar semáforos, radares, câmeras de monitoramento e outros equipamentos urbanos, incluindo manutenção, estoque de peças e equipes técnicas.
+O **Sistema Gestor para Manutenção de Ativos** é um sistema completo de gestão de ativos de mobilidade urbana desenvolvido em ASP.NET Core 9. O sistema permite gerenciar semáforos, radares, câmeras de monitoramento e outros equipamentos urbanos, incluindo manutenção, estoque de peças e equipes técnicas.
 
 ## 🚀 Tecnologias Utilizadas
 

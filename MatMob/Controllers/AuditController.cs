@@ -331,5 +331,42 @@ namespace MatMob.Controllers
 
             return View();
         }
+
+        // GET: Audit/GenerateTestLogs
+        public async Task<IActionResult> GenerateTestLogs()
+        {
+            try
+            {
+                // Gerar alguns logs de teste
+                await _auditService.LogAsync(
+                    action: Services.AuditActions.CREATE,
+                    entityName: "TestLog",
+                    description: "Log de teste gerado automaticamente",
+                    category: Services.AuditCategory.SYSTEM_ADMINISTRATION
+                );
+
+                await _auditService.LogAsync(
+                    action: Services.AuditActions.UPDATE,
+                    entityName: "TestLog",
+                    description: "Log de atualização de teste",
+                    category: Services.AuditCategory.DATA_MODIFICATION
+                );
+
+                await _auditService.LogAsync(
+                    action: Services.AuditActions.DELETE,
+                    entityName: "TestLog",
+                    description: "Log de exclusão de teste",
+                    category: Services.AuditCategory.SECURITY
+                );
+
+                TempData["SuccessMessage"] = "3 logs de teste foram gerados com sucesso!";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Erro ao gerar logs de teste: {ex.Message}";
+            }
+
+            return RedirectToAction("Diagnostics");
+        }
     }
 }

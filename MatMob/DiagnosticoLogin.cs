@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using MatMob.Data;
+using MatMob.Models.Entities;
 
 namespace MatMob
 {
@@ -10,8 +11,8 @@ namespace MatMob
         {
             using var scope = serviceProvider.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
-            var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<ApplicationRole>>();
 
             Console.WriteLine("=== DIAGNÓSTICO DO LOGIN ADMIN ===");
 
@@ -73,7 +74,7 @@ namespace MatMob
                     Console.WriteLine($"✓ Roles do admin: {string.Join(", ", adminRoles)}");
 
                     // Verificar se pode fazer login
-                    var signInManager = scope.ServiceProvider.GetRequiredService<SignInManager<IdentityUser>>();
+                    var signInManager = scope.ServiceProvider.GetRequiredService<SignInManager<ApplicationUser>>();
                     var loginResult = await signInManager.CheckPasswordSignInAsync(adminUser, "Admin123!", false);
                     Console.WriteLine($"✓ Teste de login: {loginResult.Succeeded}");
                     
@@ -91,7 +92,7 @@ namespace MatMob
                     // Tentar criar o usuário admin novamente
                     Console.WriteLine("Tentando criar usuário admin...");
                     
-                    var newAdminUser = new IdentityUser
+                    var newAdminUser = new ApplicationUser
                     {
                         UserName = adminEmail,
                         Email = adminEmail,

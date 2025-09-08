@@ -1,0 +1,292 @@
+@model MatMob.Models.ViewModels.UsuarioDetailsViewModel
+@{
+    ViewData["Title"] = "Detalhes do Usuário";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-user"></i> Detalhes do Usuário</h2>
+    <div>
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary">
+            <i class="fas fa-edit"></i> Editar
+        </a>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Voltar à Lista
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-user"></i> Informações Pessoais
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Email)</dt>
+                            <dd class="col-sm-8">
+                                @Html.DisplayFor(model => model.Email)
+                                @if (Model.EmailConfirmed)
+                                {
+                                    <i class="fas fa-check-circle text-success ms-1" title="Email confirmado"></i>
+                                }
+                                else
+                                {
+                                    <i class="fas fa-times-circle text-danger ms-1" title="Email não confirmado"></i>
+                                }
+                            </dd>
+
+                            <dt class="col-sm-4">@Html.DisplayNameFor(model => model.FirstName)</dt>
+                            <dd class="col-sm-8">
+                                @if (!string.IsNullOrEmpty(Model.FirstName))
+                                {
+                                    @Html.DisplayFor(model => model.FirstName)
+                                }
+                                else
+                                {
+                                    <em class="text-muted">Não informado</em>
+                                }
+                            </dd>
+
+                            <dt class="col-sm-4">@Html.DisplayNameFor(model => model.LastName)</dt>
+                            <dd class="col-sm-8">
+                                @if (!string.IsNullOrEmpty(Model.LastName))
+                                {
+                                    @Html.DisplayFor(model => model.LastName)
+                                }
+                                else
+                                {
+                                    <em class="text-muted">Não informado</em>
+                                }
+                            </dd>
+
+                            <dt class="col-sm-4">@Html.DisplayNameFor(model => model.PhoneNumber)</dt>
+                            <dd class="col-sm-8">
+                                @if (!string.IsNullOrEmpty(Model.PhoneNumber))
+                                {
+                                    @Html.DisplayFor(model => model.PhoneNumber)
+                                }
+                                else
+                                {
+                                    <em class="text-muted">Não informado</em>
+                                }
+                            </dd>
+                        </dl>
+                    </div>
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Status)</dt>
+                            <dd class="col-sm-8">
+                                @if (Model.IsActive)
+                                {
+                                    <span class="badge bg-success">Ativo</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">Inativo</span>
+                                }
+                            </dd>
+
+                            <dt class="col-sm-4">@Html.DisplayNameFor(model => model.TwoFactorEnabled)</dt>
+                            <dd class="col-sm-8">
+                                @if (Model.TwoFactorEnabled)
+                                {
+                                    <span class="text-success">Sim</span>
+                                }
+                                else
+                                {
+                                    <span class="text-danger">Nao</span>
+                                }
+                            </dd>
+
+                            <dt class="col-sm-4">@Html.DisplayNameFor(model => model.LockoutEnabled)</dt>
+                            <dd class="col-sm-8">
+                                @if (Model.LockoutEnabled)
+                                {
+                                    <span class="text-success">Sim</span>
+                                }
+                                else
+                                {
+                                    <span class="text-danger">Nao</span>
+                                }
+                            </dd>
+
+                            <dt class="col-sm-4">@Html.DisplayNameFor(model => model.AccessFailedCount)</dt>
+                            <dd class="col-sm-8">
+                                @if (Model.AccessFailedCount > 0)
+                                {
+                                    <span class="badge bg-warning">@Model.AccessFailedCount</span>
+                                }
+                                else
+                                {
+                                    <span class="text-success">0</span>
+                                }
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-shield-alt"></i> Roles e Permissões
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-users"></i> Roles Atribuídas</h6>
+                        @if (Model.Roles.Any())
+                        {
+                            <div class="d-flex flex-wrap gap-2">
+                                @foreach (var role in Model.Roles)
+                                {
+                                    <span class="badge bg-primary">@role</span>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-muted">Nenhuma role atribuída</p>
+                        }
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-key"></i> Permissões</h6>
+                        @if (Model.Permissions.Any())
+                        {
+                            <div class="permissions-container" style="max-height: 200px; overflow-y: auto;">
+                                @foreach (var permission in Model.Permissions.OrderBy(p => p))
+                                {
+                                    <span class="badge bg-secondary me-1 mb-1">@permission</span>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-muted">Nenhuma permissão</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-clock"></i> Informações de Acesso
+                </h6>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-5">@Html.DisplayNameFor(model => model.CreatedAt)</dt>
+                    <dd class="col-sm-7">
+                        @if (Model.CreatedAt.HasValue)
+                        {
+                            @Model.CreatedAt.Value.ToString("dd/MM/yyyy HH:mm")
+                        }
+                        else
+                        {
+                            <em class="text-muted">Não informado</em>
+                        }
+                    </dd>
+
+                    <dt class="col-sm-5">@Html.DisplayNameFor(model => model.UpdatedAt)</dt>
+                    <dd class="col-sm-7">
+                        @if (Model.UpdatedAt.HasValue)
+                        {
+                            @Model.UpdatedAt.Value.ToString("dd/MM/yyyy HH:mm")
+                        }
+                        else
+                        {
+                            <em class="text-muted">Nunca atualizado</em>
+                        }
+                    </dd>
+
+                    <dt class="col-sm-5">@Html.DisplayNameFor(model => model.LastLoginAt)</dt>
+                    <dd class="col-sm-7">
+                        @if (Model.LastLoginAt.HasValue)
+                        {
+                            @Model.LastLoginAt.Value.ToString("dd/MM/yyyy HH:mm")
+                        }
+                        else
+                        {
+                            <em class="text-muted">Nunca logou</em>
+                        }
+                    </dd>
+
+                    <dt class="col-sm-5">@Html.DisplayNameFor(model => model.LastLoginIp)</dt>
+                    <dd class="col-sm-7">
+                        @if (!string.IsNullOrEmpty(Model.LastLoginIp))
+                        {
+                            @Model.LastLoginIp
+                        }
+                        else
+                        {
+                            <em class="text-muted">Não disponível</em>
+                        }
+                    </dd>
+
+                    <dt class="col-sm-5">@Html.DisplayNameFor(model => model.LoginAttempts)</dt>
+                    <dd class="col-sm-7">
+                        @if (Model.LoginAttempts > 0)
+                        {
+                            <span class="badge bg-info">@Model.LoginAttempts</span>
+                        }
+                        else
+                        {
+                            <span class="text-muted">0</span>
+                        }
+                    </dd>
+                </dl>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-cog"></i> Ações Rápidas
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
+                        <i class="fas fa-edit"></i> Editar Usuário
+                    </a>
+                    
+                    @if (Model.IsActive)
+                    {
+                        <form asp-action="ToggleStatus" asp-route-id="@Model.Id" method="post">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-warning w-100" 
+                                    onclick="return confirm('Deseja desativar este usuário?')">
+                                <i class="fas fa-ban"></i> Desativar
+                            </button>
+                        </form>
+                    }
+                    else
+                    {
+                        <form asp-action="ToggleStatus" asp-route-id="@Model.Id" method="post">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-success w-100" 
+                                    onclick="return confirm('Deseja ativar este usuário?')">
+                                <i class="fas fa-check"></i> Ativar
+                            </button>
+                        </form>
+                    }
+                    
+                    <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-outline-danger">
+                        <i class="fas fa-trash"></i> Excluir
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

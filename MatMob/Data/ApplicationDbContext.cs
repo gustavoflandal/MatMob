@@ -4,7 +4,7 @@ using MatMob.Models.Entities;
 
 namespace MatMob.Data
 {
-    public class ApplicationDbContext : IdentityDbContext
+    public class ApplicationDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, string>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
@@ -37,6 +37,11 @@ namespace MatMob.Data
         // Entidade para auditoria
         public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<AuditModuleConfig> AuditModuleConfigs { get; set; } = null!;
+
+        // Entidades para sistema de permissões
+        public DbSet<Permission> Permissions { get; set; }
+        public DbSet<RolePermission> RolePermissions { get; set; }
+        public DbSet<UserPermission> UserPermissions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -336,6 +341,66 @@ namespace MatMob.Data
 
             // Seed data inicial
             SeedData(builder);
+
+            // Configurações das entidades de permissões
+            ConfigurePermissionEntities(builder);
+        }
+
+        private static void ConfigurePermissionEntities(ModelBuilder builder)
+        {
+            // Permission
+            builder.Entity<Permission>(entity =>
+            {
+                entity.HasIndex(e => e.Code).IsUnique();
+                entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP(6)");
+            });
+
+            // ApplicationUser
+            builder.Entity<ApplicationUser>(entity =>
+            {
+                entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP(6)");
+                entity.HasIndex(e => e.Email).IsUnique();
+            });
+
+            // ApplicationRole
+            builder.Entity<ApplicationRole>(entity =>
+            {
+                entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP(6)");
+            });
+
+            // RolePermission
+            builder.Entity<RolePermission>(entity =>
+            {
+                entity.HasIndex(e => new { e.RoleId, e.PermissionId }).IsUnique();
+                entity.Property(e => e.GrantedAt).HasDefaultValueSql("CURRENT_TIMESTAMP(6)");
+
+                entity.HasOne(d => d.Role)
+                    .WithMany(p => p.RolePermissions)
+                    .HasForeignKey(d => d.RoleId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(d => d.Permission)
+                    .WithMany(p => p.RolePermissions)
+                    .HasForeignKey(d => d.PermissionId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // UserPermission
+            builder.Entity<UserPermission>(entity =>
+            {
+                entity.HasIndex(e => new { e.UserId, e.PermissionId }).IsUnique();
+                entity.Property(e => e.GrantedAt).HasDefaultValueSql("CURRENT_TIMESTAMP(6)");
+
+                entity.HasOne(d => d.User)
+                    .WithMany(p => p.UserPermissions)
+                    .HasForeignKey(d => d.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(d => d.Permission)
+                    .WithMany(p => p.UserPermissions)
+                    .HasForeignKey(d => d.PermissionId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
         }
 
         private static void SeedData(ModelBuilder builder)

@@ -1,0 +1,166 @@
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Moq;
+using Xunit;
+using MatMob.Controllers;
+using MatMob.Data;
+using MatMob.Services;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+
+namespace MatMob.Tests.Controllers;
+
+public class AuditControllerBasicTests
+{
+    private readonly Mock<ApplicationDbContext> _mockContext;
+    private readonly Mock<IAuditService> _mockAuditService;
+    private readonly Mock<UserManager<IdentityUser>> _mockUserManager;
+    private readonly AuditController _controller;
+
+    public AuditControllerBasicTests()
+    {
+        _mockContext = new Mock<ApplicationDbContext>();
+        _mockAuditService = new Mock<IAuditService>();
+        
+        // Mock UserManager - using Loose behavior
+        _mockUserManager = new Mock<UserManager<IdentityUser>>(MockBehavior.Loose);
+        
+        // Setup any UserManager methods that might be called
+        _mockUserManager.Setup(um => um.GetUserAsync(It.IsAny<System.Security.Claims.ClaimsPrincipal>()))
+            .ReturnsAsync(new IdentityUser { UserName = "testuser" });
+
+        _controller = new AuditController(
+            _mockContext.Object,
+            _mockAuditService.Object,
+            _mockUserManager.Object);
+    }
+
+    [Fact]
+    public async Task Index_ReturnsViewResult()
+    {
+        // Arrange
+        var mockAuditLogs = new Mock<DbSet<MatMob.Models.Entities.AuditLog>>();
+        var testLogs = new List<MatMob.Models.Entities.AuditLog>
+        {
+            new MatMob.Models.Entities.AuditLog { Id = 1, Action = "TEST" }
+        };
+
+        mockAuditLogs.As<IQueryable<MatMob.Models.Entities.AuditLog>>().Setup(m => m.Provider).Returns(testLogs.AsQueryable().Provider);
+        mockAuditLogs.As<IQueryable<MatMob.Models.Entities.AuditLog>>().Setup(m => m.Expression).Returns(testLogs.AsQueryable().Expression);
+        mockAuditLogs.As<IQueryable<MatMob.Models.Entities.AuditLog>>().Setup(m => m.ElementType).Returns(testLogs.AsQueryable().ElementType);
+        mockAuditLogs.As<IQueryable<MatMob.Models.Entities.AuditLog>>().Setup(m => m.GetEnumerator()).Returns(testLogs.GetEnumerator());
+
+        _mockContext.Setup(c => c.AuditLogs).Returns(mockAuditLogs.Object);
+
+        // Act
+        var result = await _controller.Index(
+            searchString: null,
+            userName: null,
+            action: null,
+            entityType: null,
+            entityId: null,
+            startDate: null,
+            endDate: null,
+            pageNumber: 1,
+            pageSize: 20);
+
+        // Assert
+        var viewResult = Assert.IsType<ViewResult>(result);
+        Assert.NotNull(viewResult.Model);
+    }
+
+    [Fact]
+    public async Task Details_WithNullId_ReturnsNotFound()
+    {
+        // Act
+        var result = await _controller.Details(null);
+
+        // Assert
+        Assert.IsType<NotFoundResult>(result);
+    }
+
+    [Fact]
+    public async Task Details_WithValidId_ReturnsViewResult()
+    {
+        // Arrange
+        var testLog = new MatMob.Models.Entities.AuditLog { Id = 1, Action = "TEST" };
+        var mockAuditLogs = new Mock<DbSet<MatMob.Models.Entities.AuditLog>>();
+        mockAuditLogs.Setup(m => m.FirstOrDefaultAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<MatMob.Models.Entities.AuditLog, bool>>>(), default))
+            .ReturnsAsync(testLog);
+
+        _mockContext.Setup(c => c.AuditLogs).Returns(mockAuditLogs.Object);
+
+        // Act
+        var result = await _controller.Details(1);
+
+        // Assert
+        var viewResult = Assert.IsType<ViewResult>(result);
+        var model = Assert.IsType<MatMob.Models.Entities.AuditLog>(viewResult.Model);
+        Assert.Equal(1, model.Id);
+    }
+
+    [Fact]
+    public async Task Export_ReturnsCsvFile()
+    {
+        // Arrange
+        var mockAuditLogs = new Mock<DbSet<MatMob.Models.Entities.AuditLog>>();
+        var testLogs = new List<MatMob.Models.Entities.AuditLog>
+        {
+            new MatMob.Models.Entities.AuditLog
+            {
+                Id = 1,
+                Action = "TEST",
+                UserName = "testuser"
+            }
+        };
+
+        mockAuditLogs.As<IQueryable<MatMob.Models.Entities.AuditLog>>().Setup(m => m.Provider).Returns(testLogs.AsQueryable().Provider);
+        mockAuditLogs.As<IQueryable<MatMob.Models.Entities.AuditLog>>().Setup(m => m.Expression).Returns(testLogs.AsQueryable().Expression);
+        mockAuditLogs.As<IQueryable<MatMob.Models.Entities.AuditLog>>().Setup(m => m.ElementType).Returns(testLogs.AsQueryable().ElementType);
+        mockAuditLogs.As<IQueryable<MatMob.Models.Entities.AuditLog>>().Setup(m => m.GetEnumerator()).Returns(testLogs.GetEnumerator());
+
+        _mockContext.Setup(c => c.AuditLogs).Returns(mockAuditLogs.Object);
+
+        // Act
+        var result = await _controller.Export(
+            searchString: null,
+            userName: null,
+            action: null,
+            entityType: null,
+            entityId: null,
+            startDate: null,
+            endDate: null,
+            format: "csv");
+
+        // Assert
+        var fileResult = Assert.IsType<FileContentResult>(result);
+        Assert.Equal("text/csv", fileResult.ContentType);
+        Assert.Contains("audit_logs_", fileResult.FileDownloadName);
+    }
+
+    [Fact]
+    public async Task Dashboard_ReturnsViewResult()
+    {
+        // Arrange
+        var mockAuditLogs = new Mock<DbSet<MatMob.Models.Entities.AuditLog>>();
+        var testLogs = new List<MatMob.Models.Entities.AuditLog>
+        {
+            new MatMob.Models.Entities.AuditLog { Id = 1, Action = "CREATE", UserName = "user1" }
+        };
+
+        mockAuditLogs.As<IQueryable<MatMob.Models.Entities.AuditLog>>().Setup(m => m.Provider).Returns(testLogs.AsQueryable().Provider);
+        mockAuditLogs.As<IQueryable<MatMob.Models.Entities.AuditLog>>().Setup(m => m.Expression).Returns(testLogs.AsQueryable().Expression);
+        mockAuditLogs.As<IQueryable<MatMob.Models.Entities.AuditLog>>().Setup(m => m.ElementType).Returns(testLogs.AsQueryable().ElementType);
+        mockAuditLogs.As<IQueryable<MatMob.Models.Entities.AuditLog>>().Setup(m => m.GetEnumerator()).Returns(testLogs.GetEnumerator());
+
+        _mockContext.Setup(c => c.AuditLogs).Returns(mockAuditLogs.Object);
+
+        // Act
+        var result = await _controller.Dashboard();
+
+        // Assert
+        var viewResult = Assert.IsType<ViewResult>(result);
+        Assert.NotNull(viewResult.Model);
+    }
+}

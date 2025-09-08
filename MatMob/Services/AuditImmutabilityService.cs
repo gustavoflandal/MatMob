@@ -10,7 +10,7 @@ namespace MatMob.Services
     /// <summary>
     /// Serviço para garantir a imutabilidade dos logs de auditoria
     /// </summary>
-    public class AuditImmutabilityService
+    public class AuditImmutabilityService : IAuditImmutabilityService
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<AuditImmutabilityService> _logger;

@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("MatMob")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9eba8531217ed75e9ccc7af199d839f1331c6451")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4b59118a76230b953f03c0dbec8f6cd75cf8117b")]
 [assembly: System.Reflection.AssemblyProductAttribute("MatMob")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MatMob")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

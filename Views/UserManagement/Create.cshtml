@@ -1,0 +1,309 @@
+@model MatMob.Models.ViewModels.CreateUserViewModel
+@{
+    ViewData["Title"] = "Criar Usuário";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="page-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h1 class="h2 mb-0">
+                        <i class="fas fa-user-plus me-2"></i>
+                        Criar Usuário
+                    </h1>
+                    <a asp-action="Index" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Voltar
+                    </a>
+                </div>
+            </div>
+
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Erro!</strong> Por favor, corrija os erros abaixo.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            <form asp-action="Create" method="post">
+                <div class="row">
+                    <!-- Dados Básicos -->
+                    <div class="col-lg-8">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">
+                                    <i class="fas fa-user me-2"></i>
+                                    Dados Básicos
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label asp-for="FirstName" class="form-label"></label>
+                                        <input asp-for="FirstName" class="form-control" />
+                                        <span asp-validation-for="FirstName" class="text-danger"></span>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label asp-for="LastName" class="form-label"></label>
+                                        <input asp-for="LastName" class="form-control" />
+                                        <span asp-validation-for="LastName" class="text-danger"></span>
+                                    </div>
+                                    <div class="col-12">
+                                        <label asp-for="Email" class="form-label"></label>
+                                        <input asp-for="Email" class="form-control" type="email" />
+                                        <span asp-validation-for="Email" class="text-danger"></span>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label asp-for="Password" class="form-label"></label>
+                                        <div class="input-group">
+                                            <input asp-for="Password" class="form-control" type="password" id="password" />
+                                            <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </div>
+                                        <span asp-validation-for="Password" class="text-danger"></span>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label asp-for="ConfirmPassword" class="form-label"></label>
+                                        <div class="input-group">
+                                            <input asp-for="ConfirmPassword" class="form-control" type="password" id="confirmPassword" />
+                                            <button class="btn btn-outline-secondary" type="button" id="toggleConfirmPassword">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </div>
+                                        <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="form-check">
+                                            <input asp-for="IsActive" class="form-check-input" />
+                                            <label asp-for="IsActive" class="form-check-label">
+                                                Usuário ativo
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Permissões -->
+                    <div class="col-lg-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">
+                                    <i class="fas fa-shield-alt me-2"></i>
+                                    Status
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input asp-for="IsActive" class="form-check-input" checked />
+                                        <label asp-for="IsActive" class="form-check-label">
+                                            <strong>Usuário Ativo</strong>
+                                            <br><small class="text-muted">O usuário poderá fazer login no sistema</small>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-4">
+                    <!-- Perfis -->
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">
+                                    <i class="fas fa-users-cog me-2"></i>
+                                    Perfis
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                @if (Model.AvailableRoles.Any())
+                                {
+                                    <div class="role-selection">
+                                        @foreach (var role in Model.AvailableRoles)
+                                        {
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox" 
+                                                       name="SelectedRoleIds" value="@role.Value" 
+                                                       id="role_@role.Value" />
+                                                <label class="form-check-label" for="role_@role.Value">
+                                                    <strong>@role.Text</strong>
+                                                </label>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <p class="text-muted mb-0">
+                                        <i class="fas fa-info-circle"></i>
+                                        Nenhum perfil disponível. 
+                                        <a asp-controller="Permission" asp-action="CreateRole">Criar perfil</a>
+                                    </p>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Permissões Diretas -->
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">
+                                    <i class="fas fa-key me-2"></i>
+                                    Permissões Diretas
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                @if (Model.PermissionsByCategory.Any())
+                                {
+                                    <div class="permission-selection" style="max-height: 300px; overflow-y: auto;">
+                                        @foreach (var category in Model.PermissionsByCategory)
+                                        {
+                                            <div class="permission-category mb-3">
+                                                <h6 class="text-primary mb-2">
+                                                    <i class="fas fa-folder"></i> @category.Key
+                                                </h6>
+                                                @foreach (var permission in category.Value)
+                                                {
+                                                    <div class="form-check ms-3 mb-1">
+                                                        <input class="form-check-input" type="checkbox" 
+                                                               name="SelectedPermissionIds" value="@permission.Id" 
+                                                               id="perm_@permission.Id" />
+                                                        <label class="form-check-label small" for="perm_@permission.Id">
+                                                            @permission.Name
+                                                        </label>
+                                                    </div>
+                                                }
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <p class="text-muted mb-0">
+                                        <i class="fas fa-info-circle"></i>
+                                        Nenhuma permissão disponível.
+                                    </p>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ações -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <button type="submit" class="btn btn-success btn-lg me-3">
+                                    <i class="fas fa-save"></i> Criar Usuário
+                                </button>
+                                <a asp-action="Index" class="btn btn-outline-secondary btn-lg">
+                                    <i class="fas fa-times"></i> Cancelar
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    
+    <script>
+        // Toggle password visibility
+        document.getElementById('togglePassword').addEventListener('click', function () {
+            const passwordField = document.getElementById('password');
+            const icon = this.querySelector('i');
+            
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                passwordField.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        });
+
+        document.getElementById('toggleConfirmPassword').addEventListener('click', function () {
+            const confirmPasswordField = document.getElementById('confirmPassword');
+            const icon = this.querySelector('i');
+            
+            if (confirmPasswordField.type === 'password') {
+                confirmPasswordField.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                confirmPasswordField.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        });
+
+        // Category toggle functionality
+        document.querySelectorAll('.permission-category h6').forEach(function(header) {
+            header.style.cursor = 'pointer';
+            header.addEventListener('click', function() {
+                const category = this.parentElement;
+                const checkboxes = category.querySelectorAll('.form-check');
+                
+                checkboxes.forEach(function(checkbox) {
+                    if (checkbox.style.display === 'none') {
+                        checkbox.style.display = 'block';
+                    } else {
+                        checkbox.style.display = 'none';
+                    }
+                });
+            });
+        });
+    </script>
+}
+
+<style>
+.page-header {
+    border-bottom: 1px solid #dee2e6;
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.permission-category h6 {
+    cursor: pointer;
+    user-select: none;
+}
+
+.permission-category h6:hover {
+    text-decoration: underline;
+}
+
+.form-check-input:checked {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.btn-lg {
+    padding: 0.75rem 1.5rem;
+    font-size: 1.1rem;
+}
+</style>

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MatMob.Data;
+using MatMob.Models.Entities;
 
 namespace MatMob.Controllers
 {
@@ -10,16 +11,16 @@ namespace MatMob.Controllers
     public class DiagnosticoController : Controller
     {
         private readonly ApplicationDbContext _context;
-        private readonly UserManager<IdentityUser> _userManager;
-        private readonly RoleManager<IdentityRole> _roleManager;
-        private readonly SignInManager<IdentityUser> _signInManager;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly RoleManager<ApplicationRole> _roleManager;
+        private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly ILogger<DiagnosticoController> _logger;
 
         public DiagnosticoController(
             ApplicationDbContext context,
-            UserManager<IdentityUser> userManager,
-            RoleManager<IdentityRole> roleManager,
-            SignInManager<IdentityUser> signInManager,
+            UserManager<ApplicationUser> userManager,
+            RoleManager<ApplicationRole> roleManager,
+            SignInManager<ApplicationUser> signInManager,
             ILogger<DiagnosticoController> logger)
         {
             _context = context;
@@ -125,11 +126,13 @@ namespace MatMob.Controllers
                 }
 
                 // Criar usuário admin
-                var adminUser = new IdentityUser
+                var adminUser = new ApplicationUser
                 {
                     UserName = adminEmail,
                     Email = adminEmail,
-                    EmailConfirmed = true
+                    EmailConfirmed = true,
+                    FirstName = "Administrador",
+                    LastName = "Sistema"
                 };
 
                 var result = await _userManager.CreateAsync(adminUser, "Admin123!");
@@ -139,7 +142,7 @@ namespace MatMob.Controllers
                     // Verificar se a role existe
                     if (!await _roleManager.RoleExistsAsync("Administrador"))
                     {
-                        await _roleManager.CreateAsync(new IdentityRole("Administrador"));
+                        await _roleManager.CreateAsync(new ApplicationRole("Administrador"));
                     }
 
                     // Adicionar role

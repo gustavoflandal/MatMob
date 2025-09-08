@@ -1,0 +1,342 @@
+@model MatMob.Models.ViewModels.PermissoesIndexViewModel
+@{
+    ViewData["Title"] = "Gestão de Permissões";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-shield-alt"></i> Gestão de Permissões</h2>
+    <div>
+        <a asp-action="CreatePermission" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Nova Permissão
+        </a>
+        <a asp-action="CreateRole" class="btn btn-success">
+            <i class="fas fa-plus"></i> Nova Role
+        </a>
+        <a asp-action="Index" class="btn btn-info">
+            <i class="fas fa-users"></i> Gerenciar Roles
+        </a>
+    </div>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle"></i> @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle"></i> @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<!-- Cards de Resumo -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="mb-0">@Model.TotalPermissoes</h4>
+                        <p class="mb-0">Total de Permissões</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-key fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="mb-0">@Model.PermissoesAtivas</h4>
+                        <p class="mb-0">Permissões Ativas</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-check fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="mb-0">@Model.TotalRoles</h4>
+                        <p class="mb-0">Total de Roles</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-users fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="mb-0">@Model.RolesAtivas</h4>
+                        <p class="mb-0">Roles Ativas</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-user-check fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabs para Permissões e Roles -->
+<ul class="nav nav-tabs" id="permissoesTab" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="permissions-tab" data-bs-toggle="tab" data-bs-target="#permissions" 
+                type="button" role="tab" aria-controls="permissions" aria-selected="true">
+            <i class="fas fa-key"></i> Permissões
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="roles-tab" data-bs-toggle="tab" data-bs-target="#roles" 
+                type="button" role="tab" aria-controls="roles" aria-selected="false">
+            <i class="fas fa-users"></i> Roles
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content" id="permissoesTabContent">
+    <!-- Tab Permissões -->
+    <div class="tab-pane fade show active" id="permissions" role="tabpanel" aria-labelledby="permissions-tab">
+        <div class="card border-top-0">
+            <div class="card-body">
+                @if (Model.Permissoes.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Descrição</th>
+                                    <th>Categoria</th>
+                                    <th>Status</th>
+                                    <th>Data de Criação</th>
+                                    <th class="text-center">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var permissao in Model.Permissoes)
+                                {
+                                    <tr>
+                                        <td><strong>@permissao.Name</strong></td>
+                                        <td>
+                                            @if (!string.IsNullOrEmpty(permissao.Description))
+                                            {
+                                                @permissao.Description
+                                            }
+                                            else
+                                            {
+                                                <em class="text-muted">Sem descrição</em>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (!string.IsNullOrEmpty(permissao.Category))
+                                            {
+                                                <span class="badge bg-secondary">@permissao.Category</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-light text-dark">Geral</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (permissao.IsActive)
+                                            {
+                                                <span class="badge bg-success">Ativa</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-danger">Inativa</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (permissao.CreatedAt.HasValue)
+                                            {
+                                                @permissao.CreatedAt.Value.ToString("dd/MM/yyyy")
+                                            }
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="btn-group" role="group">
+                                                <a asp-action="EditPermission" asp-route-id="@permissao.Id" 
+                                                   class="btn btn-outline-primary btn-sm" title="Editar">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                @if (permissao.IsActive)
+                                                {
+                                                    <form asp-action="TogglePermissionStatus" asp-route-id="@permissao.Id" method="post" class="d-inline">
+                                                        @Html.AntiForgeryToken()
+                                                        <button type="submit" class="btn btn-outline-warning btn-sm" 
+                                                                title="Desativar" onclick="return confirm('Deseja desativar esta permissão?')">
+                                                            <i class="fas fa-ban"></i>
+                                                        </button>
+                                                    </form>
+                                                }
+                                                else
+                                                {
+                                                    <form asp-action="TogglePermissionStatus" asp-route-id="@permissao.Id" method="post" class="d-inline">
+                                                        @Html.AntiForgeryToken()
+                                                        <button type="submit" class="btn btn-outline-success btn-sm" 
+                                                                title="Ativar" onclick="return confirm('Deseja ativar esta permissão?')">
+                                                            <i class="fas fa-check"></i>
+                                                        </button>
+                                                    </form>
+                                                }
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-5">
+                        <i class="fas fa-key fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Nenhuma permissão encontrada</h5>
+                        <p class="text-muted">Clique no botão "Nova Permissão" para adicionar a primeira permissão.</p>
+                        <a asp-action="CreatePermission" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Criar Primeira Permissão
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab Roles -->
+    <div class="tab-pane fade" id="roles" role="tabpanel" aria-labelledby="roles-tab">
+        <div class="card border-top-0">
+            <div class="card-body">
+                @if (Model.Roles.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Descrição</th>
+                                    <th>Categoria</th>
+                                    <th>Status</th>
+                                    <th>Data de Criação</th>
+                                    <th class="text-center">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var role in Model.Roles)
+                                {
+                                    <tr>
+                                        <td><strong>@role.Name</strong></td>
+                                        <td>
+                                            @if (!string.IsNullOrEmpty(role.Description))
+                                            {
+                                                @role.Description
+                                            }
+                                            else
+                                            {
+                                                <em class="text-muted">Sem descrição</em>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (!string.IsNullOrEmpty(role.Category))
+                                            {
+                                                <span class="badge bg-info">@role.Category</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-light text-dark">Geral</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (role.IsActive)
+                                            {
+                                                <span class="badge bg-success">Ativa</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-danger">Inativa</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (role.CreatedAt.HasValue)
+                                            {
+                                                @role.CreatedAt.Value.ToString("dd/MM/yyyy")
+                                            }
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="btn-group" role="group">
+                                                <a asp-action="EditRole" asp-route-id="@role.Id" 
+                                                   class="btn btn-outline-primary btn-sm" title="Editar">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                @if (role.IsActive)
+                                                {
+                                                    <form asp-action="ToggleRoleStatus" asp-route-id="@role.Id" method="post" class="d-inline">
+                                                        @Html.AntiForgeryToken()
+                                                        <button type="submit" class="btn btn-outline-warning btn-sm" 
+                                                                title="Desativar" onclick="return confirm('Deseja desativar esta role?')">
+                                                            <i class="fas fa-ban"></i>
+                                                        </button>
+                                                    </form>
+                                                }
+                                                else
+                                                {
+                                                    <form asp-action="ToggleRoleStatus" asp-route-id="@role.Id" method="post" class="d-inline">
+                                                        @Html.AntiForgeryToken()
+                                                        <button type="submit" class="btn btn-outline-success btn-sm" 
+                                                                title="Ativar" onclick="return confirm('Deseja ativar esta role?')">
+                                                            <i class="fas fa-check"></i>
+                                                        </button>
+                                                    </form>
+                                                }
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-5">
+                        <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Nenhuma role encontrada</h5>
+                        <p class="text-muted">Clique no botão "Nova Role" para adicionar a primeira role.</p>
+                        <a asp-action="CreateRole" class="btn btn-success">
+                            <i class="fas fa-plus"></i> Criar Primeira Role
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Auto-hide alerts after 5 seconds
+        setTimeout(function() {
+            $('.alert').fadeOut('slow');
+        }, 5000);
+    </script>
+}

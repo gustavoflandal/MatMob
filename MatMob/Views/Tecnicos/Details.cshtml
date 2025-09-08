@@ -9,7 +9,6 @@
     <!-- Breadcrumb -->
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
             <li class="breadcrumb-item"><a asp-controller="Tecnicos" asp-action="Index">Técnicos</a></li>
             <li class="breadcrumb-item active">@Model.Nome</li>
         </ol>
@@ -120,42 +119,6 @@
                             <div class="col-sm-8">@Model.Observacoes</div>
                         </div>
                     }
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Estatísticas -->
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card bg-primary text-white">
-                <div class="card-body text-center">
-                    <h3>@Model.EquipesTecnico.Count(et => et.Ativo)</h3>
-                    <p class="mb-0">Equipes Atuais</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-success text-white">
-                <div class="card-body text-center">
-                    <h3>@Model.OrdensServicoResponsavel.Count</h3>
-                    <p class="mb-0">Ordens de Serviço</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-info text-white">
-                <div class="card-body text-center">
-                    <h3>@(Model.DataAdmissao.HasValue ? ((DateTime.Today - Model.DataAdmissao.Value).Days / 365) : Model.DataContratacao.HasValue ? ((DateTime.Today - Model.DataContratacao.Value).Days / 365) : 0)</h3>
-                    <p class="mb-0">Anos na Empresa</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-warning text-dark">
-                <div class="card-body text-center">
-                    <h3>@(Model.DataNascimento.HasValue ? ((DateTime.Today - Model.DataNascimento.Value).Days / 365) : 0)</h3>
-                    <p class="mb-0">Idade</p>
                 </div>
             </div>
         </div>

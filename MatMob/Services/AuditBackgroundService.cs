@@ -6,7 +6,7 @@ using System.Collections.Concurrent;
 
 namespace MatMob.Services;
 
-public class AuditBackgroundService : BackgroundService
+public class AuditBackgroundService : BackgroundService, IAuditBackgroundService
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<AuditBackgroundService> _logger;

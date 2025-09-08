@@ -1,0 +1,100 @@
+@model MatMob.Models.ViewModels.EditPermissionViewModel
+
+@{
+    ViewData["Title"] = "Editar Permissao";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box">
+                <h4 class="page-title">@ViewData["Title"]</h4>
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Home")">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Permissoes")">Permissoes</a></li>
+                    <li class="breadcrumb-item active">Editar Permissao</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title mb-0">
+                        <i class="fe-edit mr-1"></i>
+                        Editar Permissao: @Model.Name
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="EditPermission" method="post">
+                        <input type="hidden" asp-for="Id" />
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="Name" class="form-label">Nome da Permissao *</label>
+                                    <input asp-for="Name" class="form-control" placeholder="Digite o nome da permissao" />
+                                    <span asp-validation-for="Name" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="Module" class="form-label">Modulo *</label>
+                                    <select asp-for="Module" class="form-control">
+                                        <option value="">Selecione o modulo</option>
+                                        <option value="Usuarios">Usuarios</option>
+                                        <option value="Tecnicos">Tecnicos</option>
+                                        <option value="Equipes">Equipes</option>
+                                        <option value="Ativos">Ativos</option>
+                                        <option value="Pecas">Pecas</option>
+                                        <option value="OrdensServico">Ordens de Servico</option>
+                                        <option value="Dashboard">Dashboard</option>
+                                        <option value="Relatorios">Relatorios</option>
+                                        <option value="Configuracoes">Configuracoes</option>
+                                    </select>
+                                    <span asp-validation-for="Module" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="form-group">
+                                    <label asp-for="Description" class="form-label">Descricao</label>
+                                    <textarea asp-for="Description" class="form-control" rows="3" placeholder="Descreva a funcionalidade desta permissao"></textarea>
+                                    <span asp-validation-for="Description" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="custom-control custom-checkbox">
+                                <input asp-for="IsActive" type="checkbox" class="custom-control-input" id="IsActive" />
+                                <label class="custom-control-label" for="IsActive">Permissao ativa</label>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-0">
+                            <button type="submit" class="btn btn-success mr-2">
+                                <i class="fe-save mr-1"></i>
+                                Salvar Alteracoes
+                            </button>
+                            <a href="@Url.Action("Index")" class="btn btn-secondary">
+                                <i class="fe-x mr-1"></i>
+                                Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

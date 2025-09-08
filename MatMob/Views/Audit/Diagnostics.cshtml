@@ -1,0 +1,181 @@
+@model IEnumerable<MatMob.Models.Entities.AuditLog>
+@{
+    ViewData["Title"] = "Diagnóstico de Auditoria";
+}
+
+<h1>Diagnóstico de Auditoria</h1>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Status da Tabela AuditLogs</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Status da conexão com banco de dados:</strong> 
+                    @if (ViewBag.DatabaseConnected == true)
+                    {
+                        <span class="text-success">Conectado ✓</span>
+                    }
+                    else
+                    {
+                        <span class="text-danger">Erro de conexão ✗</span>
+                    }
+                </p>
+                
+                @if (ViewBag.ErrorMessage != null)
+                {
+                    <div class="alert alert-danger">
+                        <strong>Erro de banco de dados:</strong> @ViewBag.ErrorMessage
+                    </div>
+                }
+
+                @if (ViewBag.TotalLogs == 0)
+                {
+                    <div class="alert alert-warning">
+                        <h6>Nenhum registro encontrado na tabela AuditLogs</h6>
+                        <p>Isso pode indicar que:</p>
+                        <ul>
+                            <li>O middleware de auditoria não está funcionando corretamente</li>
+                            <li>Nenhuma ação foi realizada no sistema ainda</li>
+                            <li>Há um problema de conexão com o banco de dados</li>
+                        </ul>
+                        <p><strong>Soluções possíveis:</strong></p>
+                        <ul>
+                            <li>Verifique se o AuditMiddleware está registrado no Program.cs</li>
+                            <li>Realize algumas ações no sistema (login, criar/editar registros)</li>
+                            <li>Verifique a conexão com o banco de dados</li>
+                        </ul>
+                        <div class="mt-3">
+                            <a href="@Url.Action("GenerateTestLogs", "Audit")" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Gerar Logs de Teste
+                            </a>
+                            <small class="text-muted d-block mt-1">Clique para gerar 3 logs de teste e verificar se o sistema está funcionando</small>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-success">
+                        <h6>Registros encontrados!</h6>
+                        <p>A tabela AuditLogs contém @ViewBag.TotalLogs registros. O sistema de auditoria está funcionando.</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (ViewBag.SampleLogs != null && ViewBag.SampleLogs.Count > 0)
+{
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Últimos 5 Registros de Auditoria</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Data/Hora</th>
+                                    <th>Usuário</th>
+                                    <th>Ação</th>
+                                    <th>Entidade</th>
+                                    <th>Descrição</th>
+                                    <th>Categoria</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var log in ViewBag.SampleLogs)
+                                {
+                                    <tr>
+                                        <td>@log.CreatedAt.ToString("dd/MM/yyyy HH:mm:ss")</td>
+                                        <td>@log.UserName</td>
+                                        <td>@log.Action</td>
+                                        <td>@log.EntityName</td>
+                                        <td>@log.Description</td>
+                                        <td>@log.Category</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Ações Recomendadas</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>1. Testar Geração de Logs</h6>
+                        <p>Realize algumas ações no sistema para gerar logs de auditoria:</p>
+                        <ul>
+                            <li>Faça login/logout</li>
+                            <li>Crie, edite ou delete um registro</li>
+                            <li>Acesse diferentes páginas</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>2. Verificar Middleware</h6>
+                        <p>Confirme se o AuditMiddleware está ativo:</p>
+                        <ul>
+                            <li>Verifique o arquivo Program.cs</li>
+                            <li>Procure por "AuditMiddleware" no código</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <h6>3. Verificar Banco de Dados</h6>
+                        <p>Confirme a conexão e estrutura da tabela:</p>
+                        <ul>
+                            <li>Verifique a string de conexão</li>
+                            <li>Confirme se a tabela AuditLogs existe</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>4. Próximos Passos</h6>
+                        <p>Após testar as ações acima:</p>
+                        <ul>
+                            <li>Volte para a página principal de auditoria</li>
+                            <li>Verifique se os logs aparecem na grid</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <a href="@Url.Action("Index", "Audit")" class="btn btn-primary">Voltar para Logs de Auditoria</a>
+        <a href="@Url.Action("Dashboard", "Audit")" class="btn btn-secondary">Ir para Dashboard</a>
+    </div>
+</div>
