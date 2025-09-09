@@ -7,99 +7,509 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">
-                        <i class="fas fa-eye"></i> Detalhes do Log de Auditoria
-                    </h3>
-                    <div class="card-tools">
-                        <a href="@Url.Action("Index", "Audit")" class="btn btn-secondary btn-sm">
-                            <i class="fas fa-arrow-left"></i> Voltar
-                        </a>
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2><i class="fas fa-eye text-primary"></i> Detalhes do Log de Auditoria</h2>
+                    <p class="text-muted mb-0">Log ID: #@Model.Id | Sequência: #@Model.SequenceNumber</p>
+                </div>
+                <div>
+                    <a href="@Url.Action("Index", "Audit")" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Voltar para Lista
+                    </a>
+                    <a href="@Url.Action("Dashboard", "Audit")" class="btn btn-info">
+                        <i class="fas fa-chart-bar"></i> Dashboard
+                    </a>
+                </div>
+            </div>
+
+            <!-- Cards de Informação -->
+            <div class="row">
+                <!-- Card Principal - Informações Básicas -->
+                <div class="col-lg-8">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0"><i class="fas fa-info-circle"></i> Informações Básicas</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <dl class="row">
+                                        <dt class="col-sm-5 text-muted">Data/Hora:</dt>
+                                        <dd class="col-sm-7">
+                                            <strong>@Model.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss")</strong>
+                                        </dd>
+
+                                        <dt class="col-sm-5 text-muted">Usuário:</dt>
+                                        <dd class="col-sm-7">
+                                            @if (!string.IsNullOrEmpty(Model.UserName))
+                                            {
+                                                <span class="badge badge-info">@Model.UserName</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">Sistema</span>
+                                            }
+                                        </dd>
+
+                                        <dt class="col-sm-5 text-muted">Ação:</dt>
+                                        <dd class="col-sm-7">
+                                            @if (Model.Action != null)
+                                            {
+                                                @switch (Model.Action.ToUpper())
+                                                {
+                                                    case "VIEW":
+                                                        <span class="audit-badge-view">@Model.Action</span>
+                                                        break;
+                                                    case "DELETE":
+                                                        <span class="audit-badge-delete">@Model.Action</span>
+                                                        break;
+                                                    case "UPDATE":
+                                                        <span class="audit-badge-update">@Model.Action</span>
+                                                        break;
+                                                    case "CREATE":
+                                                        <span class="audit-badge-create">@Model.Action</span>
+                                                        break;
+                                                    default:
+                                                        <span class="audit-badge-default">@Model.Action</span>
+                                                        break;
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <span class="audit-badge-default">N/A</span>
+                                            }
+                                        </dd>
+                                    </dl>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <dl class="row">
+                                        <dt class="col-sm-5 text-muted">Entidade:</dt>
+                                        <dd class="col-sm-7">
+                                            @if (!string.IsNullOrEmpty(Model.EntityName))
+                                            {
+                                                <code>@Model.EntityName</code>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">N/A</span>
+                                            }
+                                        </dd>
+
+                                        <dt class="col-sm-5 text-muted">ID da Entidade:</dt>
+                                        <dd class="col-sm-7">
+                                            @if (Model.EntityId.HasValue)
+                                            {
+                                                <code>@Model.EntityId.Value</code>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">N/A</span>
+                                            }
+                                        </dd>
+
+                                        <dt class="col-sm-5 text-muted">Sucesso:</dt>
+                                        <dd class="col-sm-7">
+                                            @if (Model.Success)
+                                            {
+                                                <span class="badge badge-success"><i class="fas fa-check"></i> Sim</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge badge-danger"><i class="fas fa-times"></i> Não</span>
+                                            }
+                                        </dd>
+                                    </dl>
+                                </div>
+                            </div>
+
+                            @if (!string.IsNullOrEmpty(Model.Description))
+                            {
+                                <hr>
+                                <div class="row">
+                                    <div class="col-12">
+                                        <dt class="text-muted mb-2">Descrição:</dt>
+                                        <dd class="p-3 bg-light rounded">@Model.Description</dd>
+                                    </div>
+                                </div>
+                            }
+                        </div>
                     </div>
                 </div>
 
-                <div class="card-body">
-                    <dl class="row">
-                        <dt class="col-sm-3">ID</dt>
-                        <dd class="col-sm-9">@Model.Id</dd>
-
-                        <dt class="col-sm-3">Data/Hora</dt>
-                        <dd class="col-sm-9">@Model.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss")</dd>
-
-                        <dt class="col-sm-3">Usuário</dt>
-                        <dd class="col-sm-9">@Model.UserName</dd>
-
-                        <dt class="col-sm-3">Ação</dt>
-                        <dd class="col-sm-9">
-                            <span class="badge badge-primary">@Model.Action</span>
-                        </dd>
-
-                        <dt class="col-sm-3">Entidade</dt>
-                        <dd class="col-sm-9">@Model.EntityName</dd>
-
-                        <dt class="col-sm-3">ID da Entidade</dt>
-                        <dd class="col-sm-9">@Model.EntityId</dd>
-
-                        <dt class="col-sm-3">Descrição</dt>
-                        <dd class="col-sm-9">@Model.Description</dd>
-
-                        <dt class="col-sm-3">Categoria</dt>
-                        <dd class="col-sm-9">
-                            <span class="badge badge-info">@Model.Category</span>
-                        </dd>
-
-                        <dt class="col-sm-3">Severidade</dt>
-                        <dd class="col-sm-9">
-                            @switch (Model.Severity)
-                            {
-                                case "CRITICAL":
-                                    <span class="badge badge-danger">CRÍTICO</span>
-                                    break;
-                                case "ERROR":
-                                    <span class="badge badge-danger">ERRO</span>
-                                    break;
-                                case "WARNING":
-                                    <span class="badge badge-warning">AVISO</span>
-                                    break;
-                                case "INFO":
-                                    <span class="badge badge-info">INFO</span>
-                                    break;
-                                case "DEBUG":
-                                    <span class="badge badge-secondary">DEBUG</span>
-                                    break;
-                                default:
-                                    <span class="badge badge-secondary">@Model.Severity</span>
-                                    break;
-                            }
-                        </dd>
-
-                        <dt class="col-sm-3">Endereço IP</dt>
-                        <dd class="col-sm-9">@Model.IpAddress</dd>
-
-                        <dt class="col-sm-3">User Agent</dt>
-                        <dd class="col-sm-9">
-                            <small class="text-muted">@Model.UserAgent</small>
-                        </dd>
-                    </dl>
-
-                    @if (!string.IsNullOrEmpty(Model.OldData))
-                    {
-                        <div class="mt-4">
-                            <h5>Valores Anteriores</h5>
-                            <pre class="bg-light p-3 rounded"><code>@Model.OldData</code></pre>
+                <!-- Card Lateral - Classificação e Status -->
+                <div class="col-lg-4">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0"><i class="fas fa-tags"></i> Classificação</h5>
                         </div>
-                    }
+                        <div class="card-body">
+                            <dl>
+                                <dt class="text-muted">Categoria:</dt>
+                                <dd class="mb-3">
+                                    @if (Model.Category != null)
+                                    {
+                                        @switch (Model.Category.ToUpper())
+                                        {
+                                            case "DATA_ACCESS":
+                                                <span class="audit-category-data-access">@Model.Category</span>
+                                                break;
+                                            case "AUTHENTICATION":
+                                                <span class="audit-category-auth">@Model.Category</span>
+                                                break;
+                                            case "AUTHORIZATION":
+                                                <span class="audit-category-authz">@Model.Category</span>
+                                                break;
+                                            case "SYSTEM":
+                                                <span class="audit-category-system">@Model.Category</span>
+                                                break;
+                                            case "BUSINESS":
+                                                <span class="audit-category-business">@Model.Category</span>
+                                                break;
+                                            case "ERROR":
+                                                <span class="audit-category-error">@Model.Category</span>
+                                                break;
+                                            default:
+                                                <span class="audit-category-default">@Model.Category</span>
+                                                break;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="audit-category-default">N/A</span>
+                                    }
+                                </dd>
 
-                    @if (!string.IsNullOrEmpty(Model.NewData))
-                    {
-                        <div class="mt-4">
-                            <h5>Valores Novos</h5>
-                            <pre class="bg-light p-3 rounded"><code>@Model.NewData</code></pre>
+                                <dt class="text-muted">Severidade:</dt>
+                                <dd class="mb-3">
+                                    @switch (Model.Severity)
+                                    {
+                                        case "CRITICAL":
+                                            <span class="badge badge-danger">CRÍTICO</span>
+                                            break;
+                                        case "ERROR":
+                                            <span class="badge badge-danger">ERRO</span>
+                                            break;
+                                        case "WARNING":
+                                            <span class="badge badge-warning">AVISO</span>
+                                            break;
+                                        case "INFO":
+                                            <span class="badge badge-info">INFO</span>
+                                            break;
+                                        case "DEBUG":
+                                            <span class="badge badge-secondary">DEBUG</span>
+                                            break;
+                                        default:
+                                            <span class="badge badge-secondary">@(Model.Severity ?? "N/A")</span>
+                                            break;
+                                    }
+                                </dd>
+
+                                @if (Model.Duration.HasValue)
+                                {
+                                    <dt class="text-muted">Duração:</dt>
+                                    <dd class="mb-3">
+                                        <span class="badge badge-light">@Model.Duration.Value ms</span>
+                                    </dd>
+                                }
+
+                                @if (!string.IsNullOrEmpty(Model.PropertyName))
+                                {
+                                    <dt class="text-muted">Propriedade Alterada:</dt>
+                                    <dd class="mb-3">
+                                        <code>@Model.PropertyName</code>
+                                    </dd>
+                                }
+                            </dl>
                         </div>
-                    }
+                    </div>
                 </div>
             </div>
+
+            <!-- Card de Informações Técnicas -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-dark text-white">
+                            <h5 class="mb-0"><i class="fas fa-network-wired"></i> Informações Técnicas</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <dl>
+                                        <dt class="text-muted">Endereço IP:</dt>
+                                        <dd class="mb-3">
+                                            @if (!string.IsNullOrEmpty(Model.IpAddress))
+                                            {
+                                                <code class="bg-light p-1">@Model.IpAddress</code>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">N/A</span>
+                                            }
+                                        </dd>
+
+                                        <dt class="text-muted">Método HTTP:</dt>
+                                        <dd class="mb-3">
+                                            @if (!string.IsNullOrEmpty(Model.HttpMethod))
+                                            {
+                                                @switch (Model.HttpMethod.ToUpper())
+                                                {
+                                                    case "GET":
+                                                        <span class="badge badge-info">@Model.HttpMethod</span>
+                                                        break;
+                                                    case "POST":
+                                                        <span class="badge badge-success">@Model.HttpMethod</span>
+                                                        break;
+                                                    case "PUT":
+                                                        <span class="badge badge-warning">@Model.HttpMethod</span>
+                                                        break;
+                                                    case "DELETE":
+                                                        <span class="badge badge-danger">@Model.HttpMethod</span>
+                                                        break;
+                                                    default:
+                                                        <span class="badge badge-secondary">@Model.HttpMethod</span>
+                                                        break;
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">N/A</span>
+                                            }
+                                        </dd>
+
+                                        <dt class="text-muted">Status HTTP:</dt>
+                                        <dd class="mb-3">
+                                            @if (Model.HttpStatusCode.HasValue)
+                                            {
+                                                var statusClass = Model.HttpStatusCode < 300 ? "success" : Model.HttpStatusCode < 400 ? "warning" : "danger";
+                                                <span class="badge badge-@statusClass">@Model.HttpStatusCode</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">N/A</span>
+                                            }
+                                        </dd>
+                                    </dl>
+                                </div>
+
+                                <div class="col-md-8">
+                                    <dl>
+                                        <dt class="text-muted">URL da Requisição:</dt>
+                                        <dd class="mb-3">
+                                            @if (!string.IsNullOrEmpty(Model.RequestUrl))
+                                            {
+                                                <div class="bg-light p-2 rounded">
+                                                    <code class="text-break">@Model.RequestUrl</code>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">N/A</span>
+                                            }
+                                        </dd>
+
+                                        <dt class="text-muted">User Agent:</dt>
+                                        <dd class="mb-3">
+                                            @if (!string.IsNullOrEmpty(Model.UserAgent))
+                                            {
+                                                <div class="bg-light p-2 rounded">
+                                                    <small class="text-muted text-break">@Model.UserAgent</small>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">N/A</span>
+                                            }
+                                        </dd>
+                                    </dl>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <dl>
+                                        <dt class="text-muted">Session ID:</dt>
+                                        <dd>
+                                            @if (!string.IsNullOrEmpty(Model.SessionId))
+                                            {
+                                                <small class="font-monospace text-break">@Model.SessionId</small>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">N/A</span>
+                                            }
+                                        </dd>
+                                    </dl>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <dl>
+                                        <dt class="text-muted">Correlation ID:</dt>
+                                        <dd>
+                                            @if (!string.IsNullOrEmpty(Model.CorrelationId))
+                                            {
+                                                <small class="font-monospace text-break">@Model.CorrelationId</small>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">N/A</span>
+                                            }
+                                        </dd>
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seção de Dados -->
+            @if (!string.IsNullOrEmpty(Model.AdditionalData) || !string.IsNullOrEmpty(Model.OldData) || !string.IsNullOrEmpty(Model.NewData))
+            {
+                <div class="row">
+                    @if (!string.IsNullOrEmpty(Model.AdditionalData))
+                    {
+                        <div class="col-12 mb-4">
+                            <div class="card shadow-sm">
+                                <div class="card-header bg-warning text-dark">
+                                    <h5 class="mb-0"><i class="fas fa-plus-circle"></i> Dados Adicionais</h5>
+                                </div>
+                                <div class="card-body">
+                                    <pre class="bg-light p-3 rounded mb-0 text-wrap"><code>@Model.AdditionalData</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Dados Anteriores e Novos lado a lado -->
+                    @if (!string.IsNullOrEmpty(Model.OldData) || !string.IsNullOrEmpty(Model.NewData))
+                    {
+                        @if (!string.IsNullOrEmpty(Model.OldData))
+                        {
+                            <div class="col-md-6 mb-4">
+                                <div class="card shadow-sm border-warning">
+                                    <div class="card-header bg-warning text-dark">
+                                        <h5 class="mb-0"><i class="fas fa-history"></i> Dados Anteriores</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <pre class="bg-light p-3 rounded mb-0 text-wrap"><code>@Model.OldData</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrEmpty(Model.NewData))
+                        {
+                            <div class="col-md-6 mb-4">
+                                <div class="card shadow-sm border-success">
+                                    <div class="card-header bg-success text-white">
+                                        <h5 class="mb-0"><i class="fas fa-sync-alt"></i> Dados Novos</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <pre class="bg-light p-3 rounded mb-0 text-wrap"><code>@Model.NewData</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+            }
+
+            <!-- Informações de Integridade e Segurança -->
+            @if (!string.IsNullOrEmpty(Model.ContentHash) || !string.IsNullOrEmpty(Model.PreviousHash) || Model.SequenceNumber > 0)
+            {
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card shadow-sm mb-4">
+                            <div class="card-header bg-secondary text-white">
+                                <h5 class="mb-0"><i class="fas fa-shield-alt"></i> Integridade e Segurança</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <dl>
+                                            <dt class="text-muted">Integridade Verificada:</dt>
+                                            <dd class="mb-3">
+                                                @if (Model.IntegrityVerified)
+                                                {
+                                                    <span class="badge badge-success"><i class="fas fa-check-circle"></i> Verificada</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge badge-warning"><i class="fas fa-exclamation-triangle"></i> Não Verificada</span>
+                                                }
+                                            </dd>
+
+                                            @if (Model.SequenceNumber > 0)
+                                            {
+                                                <dt class="text-muted">Número de Sequência:</dt>
+                                                <dd class="mb-3">
+                                                    <span class="badge badge-dark">#@Model.SequenceNumber</span>
+                                                </dd>
+                                            }
+                                        </dl>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        @if (!string.IsNullOrEmpty(Model.ContentHash))
+                                        {
+                                            <dt class="text-muted">Hash do Conteúdo:</dt>
+                                            <dd class="mb-3">
+                                                <div class="bg-light p-2 rounded">
+                                                    <small class="font-monospace text-break">@Model.ContentHash</small>
+                                                </div>
+                                            </dd>
+                                        }
+
+                                        @if (!string.IsNullOrEmpty(Model.PreviousHash))
+                                        {
+                                            <dt class="text-muted">Hash Anterior:</dt>
+                                            <dd class="mb-3">
+                                                <div class="bg-light p-2 rounded">
+                                                    <small class="font-monospace text-break">@Model.PreviousHash</small>
+                                                </div>
+                                            </dd>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Informações de Erro -->
+            @if (!string.IsNullOrEmpty(Model.ErrorMessage) || !string.IsNullOrEmpty(Model.StackTrace))
+            {
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card shadow-sm border-danger mb-4">
+                            <div class="card-header bg-danger text-white">
+                                <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Informações de Erro</h5>
+                            </div>
+                            <div class="card-body">
+                                @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+                                {
+                                    <div class="alert alert-danger">
+                                        <strong><i class="fas fa-bug"></i> Mensagem de Erro:</strong><br>
+                                        @Model.ErrorMessage
+                                    </div>
+                                }
+
+                                @if (!string.IsNullOrEmpty(Model.StackTrace))
+                                {
+                                    <div class="mt-3">
+                                        <h6 class="text-danger"><i class="fas fa-code"></i> Stack Trace:</h6>
+                                        <pre class="bg-dark text-light p-3 rounded text-wrap"><code>@Model.StackTrace</code></pre>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
         </div>
     </div>
 </div>

@@ -13,122 +13,30 @@
                         <i class="fas fa-history"></i> Logs de Auditoria
                     </h3>
                     <div class="card-tools">
-                        <a href="@Url.Action("Dashboard", "Audit")" class="btn btn-info btn-sm">
-                            <i class="fas fa-chart-bar"></i> Dashboard
-                        </a>
-                        <a href="@Url.Action("Index", "AuditIntegrity")" class="btn btn-warning btn-sm">
-                            <i class="fas fa-shield-alt"></i> Verificar Integridade
-                        </a>
-                        <a href="@Url.Action("Export", "Audit", new { format = "csv" })" class="btn btn-success btn-sm">
-                            <i class="fas fa-download"></i> Exportar CSV
-                        </a>
-                        <a href="@Url.Action("Export", "Audit", new { format = "json" })" class="btn btn-primary btn-sm">
-                            <i class="fas fa-download"></i> Exportar JSON
+                        <a href="@Url.Action("GenerateTestLogs", "Audit")" class="btn btn-secondary btn-sm">
+                            <i class="fas fa-vial"></i> Gerar Logs Teste
                         </a>
                     </div>
                 </div>
 
                 <div class="card-body">
-                    <!-- Filtros -->
-                    <form method="get" class="mb-4">
-                        <div class="row">
-                            <div class="col-md-3">
-                                <div class="form-group">
-                                    <label for="searchString">Buscar</label>
-                                    <input type="text" class="form-control" id="searchString" name="searchString"
-                                           value="@ViewData["CurrentFilter"]" placeholder="Nome da entidade, descrição...">
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="form-group">
-                                    <label for="userName">Usuário</label>
-                                    <select class="form-control" id="userName" name="userName">
-                                        <option value="">Todos</option>
-                                        @foreach (var user in ViewBag.Users)
-                                        {
-                                            <option value="@user" selected="@(ViewData["UserNameFilter"]?.ToString() == user)">
-                                                @user
-                                            </option>
-                                        }
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="form-group">
-                                    <label for="action">Ação</label>
-                                    <select class="form-control" id="action" name="action">
-                                        <option value="">Todas</option>
-                                        @foreach (var act in ViewBag.Actions)
-                                        {
-                                            <option value="@act" selected="@(ViewData["ActionFilter"]?.ToString() == act)">
-                                                @act
-                                            </option>
-                                        }
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="form-group">
-                                    <label for="category">Categoria</label>
-                                    <select class="form-control" id="category" name="category">
-                                        <option value="">Todas</option>
-                                        @foreach (var cat in ViewBag.Categories)
-                                        {
-                                            <option value="@cat" selected="@(ViewData["CategoryFilter"]?.ToString() == cat)">
-                                                @cat
-                                            </option>
-                                        }
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="form-group">
-                                    <label>Data Inicial</label>
-                                    <input type="date" class="form-control" name="startDate"
-                                           value="@ViewData["StartDateFilter"]">
-                                </div>
-                            </div>
+                    <!-- Total de registros -->
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <p class="mb-0">
+                            <strong>Total de logs: @ViewBag.TotalRecords</strong>
+                            @if (ViewBag.TotalPages > 1)
+                            {
+                                <span class="text-muted">(Página @ViewBag.CurrentPage de @ViewBag.TotalPages)</span>
+                            }
+                        </p>
+                    </div>
+
+                    @if (ViewBag.ErrorMessage != null)
+                    {
+                        <div class="alert alert-danger">
+                            @ViewBag.ErrorMessage
                         </div>
-                        <div class="row">
-                            <div class="col-md-3">
-                                <div class="form-group">
-                                    <label>Data Final</label>
-                                    <input type="date" class="form-control" name="endDate"
-                                           value="@ViewData["EndDateFilter"]">
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="form-group">
-                                    <label for="severity">Severidade</label>
-                                    <select class="form-control" id="severity" name="severity">
-                                        <option value="">Todas</option>
-                                        @foreach (var sev in ViewBag.Severities)
-                                        {
-                                            <option value="@sev" selected="@(ViewData["SeverityFilter"]?.ToString() == sev)">
-                                                @sev
-                                            </option>
-                                        }
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="form-group">
-                                    <label>&nbsp;</label>
-                                    <button type="submit" class="btn btn-primary btn-block">
-                                        <i class="fas fa-search"></i> Filtrar
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="form-group">
-                                    <label>&nbsp;</label>
-                                    <a href="@Url.Action("Index", "Audit")" class="btn btn-secondary btn-block">
-                                        <i class="fas fa-times"></i> Limpar
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </form>
+                    }
 
                     <!-- Tabela de Logs -->
                     <div class="table-responsive">
@@ -139,59 +47,112 @@
                                     <th>Usuário</th>
                                     <th>Ação</th>
                                     <th>Entidade</th>
+                                    <th>ID</th>
                                     <th>Descrição</th>
                                     <th>Categoria</th>
                                     <th>Severidade</th>
+                                    <th>Status</th>
+                                    <th>IP</th>
                                     <th>Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @if (Model.Any())
+                                @if (Model != null && Model.Any())
                                 {
-                                    @foreach (var log in Model)
+                                    @foreach (var item in Model)
                                     {
                                         <tr>
-                                            <td>@log.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss")</td>
-                                            <td>@log.UserName</td>
-                                            <td>
-                                                <span class="badge badge-primary">@log.Action</span>
-                                            </td>
-                                            <td>@log.EntityName</td>
-                                            <td>
-                                                <span title="@log.Description">
-                                                    @(log.Description?.Length > 50 ? log.Description.Substring(0, 50) + "..." : log.Description)
-                                                </span>
+                                            <td class="text-nowrap">
+                                                @item.CreatedAt.ToString("dd/MM/yyyy HH:mm:ss")
                                             </td>
                                             <td>
-                                                <span class="badge badge-info">@log.Category</span>
+                                                @(item.UserName ?? "Sistema")
                                             </td>
                                             <td>
-                                                @switch (log.Severity)
+                                                @{
+                                                    string badgeClass = item.Action?.ToUpper() switch
+                                                    {
+                                                        "VIEW" => "audit-badge badge-view",
+                                                        "DELETE" => "audit-badge badge-delete",
+                                                        "UPDATE" => "audit-badge badge-update",
+                                                        "CREATE" => "audit-badge badge-create",
+                                                        "LOGIN" => "audit-badge badge-login",
+                                                        _ => "badge badge-secondary"
+                                                    };
+                                                }
+                                                <span class="badge @badgeClass">@item.Action</span>
+                                            </td>
+                                            <td>@item.EntityName</td>
+                                            <td>@item.EntityId</td>
+                                            <td>
+                                                @if (!string.IsNullOrEmpty(item.Description))
                                                 {
-                                                    case "CRITICAL":
-                                                        <span class="badge badge-danger">CRÍTICO</span>
-                                                        break;
-                                                    case "ERROR":
-                                                        <span class="badge badge-danger">ERRO</span>
-                                                        break;
-                                                    case "WARNING":
-                                                        <span class="badge badge-warning">AVISO</span>
-                                                        break;
-                                                    case "INFO":
-                                                        <span class="badge badge-info">INFO</span>
-                                                        break;
-                                                    case "DEBUG":
-                                                        <span class="badge badge-secondary">DEBUG</span>
-                                                        break;
-                                                    default:
-                                                        <span class="badge badge-secondary">@log.Severity</span>
-                                                        break;
+                                                    string desc = item.Description.Length > 50 ? 
+                                                        item.Description.Substring(0, 50) + "..." : 
+                                                        item.Description;
+                                                    <span title="@item.Description">@desc</span>
                                                 }
                                             </td>
                                             <td>
-                                                <a href="@Url.Action("Details", "Audit", new { id = log.Id })"
-                                                   class="btn btn-sm btn-info">
-                                                    <i class="fas fa-eye"></i> Detalhes
+                                                @if (!string.IsNullOrEmpty(item.Category))
+                                                {
+                                                    string catBadgeClass = item.Category switch
+                                                    {
+                                                        "DATA_ACCESS" => "audit-badge badge-category-data-access",
+                                                        "DATA_MODIFICATION" => "audit-badge badge-category-data-modification", 
+                                                        "AUTHENTICATION" => "audit-badge badge-category-authentication",
+                                                        "SECURITY" => "audit-badge badge-category-security",
+                                                        "SYSTEM_ADMINISTRATION" => "audit-badge badge-category-admin",
+                                                        _ => "audit-badge badge-category-other"
+                                                    };
+                                                    <span class="@catBadgeClass">@item.Category.Replace("_", " ")</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (!string.IsNullOrEmpty(item.Severity))
+                                                {
+                                                    string sevBadgeClass = item.Severity switch
+                                                    {
+                                                        "INFO" => "audit-badge badge-severity-info",
+                                                        "WARNING" => "audit-badge badge-severity-warning",
+                                                        "ERROR" => "audit-badge badge-severity-error",
+                                                        "CRITICAL" => "audit-badge badge-severity-critical",
+                                                        _ => "audit-badge badge-severity-other"
+                                                    };
+                                                    <span class="@sevBadgeClass">
+                                                        @{
+                                                            string icon = item.Severity switch
+                                                            {
+                                                                "INFO" => "fas fa-info-circle",
+                                                                "WARNING" => "fas fa-exclamation-triangle", 
+                                                                "ERROR" => "fas fa-exclamation-circle",
+                                                                "CRITICAL" => "fas fa-skull-crossbones",
+                                                                _ => "fas fa-question-circle"
+                                                            };
+                                                        }
+                                                        <i class="@icon"></i> @item.Severity
+                                                    </span>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (item.Success)
+                                                {
+                                                    <span class="audit-badge badge-status-success">
+                                                        <i class="fas fa-check-circle"></i> Sucesso
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="audit-badge badge-status-error" title="@item.ErrorMessage">
+                                                        <i class="fas fa-times-circle"></i> Erro
+                                                    </span>
+                                                }
+                                            </td>
+                                            <td class="text-nowrap">@item.IpAddress</td>
+                                            <td>
+                                                <a asp-action="Details" asp-route-id="@item.Id" 
+                                                   class="btn btn-info btn-sm" title="Ver detalhes">
+                                                    <i class="fas fa-eye"></i>
                                                 </a>
                                             </td>
                                         </tr>
@@ -200,8 +161,9 @@
                                 else
                                 {
                                     <tr>
-                                        <td colspan="8" class="text-center">
-                                            <i class="fas fa-info-circle"></i> Nenhum log de auditoria encontrado.
+                                        <td colspan="11" class="text-center text-muted">
+                                            <i class="fas fa-info-circle"></i>
+                                            Nenhum log de auditoria encontrado.
                                         </td>
                                     </tr>
                                 }
@@ -212,69 +174,189 @@
                     <!-- Paginação -->
                     @if (ViewBag.TotalPages > 1)
                     {
-                        <nav aria-label="Paginação">
+                        <nav aria-label="Navegação de página">
                             <ul class="pagination justify-content-center">
                                 @if (ViewBag.CurrentPage > 1)
                                 {
                                     <li class="page-item">
-                                        <a class="page-link" href="@Url.Action("Index", "Audit", new {
-                                            page = ViewBag.CurrentPage - 1,
-                                            searchString = ViewData["CurrentFilter"],
-                                            userName = ViewData["UserNameFilter"],
-                                            action = ViewData["ActionFilter"],
-                                            category = ViewData["CategoryFilter"],
-                                            severity = ViewData["SeverityFilter"],
-                                            startDate = ViewData["StartDateFilter"],
-                                            endDate = ViewData["EndDateFilter"]
-                                        })">Anterior</a>
+                                        <a class="page-link" href="@Url.Action("Index", new { pageNumber = 1 })">
+                                            <i class="fas fa-angle-double-left"></i>
+                                        </a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="@Url.Action("Index", new { pageNumber = ViewBag.CurrentPage - 1 })">
+                                            <i class="fas fa-angle-left"></i>
+                                        </a>
                                     </li>
                                 }
 
-                                @for (int i = Math.Max(1, ViewBag.CurrentPage - 2); i <= Math.Min(ViewBag.TotalPages, ViewBag.CurrentPage + 2); i++)
+                                @{
+                                    int startPage = Math.Max(1, ViewBag.CurrentPage - 2);
+                                    int endPage = Math.Min(ViewBag.TotalPages, ViewBag.CurrentPage + 2);
+                                }
+
+                                @for (int i = startPage; i <= endPage; i++)
                                 {
                                     <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
-                                        <a class="page-link" href="@Url.Action("Index", "Audit", new {
-                                            page = i,
-                                            searchString = ViewData["CurrentFilter"],
-                                            userName = ViewData["UserNameFilter"],
-                                            action = ViewData["ActionFilter"],
-                                            category = ViewData["CategoryFilter"],
-                                            severity = ViewData["SeverityFilter"],
-                                            startDate = ViewData["StartDateFilter"],
-                                            endDate = ViewData["EndDateFilter"]
-                                        })">@i</a>
+                                        <a class="page-link" href="@Url.Action("Index", new { pageNumber = i })">@i</a>
                                     </li>
                                 }
 
                                 @if (ViewBag.CurrentPage < ViewBag.TotalPages)
                                 {
                                     <li class="page-item">
-                                        <a class="page-link" href="@Url.Action("Index", "Audit", new {
-                                            page = ViewBag.CurrentPage + 1,
-                                            searchString = ViewData["CurrentFilter"],
-                                            userName = ViewData["UserNameFilter"],
-                                            action = ViewData["ActionFilter"],
-                                            category = ViewData["CategoryFilter"],
-                                            severity = ViewData["SeverityFilter"],
-                                            startDate = ViewData["StartDateFilter"],
-                                            endDate = ViewData["EndDateFilter"]
-                                        })">Próximo</a>
+                                        <a class="page-link" href="@Url.Action("Index", new { pageNumber = ViewBag.CurrentPage + 1 })">
+                                            <i class="fas fa-angle-right"></i>
+                                        </a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="@Url.Action("Index", new { pageNumber = ViewBag.TotalPages })">
+                                            <i class="fas fa-angle-double-right"></i>
+                                        </a>
                                     </li>
                                 }
                             </ul>
                         </nav>
                     }
-
-                    <!-- Informações de paginação -->
-                    <div class="row mt-3">
-                        <div class="col-12 text-center text-muted">
-                            Mostrando @(((ViewBag.CurrentPage - 1) * ViewBag.PageSize) + 1) -
-                            @Math.Min(ViewBag.CurrentPage * ViewBag.PageSize, ViewBag.TotalRecords)
-                            de @ViewBag.TotalRecords registros
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+/* Estilos para badges de ação com cores personalizadas */
+.audit-badge {
+    font-weight: bold;
+    padding: 0.375rem 0.75rem;
+    border-radius: 0.25rem;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+/* Badges de Ação */
+.audit-badge.badge-view {
+    background-color: #ffc107;
+    color: #000;
+}
+
+.audit-badge.badge-delete {
+    background-color: #dc3545;
+    color: #fff;
+}
+
+.audit-badge.badge-update {
+    background-color: #28a745;
+    color: #fff;
+}
+
+.audit-badge.badge-create {
+    background-color: #007bff;
+    color: #fff;
+}
+
+.audit-badge.badge-login {
+    background-color: #6f42c1;
+    color: #fff;
+}
+
+/* Badges de Categoria */
+.audit-badge.badge-category-data-access {
+    background-color: #17a2b8;
+    color: #fff;
+}
+
+.audit-badge.badge-category-data-modification {
+    background-color: #fd7e14;
+    color: #fff;
+}
+
+.audit-badge.badge-category-authentication {
+    background-color: #20c997;
+    color: #fff;
+}
+
+.audit-badge.badge-category-security {
+    background-color: #e83e8c;
+    color: #fff;
+}
+
+.audit-badge.badge-category-admin {
+    background-color: #6f42c1;
+    color: #fff;
+}
+
+.audit-badge.badge-category-other {
+    background-color: #6c757d;
+    color: #fff;
+}
+
+/* Badges de Severidade */
+.audit-badge.badge-severity-info {
+    background-color: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+
+.audit-badge.badge-severity-warning {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+.audit-badge.badge-severity-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.audit-badge.badge-severity-critical {
+    background-color: #721c24;
+    color: #fff;
+    border: 1px solid #721c24;
+    animation: pulse 2s infinite;
+}
+
+.audit-badge.badge-severity-other {
+    background-color: #e2e3e5;
+    color: #383d41;
+    border: 1px solid #d6d8db;
+}
+
+/* Badges de Status */
+.audit-badge.badge-status-success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.audit-badge.badge-status-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+/* Animação para CRITICAL */
+@@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+    }
+}
+
+/* Responsividade para tabela */
+@@media (max-width: 768px) {
+    .audit-badge {
+        font-size: 0.7rem;
+        padding: 0.25rem 0.5rem;
+    }
+}
+</style>

@@ -37,68 +37,153 @@ namespace MatMob.Controllers
             string? searchString,
             string? userName,
             string? action,
-            string? entityType,
-            string? entityId,
+            string? category,
+            string? severity,
             DateTime? startDate,
             DateTime? endDate,
             int pageNumber = 1,
             int pageSize = 20)
         {
+            Console.WriteLine("=== AUDIT INDEX INICIADO ===");
+            Console.WriteLine($"Parâmetros recebidos:");
+            Console.WriteLine($"  SearchString: '{searchString ?? "NULL"}'");
+            Console.WriteLine($"  UserName: '{userName ?? "NULL"}'");
+            Console.WriteLine($"  Action: '{action ?? "NULL"}'");
+            Console.WriteLine($"  Category: '{category ?? "NULL"}'");
+            Console.WriteLine($"  Severity: '{severity ?? "NULL"}'");
+            Console.WriteLine($"  StartDate: {startDate?.ToString("yyyy-MM-dd") ?? "NULL"}");
+            Console.WriteLine($"  EndDate: {endDate?.ToString("yyyy-MM-dd") ?? "NULL"}");
+            Console.WriteLine($"  PageNumber: {pageNumber}, PageSize: {pageSize}");
+
+            // Verificar se há ALGUM filtro informado
+            // IMPORTANTE: Ignorar action="Index" pois é adicionado automaticamente pelo MVC routing
+            bool hasAnyFilter = !string.IsNullOrEmpty(searchString) ||
+                               !string.IsNullOrEmpty(userName) ||
+                               (!string.IsNullOrEmpty(action) && action != "Index") ||
+                               !string.IsNullOrEmpty(category) ||
+                               !string.IsNullOrEmpty(severity) ||
+                               startDate.HasValue ||
+                               endDate.HasValue;
+
+            Console.WriteLine($"=== HÁ FILTROS ATIVOS: {hasAnyFilter} ===");
+
             var query = _context.AuditLogs.AsQueryable();
 
-            if (!string.IsNullOrEmpty(searchString))
+            // APLICAR FILTROS APENAS SE EXISTIREM
+            if (hasAnyFilter)
             {
-                query = query.Where(a => a.Details.Contains(searchString));
+                Console.WriteLine("=== EXECUTANDO QUERY COM FILTROS ===");
+
+                if (!string.IsNullOrEmpty(searchString))
+                {
+                    Console.WriteLine($"  Aplicando filtro de busca: '{searchString}'");
+                    query = query.Where(a => 
+                        (a.Description != null && a.Description.Contains(searchString)) ||
+                        (a.EntityName != null && a.EntityName.Contains(searchString)) ||
+                        (a.Context != null && a.Context.Contains(searchString)));
+                }
+
+                if (!string.IsNullOrEmpty(userName))
+                {
+                    Console.WriteLine($"  Aplicando filtro de usuário: '{userName}'");
+                    query = query.Where(a => a.UserName != null && a.UserName.Contains(userName));
+                }
+
+                if (!string.IsNullOrEmpty(action) && action != "Index")
+                {
+                    Console.WriteLine($"  Aplicando filtro de ação: '{action}'");
+                    query = query.Where(a => a.Action == action);
+                }
+
+                if (!string.IsNullOrEmpty(category))
+                {
+                    Console.WriteLine($"  Aplicando filtro de categoria: '{category}'");
+                    query = query.Where(a => a.Category == category);
+                }
+
+                if (!string.IsNullOrEmpty(severity))
+                {
+                    Console.WriteLine($"  Aplicando filtro de severidade: '{severity}'");
+                    query = query.Where(a => a.Severity == severity);
+                }
+
+                if (startDate.HasValue)
+                {
+                    Console.WriteLine($"  Aplicando filtro de data inicial: {startDate:yyyy-MM-dd}");
+                    query = query.Where(a => a.CreatedAt >= startDate.Value);
+                }
+
+                if (endDate.HasValue)
+                {
+                    Console.WriteLine($"  Aplicando filtro de data final: {endDate:yyyy-MM-dd}");
+                    var endOfDay = endDate.Value.Date.AddDays(1).AddTicks(-1);
+                    query = query.Where(a => a.CreatedAt <= endOfDay);
+                }
+            }
+            else
+            {
+                Console.WriteLine("=== EXECUTANDO QUERY SEM FILTROS (TODOS OS REGISTROS) ===");
+                // Query sem WHERE - pega todos os registros
             }
 
-            if (!string.IsNullOrEmpty(userName))
-            {
-                query = query.Where(a => a.UserName.Contains(userName));
-            }
-
-            if (!string.IsNullOrEmpty(action))
-            {
-                query = query.Where(a => a.Action == action);
-            }
-
-            if (!string.IsNullOrEmpty(entityType))
-            {
-                query = query.Where(a => a.EntityType == entityType);
-            }
-
-            if (!string.IsNullOrEmpty(entityId))
-            {
-                query = query.Where(a => a.EntityId == entityId);
-            }
-
-            if (startDate.HasValue)
-            {
-                query = query.Where(a => a.Timestamp >= startDate.Value);
-            }
-
-            if (endDate.HasValue)
-            {
-                query = query.Where(a => a.Timestamp <= endDate.Value);
-            }
-
+            // Contar total de registros (com ou sem filtros)
             var totalRecords = await query.CountAsync();
+            Console.WriteLine($"=== TOTAL DE REGISTROS ENCONTRADOS: {totalRecords} ===");
+
+            // Aplicar paginação e ordenação (SEMPRE mais recentes primeiro)
             var auditLogs = await query
-                .OrderByDescending(a => a.Timestamp)
+                .OrderByDescending(a => a.CreatedAt)
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
 
+            Console.WriteLine($"=== RETORNANDO {auditLogs.Count} LOGS DA PÁGINA {pageNumber} ===");
+
+            // Preencher ViewBags para os dropdowns (sempre todos os valores disponíveis)
+            ViewBag.Users = await _context.AuditLogs
+                .Where(a => a.UserName != null && a.UserName != "")
+                .Select(a => a.UserName)
+                .Distinct()
+                .OrderBy(u => u)
+                .ToListAsync();
+
+            ViewBag.Actions = await _context.AuditLogs
+                .Where(a => a.Action != "")
+                .Select(a => a.Action)
+                .Distinct()
+                .OrderBy(a => a)
+                .ToListAsync();
+
+            ViewBag.Categories = await _context.AuditLogs
+                .Where(a => a.Category != null && a.Category != "")
+                .Select(a => a.Category)
+                .Distinct()
+                .OrderBy(c => c)
+                .ToListAsync();
+
+            ViewBag.Severities = await _context.AuditLogs
+                .Where(a => a.Severity != "")
+                .Select(a => a.Severity)
+                .Distinct()
+                .OrderBy(s => s)
+                .ToListAsync();
+
+            // Preencher ViewData para manter filtros na interface
             ViewData["CurrentFilter"] = searchString;
             ViewData["UserNameFilter"] = userName;
             ViewData["ActionFilter"] = action;
-            ViewData["EntityTypeFilter"] = entityType;
-            ViewData["EntityIdFilter"] = entityId;
+            ViewData["CategoryFilter"] = category;
+            ViewData["SeverityFilter"] = severity;
             ViewData["StartDateFilter"] = startDate?.ToString("yyyy-MM-dd");
             ViewData["EndDateFilter"] = endDate?.ToString("yyyy-MM-dd");
-            ViewData["PageNumber"] = pageNumber;
-            ViewData["PageSize"] = pageSize;
-            ViewData["TotalPages"] = (int)Math.Ceiling(totalRecords / (double)pageSize);
 
+            // Preencher ViewBag para paginação
+            ViewBag.TotalRecords = totalRecords;
+            ViewBag.CurrentPage = pageNumber;
+            ViewBag.PageSize = pageSize;
+            ViewBag.TotalPages = (int)Math.Ceiling(totalRecords / (double)pageSize);
+
+            Console.WriteLine("=== AUDIT INDEX FINALIZADO COM SUCESSO ===");
             return View(auditLogs);
         }
 
@@ -126,8 +211,8 @@ namespace MatMob.Controllers
             string? searchString,
             string? userName,
             string? action,
-            string? entityType,
-            string? entityId,
+            string? category,
+            string? severity,
             DateTime? startDate,
             DateTime? endDate,
             string format = "csv")
@@ -136,12 +221,15 @@ namespace MatMob.Controllers
 
             if (!string.IsNullOrEmpty(searchString))
             {
-                query = query.Where(a => a.Details.Contains(searchString));
+                query = query.Where(a => 
+                    (a.Description != null && a.Description.Contains(searchString)) ||
+                    (a.EntityName != null && a.EntityName.Contains(searchString)) ||
+                    (a.Context != null && a.Context.Contains(searchString)));
             }
 
             if (!string.IsNullOrEmpty(userName))
             {
-                query = query.Where(a => a.UserName.Contains(userName));
+                query = query.Where(a => a.UserName != null && a.UserName.Contains(userName));
             }
 
             if (!string.IsNullOrEmpty(action))
@@ -149,28 +237,29 @@ namespace MatMob.Controllers
                 query = query.Where(a => a.Action == action);
             }
 
-            if (!string.IsNullOrEmpty(entityType))
+            if (!string.IsNullOrEmpty(category))
             {
-                query = query.Where(a => a.EntityType == entityType);
+                query = query.Where(a => a.Category == category);
             }
 
-            if (!string.IsNullOrEmpty(entityId))
+            if (!string.IsNullOrEmpty(severity))
             {
-                query = query.Where(a => a.EntityId == entityId);
+                query = query.Where(a => a.Severity == severity);
             }
 
             if (startDate.HasValue)
             {
-                query = query.Where(a => a.Timestamp >= startDate.Value);
+                query = query.Where(a => a.CreatedAt >= startDate.Value);
             }
 
             if (endDate.HasValue)
             {
-                query = query.Where(a => a.Timestamp <= endDate.Value);
+                var endDateTime = endDate.Value.Date.AddDays(1);
+                query = query.Where(a => a.CreatedAt < endDateTime);
             }
 
             var auditLogs = await query
-                .OrderByDescending(a => a.Timestamp)
+                .OrderByDescending(a => a.CreatedAt)
                 .ToListAsync();
 
             if (format.ToLower() == "json")
@@ -185,14 +274,157 @@ namespace MatMob.Controllers
             {
                 // CSV export
                 var csv = new StringBuilder();
-                csv.AppendLine("ID,Timestamp,UserName,Action,EntityType,EntityId,Details,IPAddress");
+                csv.AppendLine("ID,CreatedAt,UserName,Action,EntityName,EntityId,Description,Category,Severity,IpAddress,Success");
 
                 foreach (var log in auditLogs)
                 {
-                    csv.AppendLine($"{log.Id},{log.Timestamp:yyyy-MM-dd HH:mm:ss},{log.UserName},{log.Action},{log.EntityType},{log.EntityId},\"{log.Details?.Replace("\"", "\"\"")}\",{log.IPAddress}");
+                    csv.AppendLine($"{log.Id},{log.CreatedAt:yyyy-MM-dd HH:mm:ss},{log.UserName},{log.Action},{log.EntityName},{log.EntityId},\"{log.Description?.Replace("\"", "\"\"")}\",{log.Category},{log.Severity},{log.IpAddress},{log.Success}");
                 }
 
                 return File(Encoding.UTF8.GetBytes(csv.ToString()), "text/csv", "audit_logs.csv");
+            }
+        }
+
+        // GET: Audit/CreateTestData - Criar dados de teste
+        [AllowAnonymous]
+        public async Task<IActionResult> CreateTestData()
+        {
+            try
+            {
+                Console.WriteLine("=== CRIANDO DADOS DE TESTE ===");
+                
+                var testLogs = new List<AuditLog>
+                {
+                    new AuditLog
+                    {
+                        Action = "VIEW",
+                        EntityName = "Ativo",
+                        EntityId = 1,
+                        Description = "Visualização de ativo ID 1",
+                        Category = "DATA_ACCESS",
+                        Severity = "INFO",
+                        UserName = "admin@matmob.com",
+                        IpAddress = "127.0.0.1",
+                        CreatedAt = DateTime.UtcNow.AddHours(-1),
+                        Success = true
+                    },
+                    new AuditLog
+                    {
+                        Action = "CREATE",
+                        EntityName = "OrdemServico",
+                        EntityId = 123,
+                        Description = "Criação de nova ordem de serviço",
+                        Category = "DATA_MODIFICATION",
+                        Severity = "INFO",
+                        UserName = "admin@matmob.com",
+                        IpAddress = "127.0.0.1",
+                        CreatedAt = DateTime.UtcNow.AddHours(-2),
+                        Success = true
+                    },
+                    new AuditLog
+                    {
+                        Action = "UPDATE",
+                        EntityName = "Tecnico",
+                        EntityId = 5,
+                        Description = "Atualização de dados do técnico",
+                        Category = "DATA_MODIFICATION",
+                        Severity = "WARNING",
+                        UserName = "gestor@matmob.com",
+                        IpAddress = "192.168.1.100",
+                        CreatedAt = DateTime.UtcNow.AddHours(-3),
+                        Success = true
+                    },
+                    new AuditLog
+                    {
+                        Action = "DELETE",
+                        EntityName = "Peca",
+                        EntityId = 99,
+                        Description = "Exclusão de peça obsoleta",
+                        Category = "DATA_MODIFICATION",
+                        Severity = "ERROR",
+                        UserName = "admin@matmob.com",
+                        IpAddress = "127.0.0.1",
+                        CreatedAt = DateTime.UtcNow.AddHours(-4),
+                        Success = false,
+                        ErrorMessage = "Peça possui dependências"
+                    },
+                    new AuditLog
+                    {
+                        Action = "LOGIN",
+                        EntityName = "User",
+                        Description = "Login no sistema",
+                        Category = "AUTHENTICATION",
+                        Severity = "INFO",
+                        UserName = "tecnico@matmob.com",
+                        IpAddress = "192.168.1.50",
+                        CreatedAt = DateTime.UtcNow.AddHours(-5),
+                        Success = true
+                    }
+                };
+                
+                _context.AuditLogs.AddRange(testLogs);
+                await _context.SaveChangesAsync();
+                
+                Console.WriteLine($"SUCESSO: {testLogs.Count} logs criados!");
+                
+                return Json(new { 
+                    Success = true, 
+                    Message = $"{testLogs.Count} logs de teste criados com sucesso!",
+                    LogsCreated = testLogs.Count 
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"ERRO: {ex.Message}");
+                return Json(new { 
+                    Success = false, 
+                    Error = ex.Message, 
+                    StackTrace = ex.StackTrace 
+                });
+            }
+        }
+
+        // GET: Audit/TestData - Action para testar sem autenticação
+        [AllowAnonymous]
+        public async Task<IActionResult> TestData()
+        {
+            try
+            {
+                Console.WriteLine("=== TESTDATA: Iniciando teste direto ===");
+                
+                var totalCount = await _context.AuditLogs.CountAsync();
+                Console.WriteLine($"TESTDATA: Total de registros na base: {totalCount}");
+                
+                var logs = await _context.AuditLogs
+                    .OrderByDescending(a => a.CreatedAt)
+                    .Take(10)
+                    .ToListAsync();
+                    
+                Console.WriteLine($"TESTDATA: Retornando {logs.Count} registros");
+                
+                var result = new
+                {
+                    TotalCount = totalCount,
+                    SampleLogs = logs.Select(l => new {
+                        l.Id,
+                        l.Action,
+                        l.EntityName,
+                        l.EntityId,
+                        l.Description,
+                        l.Category,
+                        l.Severity,
+                        l.UserName,
+                        CreatedAt = l.CreatedAt.ToString("dd/MM/yyyy HH:mm:ss"),
+                        l.Success
+                    })
+                };
+                
+                return Json(result);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"TESTDATA: Erro - {ex.Message}");
+                return Json(new { Error = ex.Message, StackTrace = ex.StackTrace });
             }
         }
 
@@ -203,7 +435,7 @@ namespace MatMob.Controllers
 
             var totalLogs = await _context.AuditLogs.CountAsync();
             var recentLogs = await _context.AuditLogs
-                .Where(a => a.Timestamp >= thirtyDaysAgo)
+                .Where(a => a.CreatedAt >= thirtyDaysAgo)
                 .CountAsync();
 
             var logsByAction = await _context.AuditLogs
@@ -214,6 +446,7 @@ namespace MatMob.Controllers
                 .ToListAsync();
 
             var logsByUser = await _context.AuditLogs
+                .Where(a => a.UserName != null)
                 .GroupBy(a => a.UserName)
                 .Select(g => new { UserName = g.Key, Count = g.Count() })
                 .OrderByDescending(g => g.Count)
@@ -237,14 +470,119 @@ namespace MatMob.Controllers
         public async Task<IActionResult> GenerateTestLogs()
         {
             var currentUser = await _userManager.GetUserAsync(User);
-            var userName = currentUser?.UserName ?? "System";
+            var userName = currentUser?.UserName ?? "admin@matmob.com";
 
-            // Generate some test audit logs
-            await _auditService.LogCreateAsync("TestEntity", "123", "Test creation", userName, "127.0.0.1");
-            await _auditService.LogUpdateAsync("TestEntity", "123", "Test update", userName, "127.0.0.1");
-            await _auditService.LogDeleteAsync("TestEntity", "123", "Test deletion", userName, "127.0.0.1");
+            // Generate comprehensive test audit logs with various scenarios
+            var testLogs = new List<AuditLog>
+            {
+                new AuditLog
+                {
+                    Action = "VIEW",
+                    EntityName = "Ativo",
+                    EntityId = 1,
+                    Description = "Visualização de ativo ID 1",
+                    Category = "DATA_ACCESS",
+                    Severity = "INFO",
+                    UserName = userName,
+                    UserId = currentUser?.Id,
+                    IpAddress = "127.0.0.1",
+                    CreatedAt = DateTime.UtcNow.AddHours(-1),
+                    Success = true
+                },
+                new AuditLog
+                {
+                    Action = "CREATE",
+                    EntityName = "OrdemServico",
+                    EntityId = 123,
+                    Description = "Criação de nova ordem de serviço",
+                    Category = "DATA_MODIFICATION",
+                    Severity = "INFO",
+                    UserName = userName,
+                    UserId = currentUser?.Id,
+                    IpAddress = "127.0.0.1",
+                    CreatedAt = DateTime.UtcNow.AddHours(-2),
+                    Success = true,
+                    NewData = "{\"NumeroOS\":\"OS-2025-001\",\"Status\":1,\"Prioridade\":\"Alta\"}"
+                },
+                new AuditLog
+                {
+                    Action = "UPDATE",
+                    EntityName = "Tecnico",
+                    EntityId = 5,
+                    Description = "Atualização de dados do técnico",
+                    Category = "DATA_MODIFICATION",
+                    Severity = "INFO",
+                    UserName = userName,
+                    UserId = currentUser?.Id,
+                    IpAddress = "127.0.0.1",
+                    CreatedAt = DateTime.UtcNow.AddHours(-3),
+                    Success = true,
+                    OldData = "{\"Status\":\"Ativo\",\"Especialidade\":\"Mecânica\"}",
+                    NewData = "{\"Status\":\"Inativo\",\"Especialidade\":\"Elétrica\"}"
+                },
+                new AuditLog
+                {
+                    Action = "DELETE",
+                    EntityName = "Peca",
+                    EntityId = 99,
+                    Description = "Exclusão de peça obsoleta",
+                    Category = "DATA_MODIFICATION",
+                    Severity = "WARNING",
+                    UserName = userName,
+                    UserId = currentUser?.Id,
+                    IpAddress = "127.0.0.1",
+                    CreatedAt = DateTime.UtcNow.AddHours(-4),
+                    Success = true,
+                    OldData = "{\"Nome\":\"Peça Obsoleta\",\"Codigo\":\"P99\",\"Ativa\":false}"
+                },
+                new AuditLog
+                {
+                    Action = "LOGIN",
+                    EntityName = "User",
+                    Description = "Login no sistema",
+                    Category = "AUTHENTICATION",
+                    Severity = "INFO",
+                    UserName = userName,
+                    UserId = currentUser?.Id,
+                    IpAddress = "127.0.0.1",
+                    CreatedAt = DateTime.UtcNow.AddHours(-5),
+                    Success = true
+                },
+                new AuditLog
+                {
+                    Action = "EXPORT",
+                    EntityName = "AuditLog",
+                    Description = "Exportação de logs de auditoria",
+                    Category = "REPORTING",
+                    Severity = "INFO",
+                    UserName = userName,
+                    UserId = currentUser?.Id,
+                    IpAddress = "127.0.0.1",
+                    CreatedAt = DateTime.UtcNow.AddHours(-6),
+                    Success = true,
+                    AdditionalData = "{\"ExportType\":\"CSV\",\"RecordCount\":150}"
+                },
+                new AuditLog
+                {
+                    Action = "UPDATE",
+                    EntityName = "OrdemServico",
+                    EntityId = 123,
+                    Description = "Erro ao atualizar ordem de serviço",
+                    Category = "DATA_MODIFICATION",
+                    Severity = "ERROR",
+                    UserName = userName,
+                    UserId = currentUser?.Id,
+                    IpAddress = "127.0.0.1",
+                    CreatedAt = DateTime.UtcNow.AddHours(-7),
+                    Success = false,
+                    ErrorMessage = "Violação de constraint: Status inválido"
+                }
+            };
 
-            TempData["Success"] = "Test audit logs generated successfully.";
+            _context.AuditLogs.AddRange(testLogs);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = $"Logs de teste gerados com sucesso! {testLogs.Count} registros criados.";
             return RedirectToAction(nameof(Index));
         }
     }

@@ -21,6 +21,128 @@ body {
   margin-bottom: 60px;
 }
 
+/* Estilos para badges de auditoria - cores garantidas */
+.audit-badge-view {
+  background-color: #ffc107 !important; /* Amarelo */
+  color: #212529 !important; /* Texto escuro */
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 0.375rem;
+  display: inline-block;
+}
+
+.audit-badge-delete {
+  background-color: #dc3545 !important; /* Vermelho */
+  color: #ffffff !important; /* Texto branco */
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 0.375rem;
+  display: inline-block;
+}
+
+.audit-badge-update {
+  background-color: #198754 !important; /* Verde */
+  color: #ffffff !important; /* Texto branco */
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 0.375rem;
+  display: inline-block;
+}
+
+.audit-badge-create {
+  background-color: #0d6efd !important; /* Azul */
+  color: #ffffff !important; /* Texto branco */
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 0.375rem;
+  display: inline-block;
+}
+
+.audit-badge-default {
+  background-color: #6c757d !important; /* Cinza */
+  color: #ffffff !important; /* Texto branco */
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 0.375rem;
+  display: inline-block;
+}
+
+/* Badges para Categorias */
+.audit-category-data-access {
+  background-color: #17a2b8 !important; /* Info - azul claro */
+  color: #ffffff !important;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 0.375rem;
+  display: inline-block;
+}
+
+.audit-category-auth {
+  background-color: #28a745 !important; /* Success - verde */
+  color: #ffffff !important;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 0.375rem;
+  display: inline-block;
+}
+
+.audit-category-authz {
+  background-color: #fd7e14 !important; /* Warning laranja */
+  color: #ffffff !important;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 0.375rem;
+  display: inline-block;
+}
+
+.audit-category-system {
+  background-color: #6f42c1 !important; /* Purple */
+  color: #ffffff !important;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 0.375rem;
+  display: inline-block;
+}
+
+.audit-category-business {
+  background-color: #20c997 !important; /* Teal */
+  color: #ffffff !important;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 0.375rem;
+  display: inline-block;
+}
+
+.audit-category-error {
+  background-color: #dc3545 !important; /* Danger - vermelho */
+  color: #ffffff !important;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 0.375rem;
+  display: inline-block;
+}
+
+.audit-category-default {
+  background-color: #6c757d !important; /* Secondary - cinza */
+  color: #ffffff !important;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 0.375rem;
+  display: inline-block;
+}
+
 .form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
   color: var(--bs-secondary-color);
   text-align: end;

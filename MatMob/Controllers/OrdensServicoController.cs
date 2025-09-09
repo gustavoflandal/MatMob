@@ -251,10 +251,43 @@ namespace MatMob.Controllers
                 return NotFound();
             }
 
+            // Debug: Log dos valores recebidos
+            Console.WriteLine($"=== DEBUG EDIT OS ===");
+            Console.WriteLine($"ID: {ordemServico.Id}");
+            Console.WriteLine($"AtivoId: {ordemServico.AtivoId}");
+            Console.WriteLine($"TipoServico: {ordemServico.TipoServico}");
+            Console.WriteLine($"Status: {ordemServico.Status}");
+            Console.WriteLine($"DescricaoProblema: '{ordemServico.DescricaoProblema}'");
+
+            // Debug: Log dos valores do Request.Form
+            Console.WriteLine("=== REQUEST.FORM VALUES ===");
+            foreach (var key in Request.Form.Keys)
+            {
+                Console.WriteLine($"{key}: '{Request.Form[key]}'");
+            }
+
             if (ModelState.IsValid)
             {
                 try
                 {
+                    // Validação adicional: verificar se o ativo existe
+                    if (ordemServico.AtivoId > 0)
+                    {
+                        var ativoExiste = await _context.Ativos.AnyAsync(a => a.Id == ordemServico.AtivoId && a.Status == StatusAtivo.Ativo);
+                        if (!ativoExiste)
+                        {
+                            ModelState.AddModelError("AtivoId", "O ativo selecionado não existe ou não está ativo.");
+                            await PopulateDropdownLists(ordemServico);
+                            return View(ordemServico);
+                        }
+                    }
+                    else
+                    {
+                        ModelState.AddModelError("AtivoId", "Por favor, selecione um ativo válido.");
+                        await PopulateDropdownLists(ordemServico);
+                        return View(ordemServico);
+                    }
+
                     // Capturar o estado antigo para auditoria
                     var ordemAntiga = await _context.OrdensServico.AsNoTracking().FirstOrDefaultAsync(os => os.Id == id);
                     
@@ -298,6 +331,19 @@ namespace MatMob.Controllers
                     }
                 }
                 return RedirectToAction(nameof(Index));
+            }
+
+            // Debug: Log dos erros do ModelState
+            if (!ModelState.IsValid)
+            {
+                Console.WriteLine("ModelState não é válido:");
+                foreach (var error in ModelState)
+                {
+                    if (error.Value?.Errors?.Count > 0)
+                    {
+                        Console.WriteLine($"Campo: {error.Key}, Erros: {string.Join(", ", error.Value.Errors.Select(e => e.ErrorMessage))}");
+                    }
+                }
             }
 
             await PopulateDropdownLists(ordemServico);

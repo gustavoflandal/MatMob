@@ -82,11 +82,11 @@
             <div class="row">
                 <div class="col-md-6">
                     <div class="mb-3">
-                        <label asp-for="SolicitanteId" class="form-label">Equipe</label>
-                        <select asp-for="SolicitanteId" id="SolicitanteId" class="form-select" asp-items="@(ViewData["SolicitanteId"] as SelectList ?? new SelectList(Enumerable.Empty<SelectListItem>()))">
+                        <label asp-for="EquipeId" class="form-label">Equipe</label>
+                        <select asp-for="EquipeId" id="EquipeId" class="form-select" asp-items="@(ViewData["EquipeId"] as SelectList ?? new SelectList(Enumerable.Empty<SelectListItem>()))">
                             <option value="">Selecione a equipe (opcional)</option>
                         </select>
-                        <span asp-validation-for="SolicitanteId" class="text-danger"></span>
+                        <span asp-validation-for="EquipeId" class="text-danger"></span>
                     </div>
                 </div>
                 <div class="col-md-6">

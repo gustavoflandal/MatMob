@@ -1,0 +1,83 @@
+@model IEnumerable<MatMob.Models.Entities.AuditLog>
+
+@{
+    ViewData["Title"] = "Audit Logs - Teste Simples";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h2>Audit Logs - Teste Simples</h2>
+            
+            <p><strong>Total de registros:</strong> @(ViewBag.TotalRecords ?? 0)</p>
+            <p><strong>Logs no modelo:</strong> @(Model?.Count() ?? 0)</p>
+            
+            @if(Model != null && Model.Any())
+            {
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Usuário</th>
+                            <th>Ação</th>
+                            <th>Entidade</th>
+                            <th>Descrição</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach(var log in Model)
+                        {
+                            <tr>
+                                <td>@log.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>@log.UserName</td>
+                                <td>
+                                    @{
+                                        var actionClass = "badge ";
+                                        switch(log.Action?.ToUpper())
+                                        {
+                                            case "VIEW":
+                                                actionClass += "audit-badge-view";
+                                                break;
+                                            case "DELETE":
+                                                actionClass += "audit-badge-delete";
+                                                break;
+                                            case "UPDATE":
+                                                actionClass += "audit-badge-update";
+                                                break;
+                                            case "CREATE":
+                                                actionClass += "audit-badge-create";
+                                                break;
+                                            default:
+                                                actionClass += "audit-badge-default";
+                                                break;
+                                        }
+                                    }
+                                    <span class="@actionClass" style="
+                                        @if(log.Action?.ToUpper() == "VIEW"){<text>background-color: #ffc107 !important; color: #000 !important;</text>}
+                                        @if(log.Action?.ToUpper() == "DELETE"){<text>background-color: #dc3545 !important; color: #fff !important;</text>}
+                                        @if(log.Action?.ToUpper() == "UPDATE"){<text>background-color: #198754 !important; color: #fff !important;</text>}
+                                        @if(log.Action?.ToUpper() == "CREATE"){<text>background-color: #0d6efd !important; color: #fff !important;</text>}
+                                        @if(log.Action?.ToUpper() != "VIEW" && log.Action?.ToUpper() != "DELETE" && log.Action?.ToUpper() != "UPDATE" && log.Action?.ToUpper() != "CREATE"){<text>background-color: #6c757d !important; color: #fff !important;</text>}
+                                    ">@log.Action</span>
+                                </td>
+                                <td>@log.EntityName</td>
+                                <td>@log.Description</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div class="alert alert-warning">
+                    <strong>Nenhum log de auditoria encontrado.</strong>
+                    <br>Verifique se existem dados na tabela AuditLogs.
+                    <br><strong>Debug:</strong> Total: @(ViewBag.TotalRecords ?? 0), Modelo: @(Model?.Count() ?? 0)
+                </div>
+                
+                <a href="@Url.Action("TestData")" class="btn btn-info">Testar Dados</a>
+                <a href="@Url.Action("GenerateTestLogs")" class="btn btn-secondary">Gerar Logs Teste</a>
+            }
+        </div>
+    </div>
+</div>

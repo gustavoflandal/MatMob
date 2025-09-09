@@ -187,7 +187,6 @@ C:\MatMob\MatMob\obj\Debug\net9.0\compressed\a3ygkwa5zy-2z0ns9nrw6.gz
 C:\MatMob\MatMob\obj\Debug\net9.0\compressed\nezrqnk58p-muycvpuwrr.gz
 C:\MatMob\MatMob\obj\Debug\net9.0\compressed\v0zgfp0y55-87fc7y1x7t.gz
 C:\MatMob\MatMob\obj\Debug\net9.0\compressed\yfc7ypekbg-mlv21k5csn.gz
-C:\MatMob\MatMob\obj\Debug\net9.0\compressed\3aj7m67oe6-b9sayid5wm.gz
 C:\MatMob\MatMob\obj\Debug\net9.0\compressed\bc0su0vyfl-61n19gt1b8.gz
 C:\MatMob\MatMob\obj\Debug\net9.0\compressed\edn1po6pvh-tn92vrd2h1.gz
 C:\MatMob\MatMob\obj\Debug\net9.0\compressed\itdvr2o5jm-bqjiyaj88i.gz
@@ -266,3 +265,4 @@ C:\MatMob\MatMob\obj\Debug\net9.0\rpswa.dswa.cache.json
 C:\MatMob\MatMob\obj\Debug\net9.0\rjimswa.dswa.cache.json
 C:\MatMob\MatMob\obj\Debug\net9.0\rjsmrazor.dswa.cache.json
 C:\MatMob\MatMob\obj\Debug\net9.0\rjsmcshtml.dswa.cache.json
+C:\MatMob\MatMob\obj\Debug\net9.0\compressed\3aj7m67oe6-w93t92o9ac.gz

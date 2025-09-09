@@ -284,7 +284,24 @@
                                                             <td>@log.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss")</td>
                                                             <td>@log.UserName</td>
                                                             <td>
-                                                                <span class="badge badge-primary">@log.Action</span>
+                                                                @switch (log.Action.ToUpper())
+                                                                {
+                                                                    case "VIEW":
+                                                                        <span class="audit-badge-view">@log.Action</span>
+                                                                        break;
+                                                                    case "DELETE":
+                                                                        <span class="audit-badge-delete">@log.Action</span>
+                                                                        break;
+                                                                    case "UPDATE":
+                                                                        <span class="audit-badge-update">@log.Action</span>
+                                                                        break;
+                                                                    case "CREATE":
+                                                                        <span class="audit-badge-create">@log.Action</span>
+                                                                        break;
+                                                                    default:
+                                                                        <span class="audit-badge-default">@log.Action</span>
+                                                                        break;
+                                                                }
                                                             </td>
                                                             <td>@log.EntityName</td>
                                                             <td>
@@ -293,7 +310,37 @@
                                                                 </span>
                                                             </td>
                                                             <td>
-                                                                <span class="badge badge-info">@log.Category</span>
+                                                                @if (log.Category != null)
+                                                                {
+                                                                    @switch (log.Category.ToUpper())
+                                                                    {
+                                                                        case "DATA_ACCESS":
+                                                                            <span class="audit-category-data-access">@log.Category</span>
+                                                                            break;
+                                                                        case "AUTHENTICATION":
+                                                                            <span class="audit-category-auth">@log.Category</span>
+                                                                            break;
+                                                                        case "AUTHORIZATION":
+                                                                            <span class="audit-category-authz">@log.Category</span>
+                                                                            break;
+                                                                        case "SYSTEM":
+                                                                            <span class="audit-category-system">@log.Category</span>
+                                                                            break;
+                                                                        case "BUSINESS":
+                                                                            <span class="audit-category-business">@log.Category</span>
+                                                                            break;
+                                                                        case "ERROR":
+                                                                            <span class="audit-category-error">@log.Category</span>
+                                                                            break;
+                                                                        default:
+                                                                            <span class="audit-category-default">@log.Category</span>
+                                                                            break;
+                                                                    }
+                                                                }
+                                                                else
+                                                                {
+                                                                    <span class="audit-category-default">N/A</span>
+                                                                }
                                                             </td>
                                                         </tr>
                                                     }
